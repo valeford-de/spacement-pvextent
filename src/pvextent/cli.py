@@ -56,7 +56,36 @@ def main(argv: list[str] | None = None) -> int:
     smoke.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
     smoke.add_argument("--resume", help="Local checkpoint.pt with its .sha256 companion")
     smoke.add_argument("--json", action="store_true")
+    baseline = training_actions.add_parser("baseline", help="Fine-tune pretrained U-Net/ResNet18 using train/validation only")
+    baseline.add_argument("dataset_dir")
+    baseline.add_argument("output_dir", help="New run directory; existing runs are never overwritten")
+    baseline.add_argument("--config", required=True, help="Versioned baseline TOML configuration")
+    baseline.add_argument("--weights-dir", required=True, help="Cache directory for pinned encoder weights")
+    baseline.add_argument("--download-weights", action="store_true", help="Explicitly download missing pinned encoder files")
+    baseline.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
+    baseline.add_argument("--resume", help="Local last.pt epoch checkpoint and .sha256 companion")
+    baseline.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
+    if args.command == "train" and args.action == "baseline":
+        from pvextent.training.baseline import BaselineTrainingError, run_baseline
+        try:
+            result = run_baseline(
+                args.dataset_dir, args.output_dir, config_path=args.config, weights_dir=args.weights_dir,
+                device=args.device, download_weights=args.download_weights, resume=args.resume,
+                progress=lambda message: print(message, file=sys.stderr),
+            )
+        except BaselineTrainingError as error:
+            if args.json:
+                print(json.dumps({"ok": False, "error": str(error)}))
+            else:
+                print(f"BASELINE TRAINING FAILED: {error}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(result, indent=2, allow_nan=False))
+        else:
+            print(f"BASELINE OK: {result['epochs_completed']} epochs on {result['device']}; "
+                  f"best validation pixel IoU={result['best_val']['iou']:.4f}. Output: {args.output_dir}")
+        return 0
     if args.command == "train":
         from pvextent.training.smoke import TrainingSmokeError, run_smoke
         try:

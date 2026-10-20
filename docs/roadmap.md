@@ -46,20 +46,48 @@ The [training smoke workflow](training-smoke.md) is implemented and executed on
 MPS. A small randomly initialized U-Net verifies data loading, masked loss,
 gradients, optimizer updates, checkpoint reload and continuation; CPU regression
 tests verify exact resumed state. See the [measured smoke audit](research/training-smoke-audit.md).
-This is a pipeline check, not the pretrained baseline or a model-quality result.
+This remains a pipeline check rather than a model-quality result.
 
-- Select a pretrained segmentation backbone after checking code, weight, and
-  dataset licenses.
-- Add explicit experiment configuration for preprocessing, spatial resolution,
-  augmentation, optimization, random seed, and data split identifiers.
-- Fine-tune one baseline and save the complete configuration alongside each
-  checkpoint. Add architectural alternatives only when comparison is useful.
+The [pretrained U-Net/ResNet18 baseline](baseline-training.md) is implemented
+using SMP and a pinned ImageNet encoder from `timm`. Its
+[weight provenance and licenses](pretrained-weights.md) retain the publisher's
+Apache-2.0 weight declaration separately from dependency and dataset licenses.
+The versioned [configuration](../configs/baseline-resnet18.toml) fixes native
+resolution, ImageNet channel normalization, paired flips, AdamW settings, seed
+and validation threshold. Full train/validation tensor views exclude test pixels.
+
+Training records global validation metrics each epoch, selects `best.pt` by
+validation pixel IoU, and saves self-contained `last.pt` checkpoints with model,
+optimizer, RNG and earlier-best state. Exact epoch-boundary CPU continuation and
+recovery of completed epochs are tested. The first full-split run completed
+three epochs on 3,282 training and 278 validation examples, with 4,923 optimizer
+updates. The best checkpoint is epoch 3, with internal validation pixel IoU
+`0.91572` and Dice `0.95600`. The
+[baseline audit](research/baseline-resnet18-audit.md) records the experiment and
+artifact hashes. All 421 test examples remain unopened, and PVExtent model
+weights have not been released. These validation results do not establish
+external or roof-level performance.
+
+- Perform a detailed validation error analysis and label review, including
+  source limitations and reviewed hard negatives, before selecting further
+  experiments.
+- Add architectural alternatives only when comparison is useful; retain fixed
+  evaluation boundaries and explicit experiment provenance.
 
 ## 4. Evaluate the resulting model
 
-- Report pixel-level overlap metrics, including IoU and Dice/F1.
+Global masked pixel confusion counts, IoU, Dice, precision and recall are
+implemented and used for validation during baseline training. Counts accumulate
+over all supervised pixels before metrics are computed. Validation-based
+checkpoint selection is separate from a final evaluation on untouched test data.
+
+The following evaluation work remains:
+
+- Evaluate the selected checkpoint under a fixed test protocol after experiment
+  selection; report internal and external evidence separately.
 - Measure array detection precision and recall using a documented spatial
-  matching rule, including false positives on negative images.
+  matching rule, including false positives on negative images and roof-level
+  false-positive rates.
 - Inspect errors by image source, resolution, array size, and acquisition date.
 - Record runtime and hardware separately from prediction quality. Treat
   uncertainty and abstention explicitly if introduced.
@@ -68,8 +96,9 @@ This is a pipeline check, not the pretrained baseline or a model-quality result.
 
 - Include a model card describing intended use, data provenance, limitations,
   evaluation protocol, and results on the frozen test set.
-- Publish training and inference instructions, dependency versions, experiment
-  configurations, and checkpoint hashes.
+- Publish model inference instructions and releasable weights with dependency
+  versions, experiment configurations and checkpoint hashes. Training guidance
+  and local run artifacts are already implemented.
 - State the license of each released artifact separately and retain applicable
   third-party attribution.
 

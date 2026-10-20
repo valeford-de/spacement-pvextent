@@ -202,6 +202,43 @@ class ValidationCliTests(unittest.TestCase):
         self.assertGreater(document["parameter_update_l2"], 0)
         self.assertTrue((output / "checkpoint.pt").is_file())
 
+    def test_baseline_missing_dataset_returns_json_without_loading_encoder_weights(self) -> None:
+        config = Path(__file__).resolve().parents[1] / "configs" / "baseline-resnet18.toml"
+        output = self.root / "baseline-run"
+        cache = self.root / "encoder-cache"
+        result = self.command(
+            "train", "baseline", str(self.root / "missing-dataset"), str(output),
+            "--config", str(config), "--weights-dir", str(cache), "--device", "cpu", "--json",
+        )
+        self.assertEqual(result.returncode, 1, result.stderr)
+        document = json.loads(result.stdout)
+        self.assertFalse(document["ok"])
+        self.assertTrue(document["error"])
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertFalse(output.exists())
+        self.assertFalse(cache.exists())
+
+    def test_baseline_missing_config_is_a_clean_json_error(self) -> None:
+        output = self.root / "baseline-run"
+        result = self.command(
+            "train", "baseline", str(self.root), str(output),
+            "--config", str(self.root / "missing.toml"),
+            "--weights-dir", str(self.root / "encoder-cache"), "--json",
+        )
+        self.assertEqual(result.returncode, 1, result.stderr)
+        document = json.loads(result.stdout)
+        self.assertFalse(document["ok"])
+        self.assertIn("configuration", document["error"])
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertFalse(output.exists())
+
+    def test_baseline_requires_configuration_and_weight_cache_options(self) -> None:
+        result = self.command("train", "baseline", str(self.root), str(self.root / "baseline-run"), "--json")
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("--config", result.stderr)
+        self.assertIn("--weights-dir", result.stderr)
+
     def test_bad_command_line_exits_two(self) -> None:
         result = self.command("data", "validate")
         self.assertEqual(result.returncode, 2)

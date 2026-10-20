@@ -18,10 +18,16 @@ evaluation, and inference.
 Dataset import, validation, geographic split snapshots, a local label-review
 gallery, and a bounded NRW roof candidate fetcher are implemented. The complete
 PV4GER-SEG release has been imported and split with a 1 km geographic buffer.
-The small training smoke workflow now verifies gradients, optimizer updates,
-checkpoint reload and exact local continuation on CPU and MPS. Label review,
-an independent benchmark, full baseline training and inference remain
-outstanding; no model or segmentation-quality result has been released. See the
+The training smoke workflow verifies gradients, optimizer updates, checkpoint
+reload and local continuation. The configured U-Net/ResNet18 baseline now trains
+on the full training split, uses validation for checkpoint selection, and records
+global pixel metrics and resumable state. The first full three-epoch run is
+complete: its best checkpoint reached pixel IoU **0.91572** and Dice
+**0.95600** on the internal validation split. The 421 test images remain
+unopened, and model weights have not been released. See the
+[run audit](docs/research/baseline-resnet18-audit.md) for the recorded evidence.
+Label review, reviewed hard negatives, roof-level false-positive measurement,
+an independent benchmark and general inference remain outstanding. See the
 [research roadmap](docs/roadmap.md) for the next steps.
 
 ## Documentation
@@ -37,8 +43,11 @@ convert the first public segmentation dataset.
 Continue with [geographic splits](docs/geographic-splits.md),
 [local label review](docs/label-review.md), and
 [unreviewed NRW roof candidates](docs/nrw-candidates.md).
-The [training smoke guide](docs/training-smoke.md) documents the first executable
-training workflow and its [measured audit](docs/research/training-smoke-audit.md).
+The [training smoke guide](docs/training-smoke.md) documents the initial pipeline
+check and its [measured audit](docs/research/training-smoke-audit.md).
+Continue with the [pretrained baseline guide](docs/baseline-training.md),
+[encoder provenance and licenses](docs/pretrained-weights.md), and
+[baseline run audit](docs/research/baseline-resnet18-audit.md).
 
 For private vulnerability reports, see the [security policy](.github/SECURITY.md).
 
@@ -51,6 +60,14 @@ Requires Python 3.11 or newer; development uses Python 3.12. Install
 uv sync --locked
 uv run --locked pvextent --help
 uv run --locked python -m unittest discover -s tests -v
+```
+
+Run the complete suite, including dataset import, geographic processing,
+training and pretrained-baseline tests, with all optional dependencies:
+
+```sh
+uv run --locked --extra import --extra geo --extra train --extra baseline \
+  python -m unittest discover -s tests -v
 ```
 
 ## Validate a dataset
@@ -88,9 +105,6 @@ preserved. Canonical splits remain unassigned because nearby crops cross the
 publisher's split boundaries. See the [import guide](docs/pv4ger-import.md) for
 offline use, smoke runs, licenses, and the limits of proximity grouping.
 
-Run the complete test suite, including synthetic HDF5 import fixtures, with
-`uv run --locked --extra import --extra geo --extra train python -m unittest discover -s tests -v`.
-
 ## Prepare geographic splits and review
 
 ```sh
@@ -126,19 +140,39 @@ checkpoint reload. See the [training guide](docs/training-smoke.md) for
 continuation with optimizer/RNG state and exact dataset fingerprints. Probe
 losses describe the same training examples; they are not accuracy results.
 
+## Train the pretrained baseline
+
+```sh
+uv sync --locked --extra baseline
+uv run --locked --extra baseline pvextent train baseline \
+  data/pv4ger-seg-geographic-v1 runs/baseline-001 \
+  --config configs/baseline-resnet18.toml \
+  --weights-dir data/pretrained/resnet18.a1_in1k \
+  --download-weights --device auto --json
+```
+
+This fine-tunes an SMP U-Net with a hash-pinned ImageNet ResNet18 encoder from
+`timm`. The versioned configuration fixes preprocessing, augmentation, seed,
+optimizer and validation threshold. Full training and validation views preserve
+native resolution; test pixels are never opened. `best.pt` is selected by global
+validation pixel IoU, while `last.pt` retains model, optimizer and RNG state for
+epoch-boundary continuation. See the [baseline guide](docs/baseline-training.md)
+for configuration, checkpoints and failure recovery. Validation scores describe
+the internal source holdout and do not establish roof-level false-positive rates
+or independent test performance.
+
 ## Package layout
 
 | Module | Responsibility |
 | --- | --- |
-| `pvextent.data` | Dataset loading, labels, provenance, and preprocessing |
-| `pvextent.models` | Model construction and architecture adapters |
-| `pvextent.training` | Training and checkpoint creation |
-| `pvextent.evaluation` | Segmentation and array detection evaluation |
-| `pvextent.inference` | Predictions from images and trained checkpoints |
+| `pvextent.data` | Dataset preparation, provenance, validation, and train/validation tensor views |
+| `pvextent.models` | Tiny smoke U-Net and pretrained U-Net/ResNet18 adapter |
+| `pvextent.training` | Smoke runs, configured baseline training, and resumable checkpoints |
+| `pvextent.evaluation` | Global masked pixel confusion counts, IoU, Dice, precision, and recall |
+| `pvextent.inference` | Planned predictions from images and released model checkpoints |
 
-The data module provides preparation and training-only tensor views. Model and
-training modules provide the tiny U-Net and bounded smoke workflow. Evaluation,
-general inference and the full pretrained baseline remain planned.
+Quantitative array matching, roof-level false-positive measurement, an external
+benchmark, general inference and released PVExtent weights remain planned.
 
 ## License and attribution
 
@@ -150,7 +184,10 @@ license.
 Datasets and model checkpoints have their own provenance and licensing
 requirements. No third-party imagery or model weights are included in this
 repository. The importer records the [PV4GER-SEG sources and terms](docs/pv4ger-import.md#source-versions-and-licenses)
-separately and preserves upstream notices with each imported snapshot.
+separately and preserves upstream notices with each imported snapshot. The
+pinned `timm` encoder weights have an Apache-2.0 declaration in their publisher
+model card; their [provenance](docs/pretrained-weights.md) is recorded separately
+from dependency code and dataset licenses.
 
 ## Maintained by
 
