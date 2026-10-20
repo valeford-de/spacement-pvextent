@@ -4,12 +4,14 @@
 """Synthetic network-only fixtures: held-out raster files deliberately do not exist."""
 
 from contextlib import contextmanager
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 from io import BytesIO
 import json
 import math
 from pathlib import Path
 import tempfile
+import threading
 import time
 import unittest
 from unittest.mock import patch
@@ -316,6 +318,52 @@ class BulkTrainingTests(unittest.TestCase):
                     self.acquire()
                 self.rules[field] = original
         self.assertEqual(self.calls, [])
+
+    def test_scheduler_starts_queued_work_while_first_response_is_slow(self):
+        third_started = threading.Event()
+        first_finished = threading.Event()
+        completed, accepted = [], []
+        def acquire(candidate):
+            if candidate == 0:
+                self.assertTrue(third_started.wait(3), "Queued work must start before the oldest response finishes")
+                first_finished.set()
+            elif candidate == 2:
+                self.assertFalse(first_finished.is_set())
+                completed.append(candidate)
+                third_started.set()
+                return candidate
+            completed.append(candidate)
+            return candidate
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            for result in bulk._ordered_acquisitions(range(100), executor, acquire,
+                    lambda: 5-len(accepted), lambda candidate: True):
+                accepted.append(result)
+        self.assertEqual(accepted, list(range(5)))
+        self.assertEqual(sorted(completed), list(range(5)))  # No lookahead beyond the quota.
+        self.assertLess(completed.index(2), completed.index(0))
+
+    def test_scheduler_bounds_retained_results_and_refills_rejected_slots(self):
+        accepted, submitted = [], []
+        outstanding, maximum = 0, 0
+        class ImmediateExecutor:
+            def submit(self, acquire, candidate):
+                nonlocal outstanding, maximum
+                from concurrent.futures import Future
+                submitted.append(candidate)
+                outstanding += 1
+                maximum = max(maximum, outstanding)
+                future = Future()
+                future.set_result(acquire(candidate))
+                return future
+        for result in bulk._ordered_acquisitions(range(100), ImmediateExecutor(), lambda candidate: candidate,
+                lambda: 35-len(accepted), lambda candidate: True):
+            outstanding -= 1
+            if result not in (0, 4, 9):
+                accepted.append(result)
+        self.assertEqual(len(accepted), 35)
+        self.assertEqual(submitted, list(range(38)))
+        self.assertEqual(maximum, 32)
+        self.assertEqual(outstanding, 0)
 
     def test_acceptance_follows_stable_plan_not_worker_completion(self):
         self.rules.update(target_known=2, target_geometry=0)

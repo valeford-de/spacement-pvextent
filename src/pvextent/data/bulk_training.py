@@ -435,6 +435,26 @@ def _acquire(candidate, ledger, old_rgb_hashes, excluded_hashes):
     return result
 
 
+def _ordered_acquisitions(candidates, executor, acquire, remaining, eligible):
+    """Feed workers continuously within a 32-result, quota-limited window.
+
+    Futures remain in submission order, including completed later responses.
+    The executor can start queued work while the oldest response is slow; only
+    the main thread consumes/accepts results and updates the remaining quota.
+    """
+    candidates, pending, exhausted = iter(candidates), deque(), False
+    while True:
+        while not exhausted and len(pending) < min(32, remaining()):
+            candidate = next(candidates, None)
+            if candidate is None:
+                exhausted = True
+            elif eligible(candidate):
+                pending.append(executor.submit(acquire, candidate))
+        if not pending:
+            return
+        yield pending.popleft().result()
+
+
 def _copy_notices(training, destination):
     copied = []
     provenance = training / "provenance"
@@ -552,51 +572,43 @@ def fetch_bulk_training(training_dir: Path | str, protected_dirs: list[Path | st
             mask_bytes = mask_buffer.getvalue()
             with ThreadPoolExecutor(max_workers=protocol["max_workers"]) as executor:
                 for kind in ("known", "geometry"):
-                    queue = iter(plan[kind])
-                    exhausted = False
-                    while accepted[kind] < protocol["target_"+kind] and not exhausted:
-                        batch = []
-                        while len(batch) < min(protocol["max_workers"], protocol["target_"+kind]-accepted[kind]):
-                            candidate = next(queue, None)
-                            if candidate is None:
-                                exhausted = True
-                                break
-                            if _near(candidate["center_epsg25832"], centers+refs["identity_points"], protocol["min_candidate_distance_m"]):
-                                rejections["near_accepted_or_existing_training_pool"] += 1
-                                audit.append({"candidate": candidate, "accepted": False, "rejection": "near_accepted_or_existing_training_pool"})
-                                continue
-                            batch.append(candidate)
-                        futures = [executor.submit(_acquire, candidate, ledger, old_rgb, refs["hashes"]) for candidate in batch]
-                        # Submission order, never completion order, determines acceptance.
-                        for future in futures:
-                            result = future.result()
-                            candidate = result["candidate"]
-                            payload = result.pop("payload", None)
-                            if result["accepted"] and (result["decoded_rgb_sha256"] in rgb_hashes or _digest(payload) in image_hashes):
-                                result.update(accepted=False, rejection="duplicate_new_image")
-                            if result["accepted"] and _near(candidate["center_epsg25832"], centers, protocol["min_candidate_distance_m"]):
-                                result.update(accepted=False, rejection="near_accepted_candidate")
-                            if result["accepted"]:
-                                identifier, bounds = candidate["id"], candidate["bounds"]
-                                image_name, mask_name = "images/"+identifier+".png", "masks/"+identifier+".png"
-                                (stage / image_name).write_bytes(payload)
-                                (stage / mask_name).write_bytes(mask_bytes)
-                                records.append({"id": identifier, "image": image_name, "mask": mask_name,
-                                    "image_sha256": _digest(payload), "mask_sha256": _digest(mask_bytes), "width": 320, "height": 320,
-                                    "gsd_m": .1, "capture_date": result["metadata"]["capture_date"], "source_id": "nrw-dop",
-                                    "spatial_group": "nrw-bulk-"+_digest(protocol_bytes)[:12]+"-"+str(math.floor(bounds[0]/1000))+"-"+str(math.floor(bounds[1]/1000)),
-                                    "building_ids": candidate["building_ids"], "split": "unassigned", "annotation_status": "unreviewed",
-                                    "georeference": {"crs": "EPSG:25832", "transform": [.1, 0, bounds[0], 0, -.1, bounds[3]]}})
-                                rgb_hashes.add(result["decoded_rgb_sha256"])
-                                image_hashes.add(_digest(payload))
-                                centers.append(candidate["center_epsg25832"])
-                                accepted[kind] += 1
-                                result.update(id=identifier, center_crs="EPSG:4326", approximate_center=candidate["approximate_center"],
-                                    nearest_protected_reference_distance_m=min(math.dist(candidate["center_epsg25832"], p) for p in refs["protected_points"]))
-                            else:
-                                rejections[result["rejection"]] += 1
-                            audit.append(result)
-                            emit("acquiring-"+kind)
+                    def eligible(candidate):
+                        if _near(candidate["center_epsg25832"], centers+refs["identity_points"], protocol["min_candidate_distance_m"]):
+                            rejections["near_accepted_or_existing_training_pool"] += 1
+                            audit.append({"candidate": candidate, "accepted": False, "rejection": "near_accepted_or_existing_training_pool"})
+                            return False
+                        return True
+                    results = _ordered_acquisitions(plan[kind], executor,
+                        lambda candidate: _acquire(candidate, ledger, old_rgb, refs["hashes"]),
+                        lambda: protocol["target_"+kind]-accepted[kind], eligible)
+                    for result in results:
+                        candidate = result["candidate"]
+                        payload = result.pop("payload", None)
+                        if result["accepted"] and (result["decoded_rgb_sha256"] in rgb_hashes or _digest(payload) in image_hashes):
+                            result.update(accepted=False, rejection="duplicate_new_image")
+                        if result["accepted"] and _near(candidate["center_epsg25832"], centers, protocol["min_candidate_distance_m"]):
+                            result.update(accepted=False, rejection="near_accepted_candidate")
+                        if result["accepted"]:
+                            identifier, bounds = candidate["id"], candidate["bounds"]
+                            image_name, mask_name = "images/"+identifier+".png", "masks/"+identifier+".png"
+                            (stage / image_name).write_bytes(payload)
+                            (stage / mask_name).write_bytes(mask_bytes)
+                            records.append({"id": identifier, "image": image_name, "mask": mask_name,
+                                "image_sha256": _digest(payload), "mask_sha256": _digest(mask_bytes), "width": 320, "height": 320,
+                                "gsd_m": .1, "capture_date": result["metadata"]["capture_date"], "source_id": "nrw-dop",
+                                "spatial_group": "nrw-bulk-"+_digest(protocol_bytes)[:12]+"-"+str(math.floor(bounds[0]/1000))+"-"+str(math.floor(bounds[1]/1000)),
+                                "building_ids": candidate["building_ids"], "split": "unassigned", "annotation_status": "unreviewed",
+                                "georeference": {"crs": "EPSG:25832", "transform": [.1, 0, bounds[0], 0, -.1, bounds[3]]}})
+                            rgb_hashes.add(result["decoded_rgb_sha256"])
+                            image_hashes.add(_digest(payload))
+                            centers.append(candidate["center_epsg25832"])
+                            accepted[kind] += 1
+                            result.update(id=identifier, center_crs="EPSG:4326", approximate_center=candidate["approximate_center"],
+                                nearest_protected_reference_distance_m=min(math.dist(candidate["center_epsg25832"], p) for p in refs["protected_points"]))
+                        else:
+                            rejections[result["rejection"]] += 1
+                        audit.append(result)
+                        emit("acquiring-"+kind)
             complete = all(accepted[k] == protocol["target_"+k] for k in ("known", "geometry"))
             if not records or (not complete and not allow_partial):
                 _atomic_json(run / "last-incomplete-report.json", {"complete": False, "accepted": dict(accepted),
