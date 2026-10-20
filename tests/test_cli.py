@@ -276,6 +276,22 @@ class ValidationCliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertTrue(result.stderr)
 
+    def test_bulk_training_and_review_queue_missing_inputs_fail_cleanly(self) -> None:
+        output = self.root / "bulk-output"
+        commands = [
+            ("data", "fetch-training-bulk", str(self.root / "missing"), str(output),
+             "--protected", str(self.root / "protected"), "--protocol", str(self.root / "missing.json"),
+             "--cache-dir", str(self.root / "cache"), "--json"),
+            ("data", "review-queue", str(self.root / "missing"), str(output), "--json"),
+        ]
+        for command in commands:
+            with self.subTest(action=command[1]):
+                result = self.command(*command)
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertFalse(json.loads(result.stdout)["ok"])
+                self.assertNotIn("Traceback", result.stderr)
+                self.assertFalse(output.exists())
+
     def test_positive_holdout_missing_inputs_fail_without_publishing(self) -> None:
         output = self.root / "positive-holdout"
         commands = [

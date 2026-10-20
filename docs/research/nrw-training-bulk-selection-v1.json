@@ -79,6 +79,7 @@
   "schema_version": "1.0",
   "selection": {
     "geometry_candidate_slots": 1500,
+    "geometry_distance_from_all_original_training_centres_m": 80,
     "geometry_region_count": 30,
     "global_crop_spacing_m": 80,
     "known": "Deterministic stable ranking and round-robin over projected 10 km cells; original PV4GER train locations only. The exact operational plan is sealed in the protocol-keyed cache before RGB.",

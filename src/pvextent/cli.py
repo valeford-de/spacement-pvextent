@@ -53,6 +53,21 @@ def main(argv: list[str] | None = None) -> int:
     training_pool.add_argument("--exclude", action="append", required=True, dest="exclude_dirs")
     training_pool.add_argument("--protocol", required=True)
     training_pool.add_argument("--json", action="store_true")
+    bulk = actions.add_parser("fetch-training-bulk", help="Acquire a resumable, bounded NRW training-review collection")
+    bulk.add_argument("training_dir", help="Existing training snapshot; only original train pixels may be read")
+    bulk.add_argument("output_dir", help="New unlabelled dataset directory")
+    bulk.add_argument("--protected", action="append", required=True, dest="protected_dirs")
+    bulk.add_argument("--identity-only", action="append", default=[], dest="identity_only_dirs")
+    bulk.add_argument("--protocol", required=True)
+    bulk.add_argument("--cache-dir", required=True, help="Persistent verified response cache for restarts")
+    bulk.add_argument("--allow-partial", action="store_true", help="Explicitly publish below-quota results")
+    bulk.add_argument("--json", action="store_true")
+    queue = actions.add_parser("review-queue", help="Prepare two blind review lanes without opening images")
+    queue.add_argument("dataset_dir")
+    queue.add_argument("output_dir", help="New review queue directory")
+    queue.add_argument("--batch-size", type=int, default=25)
+    queue.add_argument("--seed", type=int, default=20261021)
+    queue.add_argument("--json", action="store_true")
     freeze = actions.add_parser("freeze-negative-holdout", help="Reserve reviewed negatives for evaluation before predictions")
     freeze.add_argument("curated_dir")
     freeze.add_argument("candidate_dir")
@@ -247,6 +262,17 @@ def main(argv: list[str] | None = None) -> int:
             elif args.action == "fetch-training-candidates":
                 from pvextent.data.nrw_training import fetch_training_candidates
                 result = fetch_training_candidates(args.exclude_dirs, args.output_dir, protocol_path=args.protocol)
+            elif args.action == "fetch-training-bulk":
+                from pvextent.data.bulk_training import fetch_bulk_training
+                result = fetch_bulk_training(
+                    args.training_dir, args.protected_dirs, args.identity_only_dirs, args.output_dir,
+                    protocol_path=args.protocol, cache_dir=args.cache_dir, allow_partial=args.allow_partial,
+                    progress=lambda event: print(json.dumps(event, sort_keys=True), file=sys.stderr, flush=True),
+                )
+            elif args.action == "review-queue":
+                from pvextent.data.review_queue import export_training_review_queue
+                result = export_training_review_queue(args.dataset_dir, args.output_dir,
+                                                      batch_size=args.batch_size, seed=args.seed)
             elif args.action == "freeze-negative-holdout":
                 from pvextent.data.negative_freeze import freeze_negative_holdout
                 result = freeze_negative_holdout(args.curated_dir, args.candidate_dir, args.exclude_dirs, args.output_dir,
