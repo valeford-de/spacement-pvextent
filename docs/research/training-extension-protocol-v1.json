@@ -1,0 +1,30 @@
+{
+  "additional_epochs": 3,
+  "changed_training_settings": [
+    "epochs only"
+  ],
+  "checkpoint_selection": "Highest internal validation pixel IoU; retain fixed last epoch and all original artifacts.",
+  "config": "configs/baseline-resnet18-continued6.toml",
+  "config_sha256": "e3fcabbc5bd0424562563b64fc394adbcf53852573de6f0cc26a48594736cb6c",
+  "dataset_fingerprint": "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14",
+  "device": "mps",
+  "experiment": "baseline-resnet18-training-extension-001",
+  "external_pilot_reinference_planned": false,
+  "known_external_pilot_used_for_checkpoint_or_threshold_selection": false,
+  "limitations": [
+    "This tests longer optimization only and does not isolate a remedy for observed external failure.",
+    "Internal validation is already used for model development; it is not new independent evidence.",
+    "Future NRW-enriched training requires a new immutable snapshot and a separate run."
+  ],
+  "new_data_added_in_this_run": false,
+  "original_421_test_pixels_opened": false,
+  "parent_best_sha256": "13dfd074d248ab71deee91b976082ad1ff4d9564f0c49eaf917e4334aff16368",
+  "parent_checkpoint": "runs/baseline-resnet18-negatives-001/last.pt",
+  "parent_checkpoint_sha256": "cdb958053609ee1b3cb4781f59518da9eb921ab28c5f8d2d379a6fcbd728e720",
+  "parent_total_epochs": 3,
+  "purpose": "Additional-epochs control on unchanged training data; not a claimed fix for external transfer.",
+  "schema_version": "1.0",
+  "target_total_epochs": 6,
+  "threshold": 0.5,
+  "training_pool_preparation_is_separate": true
+}
