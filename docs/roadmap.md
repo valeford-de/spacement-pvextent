@@ -11,6 +11,11 @@ implemented. Step 2's [PV4GER-SEG importer](pv4ger-import.md) prepares the first
 public segmentation dataset, preserving source provenance and native resolution.
 The [local review gallery](label-review.md) and
 [unreviewed NRW roof sampler](nrw-candidates.md) prepare annotation work.
+An AI visual pre-review of 15 candidate crops suggested 11 likely PV-free crops
+and four ambiguous cases. Every canonical mask and annotation status remains
+unchanged; none are verified negatives. [Candidate prediction support](candidate-predictions.md)
+is implemented and has run on all seven NRW crops for visual inspection
+without ground-truth scores.
 Completed label review, verified hard negatives, and an independent test set
 remain outstanding. Imported publisher splits are retained as provenance;
 they are not adopted as independent evaluation splits.
@@ -68,9 +73,9 @@ artifact hashes. All 421 test examples remain unopened, and PVExtent model
 weights have not been released. These validation results do not establish
 external or roof-level performance.
 
-- Perform a detailed validation error analysis and label review, including
-  source limitations and reviewed hard negatives, before selecting further
-  experiments.
+- Adjudicate the selected validation disagreements and complete label review,
+  including reviewed hard-negative annotations, before further training or
+  architectural comparisons.
 - Add architectural alternatives only when comparison is useful; retain fixed
   evaluation boundaries and explicit experiment provenance.
 
@@ -81,6 +86,17 @@ implemented and used for validation during baseline training. Counts accumulate
 over all supervised pixels before metrics are computed. Validation-based
 checkpoint selection is separate from a final evaluation on untouched test data.
 
+[Frozen validation error analysis](validation-errors.md) is implemented and has
+run on all 278 validation crops, exactly reproducing the checkpoint's original
+confusion counts. Global pixel IoU is `0.915717`, macro crop IoU `0.870849`, and
+median crop IoU `0.928061`; five crops have IoU zero. An offline gallery contains
+30 difficult examples selected for review. The fixed three-pixel boundary band
+contains 66.13% of error pixels. This diagnostic does not establish annotation
+errors; those disagreements still require adjudication. The
+[analysis audit](research/validation-error-audit.md) records the evidence.
+The checkpoint and threshold remain frozen, with no further training and all
+421 test examples still unopened.
+
 The following evaluation work remains:
 
 - Evaluate the selected checkpoint under a fixed test protocol after experiment
@@ -88,7 +104,9 @@ The following evaluation work remains:
 - Measure array detection precision and recall using a documented spatial
   matching rule, including false positives on negative images and roof-level
   false-positive rates.
-- Inspect errors by image source, resolution, array size, and acquisition date.
+- Adjudicate error-gallery examples against source imagery and annotation
+  rules; extend reviewed hard negatives and inspect transfer across sources,
+  resolutions and acquisition dates as those data become available.
 - Record runtime and hardware separately from prediction quality. Treat
   uncertainty and abstention explicitly if introduced.
 

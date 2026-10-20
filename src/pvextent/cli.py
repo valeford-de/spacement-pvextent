@@ -65,7 +65,41 @@ def main(argv: list[str] | None = None) -> int:
     baseline.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
     baseline.add_argument("--resume", help="Local last.pt epoch checkpoint and .sha256 companion")
     baseline.add_argument("--json", action="store_true")
+    evaluate = commands.add_parser("evaluate", help="Frozen validation analysis and candidate prediction review")
+    evaluations = evaluate.add_subparsers(dest="action", required=True)
+    analysis = evaluations.add_parser("validation", help="Analyze validation errors without opening test pixels")
+    proposals = evaluations.add_parser("candidates", help="Inspect unreviewed candidate predictions; no accuracy scores")
+    for action in (analysis, proposals):
+        action.add_argument("dataset_dir")
+        action.add_argument("checkpoint", help="Local best.pt with its .sha256 companion")
+        action.add_argument("output_dir", help="New offline gallery directory")
+        action.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
+        action.add_argument("--json", action="store_true")
+    analysis.add_argument("--top-k", type=int, default=12, help="Examples per error ranking (1–24)")
     args = parser.parse_args(argv)
+    if args.command == "evaluate":
+        try:
+            if args.action == "validation":
+                from pvextent.evaluation.validation import analyze_validation
+                result = analyze_validation(args.dataset_dir, args.checkpoint, args.output_dir,
+                                            device=args.device, top_k=args.top_k,
+                                            progress=lambda message: print(message, file=sys.stderr))
+            else:
+                from pvextent.inference.candidates import export_candidate_predictions
+                result = export_candidate_predictions(args.dataset_dir, args.checkpoint, args.output_dir,
+                                                      device=args.device,
+                                                      progress=lambda message: print(message, file=sys.stderr))
+        except ValueError as error:
+            if args.json:
+                print(json.dumps({"ok": False, "error": str(error)}))
+            else:
+                print(f"{args.action.upper()} FAILED: {error}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(result, indent=2, allow_nan=False))
+        else:
+            print(f"{args.action.upper()} OK. Output: {args.output_dir}")
+        return 0
     if args.command == "train" and args.action == "baseline":
         from pvextent.training.baseline import BaselineTrainingError, run_baseline
         try:

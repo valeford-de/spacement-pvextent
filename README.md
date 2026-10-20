@@ -26,7 +26,9 @@ complete: its best checkpoint reached pixel IoU **0.91572** and Dice
 **0.95600** on the internal validation split. The 421 test images remain
 unopened, and model weights have not been released. See the
 [run audit](docs/research/baseline-resnet18-audit.md) for the recorded evidence.
-Label review, reviewed hard negatives, roof-level false-positive measurement,
+Frozen error analysis has reproduced the original counts on all 278 validation
+crops and exported an offline gallery of difficult examples. Label adjudication,
+reviewed hard negatives, roof-level false-positive measurement,
 an independent benchmark and general inference remain outstanding. See the
 [research roadmap](docs/roadmap.md) for the next steps.
 
@@ -48,6 +50,10 @@ check and its [measured audit](docs/research/training-smoke-audit.md).
 Continue with the [pretrained baseline guide](docs/baseline-training.md),
 [encoder provenance and licenses](docs/pretrained-weights.md), and
 [baseline run audit](docs/research/baseline-resnet18-audit.md).
+The [validation error guide](docs/validation-errors.md) and
+[analysis audit](docs/research/validation-error-audit.md) document the frozen
+checkpoint review. [Candidate prediction guidance](docs/candidate-predictions.md)
+covers visual review of unannotated roofs without ground-truth scores.
 
 For private vulnerability reports, see the [security policy](.github/SECURITY.md).
 
@@ -124,6 +130,10 @@ evidence; they do not automatically change canonical annotations.
 
 The [NRW sampler](docs/nrw-candidates.md) can also fetch up to 24 new roof
 candidates. They remain unreviewed, with all-ignore masks until annotation.
+An AI visual pre-review of 15 candidates suggested 11 likely PV-free crops and
+four ambiguous cases. Canonical labels and annotation statuses are unchanged;
+none are verified negatives. The candidate prediction exporter has run on all
+seven NRW crops, with predictions kept separate from source labels.
 
 ## Run the training smoke test
 
@@ -168,8 +178,8 @@ or independent test performance.
 | `pvextent.data` | Dataset preparation, provenance, validation, and train/validation tensor views |
 | `pvextent.models` | Tiny smoke U-Net and pretrained U-Net/ResNet18 adapter |
 | `pvextent.training` | Smoke runs, configured baseline training, and resumable checkpoints |
-| `pvextent.evaluation` | Global masked pixel confusion counts, IoU, Dice, precision, and recall |
-| `pvextent.inference` | Planned predictions from images and released model checkpoints |
+| `pvextent.evaluation` | Global pixel metrics, crop strata, and frozen validation error analysis/gallery |
+| `pvextent.inference` | Offline candidate review predictions; general inference planned |
 
 Quantitative array matching, roof-level false-positive measurement, an external
 benchmark, general inference and released PVExtent weights remain planned.
