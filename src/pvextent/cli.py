@@ -294,7 +294,8 @@ def main(argv: list[str] | None = None) -> int:
         if args.json:
             print(json.dumps(result, indent=2, allow_nan=False))
         else:
-            print(f"{args.action.upper()}: {result['records']} records to {args.output_dir}.")
+            count = result["sample_count"] if args.action == "review-queue" else result["records"]
+            print(f"{args.action.upper()}: {count} records to {args.output_dir}.")
         return 0
     report = validate_dataset(args.directory)
     if args.json:

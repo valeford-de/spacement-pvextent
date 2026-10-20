@@ -10,6 +10,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -291,6 +292,27 @@ class ValidationCliTests(unittest.TestCase):
                 self.assertFalse(json.loads(result.stdout)["ok"])
                 self.assertNotIn("Traceback", result.stderr)
                 self.assertFalse(output.exists())
+
+    def test_review_queue_without_json_publishes_and_reports_success(self) -> None:
+        metadata = self.root / "dataset.toml"
+        metadata.write_text(metadata.read_text().replace('dataset_id = "cli-fixture"',
+                                                        'dataset_id = "nrw-training-bulk"'))
+        image, mask = self.root / "image.png", self.root / "mask.png"
+        Image.new("RGB", (320, 320), (20, 60, 140)).save(image)
+        Image.new("L", (320, 320), 255).save(mask)
+        manifest = self.root / "manifest.jsonl"
+        record = json.loads(manifest.read_text())
+        record.update(width=320, height=320, annotation_status="unreviewed",
+                      image_sha256=hashlib.sha256(image.read_bytes()).hexdigest(),
+                      mask_sha256=hashlib.sha256(mask.read_bytes()).hexdigest())
+        manifest.write_text(json.dumps(record) + "\n")
+        source = self.root.resolve()
+        output = source.parent / (self.root.name + "-queue")
+        self.addCleanup(shutil.rmtree, output, True)
+        result = self.command("data", "review-queue", str(source), str(output))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("REVIEW-QUEUE: 1 records", result.stdout)
+        self.assertTrue((output / "queue.json").is_file())
 
     def test_positive_holdout_missing_inputs_fail_without_publishing(self) -> None:
         output = self.root / "positive-holdout"
