@@ -158,7 +158,8 @@ augmentation. See the [curation audit](research/negative-curation-audit.md) for
 the measured evidence.
 
 Creating this dataset does not retrain the original baseline or change its
-validation results. A comparison using the augmented training set remains a
-separate experiment. These selected partial negatives do not estimate
+validation results. The subsequent [controlled comparison](baseline-comparison.md)
+is recorded in its own [audit](research/baseline-negative-comparison-audit.md).
+These selected partial negatives do not estimate
 real-world prevalence or provide human-reviewed benchmark truth; no PVExtent
 weights are released by this workflow.

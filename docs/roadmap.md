@@ -83,9 +83,25 @@ artifact hashes. All 421 test examples remain unopened, and PVExtent model
 weights have not been released. These validation results do not establish
 external or roof-level performance.
 
-- Run a separate controlled experiment using the augmented training snapshot;
-  retain the original baseline and fixed validation/test boundaries for
-  comparison. The new dataset has not yet fine-tuned the baseline.
+A fresh [comparison run](baseline-comparison.md) on the augmented snapshot is
+complete under the same three-epoch protocol, initialization, seed and
+configuration. It used 3,293 training examples and 4,941 updates, selecting
+epoch 3 on the unchanged 278 validation crops. Its validation pixel IoU is
+`0.91903` and Dice `0.95781`. Precision rose from `0.95477` to `0.96085`, while
+recall fell from `0.95724` to `0.95479`. False-positive pixels fell from
+276,590 to 237,303 (39,287 fewer), but false-negative pixels rose from 260,814
+to 275,765 (14,951 more). The
+[comparison audit](research/baseline-negative-comparison-audit.md) records this
+candidate separately from the original baseline.
+
+This is a modest IoU/precision gain with a recall trade-off, not a general
+quality improvement. Adding records changes shuffling, flips, batches and
+optimizer-update count; these runs do not isolate a causal effect of the eleven
+new masks. The original baseline artifacts and validation scores are preserved,
+and all 421 test examples remain unopened. No weights have been released.
+
+- Inspect paired validation diagnostics and annotation disagreements before
+  changing sampling or running further training comparisons.
 - Adjudicate the selected validation disagreements and improve annotation
   coverage. Experimental AI-reviewed partial negatives do not replace a
   human-reviewed evaluation set.
@@ -100,15 +116,31 @@ over all supervised pixels before metrics are computed. Validation-based
 checkpoint selection is separate from a final evaluation on untouched test data.
 
 [Frozen validation error analysis](validation-errors.md) is implemented and has
-run on all 278 validation crops, exactly reproducing the checkpoint's original
-confusion counts. Global pixel IoU is `0.915717`, macro crop IoU `0.870849`, and
+run on all 278 validation crops, exactly reproducing the original baseline's
+confusion counts. For that reference checkpoint, global pixel IoU is
+`0.915717`, macro crop IoU `0.870849`, and
 median crop IoU `0.928061`; five crops have IoU zero. An offline gallery contains
 30 difficult examples selected for review. The fixed three-pixel boundary band
 contains 66.13% of error pixels. This diagnostic does not establish annotation
 errors; those disagreements still require adjudication. The
 [analysis audit](research/validation-error-audit.md) records the evidence.
-The checkpoint and threshold remain frozen, with no further training and all
-421 test examples still unopened.
+The original checkpoint and threshold remain frozen. The augmented candidate
+is a separate training run; its comparison uses the same validation boundaries
+and fixed threshold. All 421 test examples remain unopened.
+
+The [paired comparison](baseline-comparison.md) has also completed, reproducing
+the candidate checkpoint's counts exactly. Crop IoU improves on 139 validation
+images, worsens on 138 and ties on one; none are undefined. Mean crop IoU rises
+from `0.87084945` to `0.87637946`, while median crop IoU falls from `0.92806051`
+to `0.92732788`. This mixed result keeps the candidate experimental, with the
+original reference retained.
+
+A separate diagnostic on the eleven added training images finds 7,078 predicted
+PV pixels within their 217,276 approved background pixels, compared with 7,212
+for the reference: only 134 fewer. Both models make these predictions on two
+of the eleven crops. Ignored areas remain unscored. This uses training images,
+so it does not supply independent evidence of a lower false-positive rate.
+See the [comparison audit](research/baseline-negative-comparison-audit.md).
 
 The following evaluation work remains:
 

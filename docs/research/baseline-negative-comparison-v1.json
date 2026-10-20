@@ -1,0 +1,493 @@
+{
+  "audit_date": "2026-10-20",
+  "candidate": {
+    "best_checkpoint_sha256": "13dfd074d248ab71deee91b976082ad1ff4d9564f0c49eaf917e4334aff16368",
+    "best_epoch": 3,
+    "best_reload_verified": true,
+    "best_val": {
+      "dice": 0.957809517043025,
+      "fn": 275765,
+      "fp": 237303,
+      "iou": 0.9190349870836102,
+      "loss": 0.12823272361118587,
+      "pixel_accuracy": 0.9819768716276979,
+      "precision": 0.9608484865483337,
+      "recall": 0.9547897102223143,
+      "samples": 278,
+      "split": "val",
+      "threshold": 0.5,
+      "tn": 22130290,
+      "tp": 5823842,
+      "valid_pixels": 28467200
+    },
+    "config_sha256": "a08e1595de910b8dbe97d43af81b220796b03b0d929d5f1194812c3f00f5cbf5",
+    "dataset_fingerprint": "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14",
+    "device": "mps",
+    "environment": {
+      "mps_fallback_env": "unset",
+      "package_versions": {
+        "safetensors": "0.8.0",
+        "segmentation-models-pytorch": "0.5.0",
+        "timm": "1.0.30",
+        "torch": "2.14.1",
+        "torchvision": "0.29.1"
+      },
+      "platform": "Darwin arm64",
+      "python": "3.12.14"
+    },
+    "epochs": [
+      {
+        "epoch": 1,
+        "global_step": 1647,
+        "train_loss": 0.3721572828056553,
+        "train_valid_pixels": 336294076,
+        "validation": {
+          "dice": 0.9449242595448863,
+          "fn": 367155,
+          "fp": 301087,
+          "iou": 0.8955985085367305,
+          "loss": 0.1743018510985932,
+          "pixel_accuracy": 0.9765258964703237,
+          "precision": 0.9500977784348457,
+          "recall": 0.9398067777153511,
+          "samples": 278,
+          "split": "val",
+          "threshold": 0.5,
+          "tn": 22066506,
+          "tp": 5732452,
+          "valid_pixels": 28467200
+        }
+      },
+      {
+        "epoch": 2,
+        "global_step": 3294,
+        "train_loss": 0.18874442451834536,
+        "train_valid_pixels": 336294076,
+        "validation": {
+          "dice": 0.9457904897822302,
+          "fn": 360451,
+          "fp": 297447,
+          "iou": 0.8971560971659767,
+          "loss": 0.16673581722936184,
+          "pixel_accuracy": 0.9768892620278777,
+          "precision": 0.9507260954546788,
+          "recall": 0.9409058649188382,
+          "samples": 278,
+          "split": "val",
+          "threshold": 0.5,
+          "tn": 22070146,
+          "tp": 5739156,
+          "valid_pixels": 28467200
+        }
+      },
+      {
+        "epoch": 3,
+        "global_step": 4941,
+        "train_loss": 0.15963930982800245,
+        "train_valid_pixels": 336294076,
+        "validation": {
+          "dice": 0.957809517043025,
+          "fn": 275765,
+          "fp": 237303,
+          "iou": 0.9190349870836102,
+          "loss": 0.12823272361118587,
+          "pixel_accuracy": 0.9819768716276979,
+          "precision": 0.9608484865483337,
+          "recall": 0.9547897102223143,
+          "samples": 278,
+          "split": "val",
+          "threshold": 0.5,
+          "tn": 22130290,
+          "tp": 5823842,
+          "valid_pixels": 28467200
+        }
+      }
+    ],
+    "final_val": {
+      "dice": 0.957809517043025,
+      "fn": 275765,
+      "fp": 237303,
+      "iou": 0.9190349870836102,
+      "loss": 0.12823272361118587,
+      "pixel_accuracy": 0.9819768716276979,
+      "precision": 0.9608484865483337,
+      "recall": 0.9547897102223143,
+      "samples": 278,
+      "split": "val",
+      "threshold": 0.5,
+      "tn": 22130290,
+      "tp": 5823842,
+      "valid_pixels": 28467200
+    },
+    "global_step": 4941,
+    "initial_val": {
+      "dice": 0.09981145106986312,
+      "fn": 5730374,
+      "fp": 929770,
+      "iou": 0.05252713007141316,
+      "loss": 1.3276855928434743,
+      "pixel_accuracy": 0.7660414793165468,
+      "precision": 0.2842433774209913,
+      "recall": 0.06053389997093255,
+      "samples": 278,
+      "split": "val",
+      "threshold": 0.5,
+      "tn": 21437823,
+      "tp": 369233,
+      "valid_pixels": 28467200
+    },
+    "last_checkpoint_sha256": "cdb958053609ee1b3cb4781f59518da9eb921ab28c5f8d2d379a6fcbd728e720",
+    "model": "unet-resnet18-v1",
+    "parameter_count": 14328209,
+    "resume_checkpoint_sha256": null,
+    "run": "baseline-resnet18-negatives-001",
+    "total_epochs": 3,
+    "train_samples": 3293,
+    "train_selection_fingerprint": "d64f6b0e15af8740d1a9d21d9a9c813ecfb0746a8b1a3e44aaa3530ecbf3e97c",
+    "val_samples": 278,
+    "val_selection_fingerprint": "18f47f06d8382037f16c0322ff8475b3b9794ad198cf4c81cb171adeaf17e5a2",
+    "wall_time_seconds": 1111.6020097919973
+  },
+  "heldout_raster_identity_check": "Same-file inode checks before and after training; test pixels not opened or decoded. Validation pixels were used for development evaluation.",
+  "heldout_records_identical": 699,
+  "interpretation": {
+    "candidate_status": "Experimental comparison candidate; original reference preserved.",
+    "causal_improvement_from_negative_labels_established": false,
+    "fewer_validation_false_positive_pixels": true,
+    "higher_global_validation_iou": true,
+    "independent_benchmark": false,
+    "model_weights_released": false,
+    "more_validation_false_negative_pixels": true,
+    "roof_false_positive_performance_established": false
+  },
+  "limitations": [
+    "Added samples change shuffling, augmentation draws, batch composition and update count; no isolated causal attribution.",
+    "Same seed on MPS does not guarantee bitwise repeatability.",
+    "Valid-pixel and sample shares are not exact batchwise loss weights.",
+    "Validation selected checkpoints; no independent benchmark or roof-level false-positive estimate.",
+    "Only one run per dataset under this seed; run-to-run variability is not estimated.",
+    "AI-reviewed negative probe is training data for the candidate; its scores are not generalization measurements."
+  ],
+  "original_source_and_baseline_artifact_hashes_preserved": true,
+  "original_training_records_preserved": 3282,
+  "paired_validation_comparison": {
+    "candidate": {
+      "analysis_report_sha256": "80f1e358bd426c306ff18c9f4774f6f74d1db561122dae7befe67befccc12937",
+      "checkpoint_epoch": 3,
+      "checkpoint_sha256": "13dfd074d248ab71deee91b976082ad1ff4d9564f0c49eaf917e4334aff16368",
+      "dataset_fingerprint": "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14",
+      "metrics": {
+        "defined_iou_samples": 278,
+        "dice": 0.957809517043025,
+        "fn": 275765,
+        "fp": 237303,
+        "iou": 0.9190349870836102,
+        "macro_iou": 0.8763794598243039,
+        "median_iou": 0.9273278849364415,
+        "pixel_accuracy": 0.9819768716276979,
+        "precision": 0.9608484865483337,
+        "recall": 0.9547897102223143,
+        "samples": 278,
+        "tn": 22130290,
+        "tp": 5823842,
+        "undefined_iou_samples": 0,
+        "valid_pixels": 28467200
+      },
+      "samples_sha256": "25c0ec2b3c1e231880f2274280c4c0ab89e383a7672c1067fb724946a04545d5"
+    },
+    "delta": {
+      "counts": {
+        "fn": 14951,
+        "fp": -39287,
+        "tn": 39287,
+        "tp": -14951,
+        "valid_pixels": 0
+      },
+      "direction": "candidate minus reference",
+      "percentage_points": {
+        "dice": 0.18049685333659804,
+        "iou": 0.3317828407364831,
+        "macro_iou": 0.5530012405485785,
+        "median_iou": -0.07326226771915412,
+        "pixel_accuracy": 0.08548785971222994,
+        "precision": 0.6077051954621382,
+        "recall": -0.24511415243637646
+      },
+      "ratios": {
+        "dice": 0.0018049685333659804,
+        "iou": 0.003317828407364831,
+        "macro_iou": 0.005530012405485785,
+        "median_iou": -0.0007326226771915412,
+        "pixel_accuracy": 0.0008548785971222994,
+        "precision": 0.006077051954621382,
+        "recall": -0.0024511415243637646
+      }
+    },
+    "device": "mps",
+    "gsd_m": 0.1,
+    "image_dimensions": [
+      320,
+      320
+    ],
+    "limitations": [
+      "Development validation already selected both checkpoints; no independent test or significance result.",
+      "Pixel errors against upstream labels are not roof-level false-positive/false-negative rates.",
+      "Matching validation reports do not establish matching training protocols or a causal effect of training changes.",
+      "No rasters or checkpoints were opened; comparison relies on the retained analysis evidence."
+    ],
+    "ok": true,
+    "package_versions": {
+      "safetensors": "0.8.0",
+      "segmentation-models-pytorch": "0.5.0",
+      "timm": "1.0.30",
+      "torch": "2.14.1",
+      "torchvision": "0.29.1"
+    },
+    "paired_iou": {
+      "improved": 139,
+      "tied": 1,
+      "undefined_in_either": 0,
+      "worse": 138
+    },
+    "paired_samples_sha256": "f9218f4084ef2c9ea39b11716852e772d786f44d828b4456dc83e72b64855b54",
+    "purpose": "paired-validation-comparison",
+    "reference": {
+      "analysis_report_sha256": "eb39b9596b687d1dd1260be5eff0baac92e5e4f841e21d084c97a111edbbbe37",
+      "checkpoint_epoch": 3,
+      "checkpoint_sha256": "252e5ec9f20557fdce9ecd8a3c97b3421be3f63fb73e6c05f4df4e24e95e3635",
+      "dataset_fingerprint": "597b9facb7f115448e81af3b88de7e1081d510c38108c294195de05763d841c5",
+      "metrics": {
+        "defined_iou_samples": 278,
+        "dice": 0.956004548509659,
+        "fn": 260814,
+        "fp": 276590,
+        "iou": 0.9157171586762454,
+        "macro_iou": 0.8708494474188181,
+        "median_iou": 0.928060507613633,
+        "pixel_accuracy": 0.9811219930305756,
+        "precision": 0.9547714345937123,
+        "recall": 0.9572408517466781,
+        "samples": 278,
+        "tn": 22091003,
+        "tp": 5838793,
+        "undefined_iou_samples": 0,
+        "valid_pixels": 28467200
+      },
+      "samples_sha256": "dce8f20c3ccd0cae2abebfc5e10193a8ce2c71d0bb842fdc97eca024ceb0fdcb"
+    },
+    "samples": 278,
+    "test_used": false,
+    "threshold": 0.5,
+    "val_selection_fingerprint": "18f47f06d8382037f16c0322ff8475b3b9794ad198cf4c81cb171adeaf17e5a2"
+  },
+  "protocol_commit": "5d06dd7",
+  "protocol_sha256": "844fa3b42bd765f3ff2021a1faa1a2b7fc41ce889720c1324ebd1770ce0a9734",
+  "purpose": "augmented-training-same-protocol-comparison",
+  "qualitative_review": {
+    "labels_remain_upstream": true,
+    "native_contact_sheets_inspected": 2,
+    "samples": 8,
+    "selection": "Four largest paired IoU improvements and four largest regressions."
+  },
+  "reference": {
+    "best_checkpoint_sha256": "252e5ec9f20557fdce9ecd8a3c97b3421be3f63fb73e6c05f4df4e24e95e3635",
+    "best_epoch": 3,
+    "best_reload_verified": true,
+    "best_val": {
+      "dice": 0.956004548509659,
+      "fn": 260814,
+      "fp": 276590,
+      "iou": 0.9157171586762454,
+      "loss": 0.1320273610729751,
+      "pixel_accuracy": 0.9811219930305756,
+      "precision": 0.9547714345937123,
+      "recall": 0.9572408517466781,
+      "samples": 278,
+      "split": "val",
+      "threshold": 0.5,
+      "tn": 22091003,
+      "tp": 5838793,
+      "valid_pixels": 28467200
+    },
+    "config_sha256": "a17d6cbf6ca0a823aba0d086bc9859fc5d9c2b303395d451d2562c0e4f458ac5",
+    "dataset_fingerprint": "597b9facb7f115448e81af3b88de7e1081d510c38108c294195de05763d841c5",
+    "device": "mps",
+    "environment": {
+      "mps_fallback_env": "unset",
+      "package_versions": {
+        "safetensors": "0.8.0",
+        "segmentation-models-pytorch": "0.5.0",
+        "timm": "1.0.30",
+        "torch": "2.14.1",
+        "torchvision": "0.29.1"
+      },
+      "platform": "Darwin arm64",
+      "python": "3.12.14"
+    },
+    "epochs": [
+      {
+        "epoch": 1,
+        "global_step": 1641,
+        "train_loss": 0.36267992655027576,
+        "train_valid_pixels": 336076800,
+        "validation": {
+          "dice": 0.9464811921278905,
+          "fn": 352002,
+          "fp": 297995,
+          "iou": 0.8983999004627046,
+          "loss": 0.16830854233113124,
+          "pixel_accuracy": 0.9771668095211331,
+          "precision": 0.9507087799391293,
+          "recall": 0.9422910361274095,
+          "samples": 278,
+          "split": "val",
+          "threshold": 0.5,
+          "tn": 22069598,
+          "tp": 5747605,
+          "valid_pixels": 28467200
+        }
+      },
+      {
+        "epoch": 2,
+        "global_step": 3282,
+        "train_loss": 0.18398534675230346,
+        "train_valid_pixels": 336076800,
+        "validation": {
+          "dice": 0.9523948895999303,
+          "fn": 258622,
+          "fp": 325297,
+          "iou": 0.9091163074187567,
+          "loss": 0.14667946269079077,
+          "pixel_accuracy": 0.9794880072504496,
+          "precision": 0.9472458444164571,
+          "recall": 0.9576002191616607,
+          "samples": 278,
+          "split": "val",
+          "threshold": 0.5,
+          "tn": 22042296,
+          "tp": 5840985,
+          "valid_pixels": 28467200
+        }
+      },
+      {
+        "epoch": 3,
+        "global_step": 4923,
+        "train_loss": 0.15501085344173063,
+        "train_valid_pixels": 336076800,
+        "validation": {
+          "dice": 0.956004548509659,
+          "fn": 260814,
+          "fp": 276590,
+          "iou": 0.9157171586762454,
+          "loss": 0.1320273610729751,
+          "pixel_accuracy": 0.9811219930305756,
+          "precision": 0.9547714345937123,
+          "recall": 0.9572408517466781,
+          "samples": 278,
+          "split": "val",
+          "threshold": 0.5,
+          "tn": 22091003,
+          "tp": 5838793,
+          "valid_pixels": 28467200
+        }
+      }
+    ],
+    "final_val": {
+      "dice": 0.956004548509659,
+      "fn": 260814,
+      "fp": 276590,
+      "iou": 0.9157171586762454,
+      "loss": 0.1320273610729751,
+      "pixel_accuracy": 0.9811219930305756,
+      "precision": 0.9547714345937123,
+      "recall": 0.9572408517466781,
+      "samples": 278,
+      "split": "val",
+      "threshold": 0.5,
+      "tn": 22091003,
+      "tp": 5838793,
+      "valid_pixels": 28467200
+    },
+    "global_step": 4923,
+    "initial_val": {
+      "dice": 0.09981145106986312,
+      "fn": 5730374,
+      "fp": 929770,
+      "iou": 0.05252713007141316,
+      "loss": 1.3276855928434743,
+      "pixel_accuracy": 0.7660414793165468,
+      "precision": 0.2842433774209913,
+      "recall": 0.06053389997093255,
+      "samples": 278,
+      "split": "val",
+      "threshold": 0.5,
+      "tn": 21437823,
+      "tp": 369233,
+      "valid_pixels": 28467200
+    },
+    "last_checkpoint_sha256": "bdff7bc905539f34656809e999bf2137a5ebdf3c791db49c0e7f291e92cb39f8",
+    "model": "unet-resnet18-v1",
+    "parameter_count": 14328209,
+    "resume_checkpoint_sha256": null,
+    "run": "baseline-resnet18-001",
+    "total_epochs": 3,
+    "train_samples": 3282,
+    "train_selection_fingerprint": "42c7fe5215c51f726e997af4498f2d43fad4ef2b82cad631b1f4504c74fa3117",
+    "val_samples": 278,
+    "val_selection_fingerprint": "18f47f06d8382037f16c0322ff8475b3b9794ad198cf4c81cb171adeaf17e5a2",
+    "wall_time_seconds": 1349.012499000004
+  },
+  "same_complete_initial_validation": true,
+  "test_used": false,
+  "training_code_and_dependency_lock_match_frozen_protocol": true,
+  "training_negative_probe": {
+    "device": "mps",
+    "limitations": [
+      "Candidate trained on all eleven crops; reference had not trained on them.",
+      "Only AI-reviewed background is scored; ignored predictions have no ground truth and are unscored.",
+      "This is training-set behavior, not generalization or a roof-level false-positive rate."
+    ],
+    "purpose": "training-negative-pool-diagnostic",
+    "results": {
+      "candidate": {
+        "checkpoint_epoch": 3,
+        "checkpoint_sha256": "13dfd074d248ab71deee91b976082ad1ff4d9564f0c49eaf917e4334aff16368",
+        "samples": 11,
+        "totals": {
+          "crops_with_any_supervised_background_pv_prediction": 2,
+          "ignored_pixels": 909124,
+          "pv_predictions_in_ignored_region_unscored": 15323,
+          "pv_predictions_in_supervised_background": 7078,
+          "supervised_background_pixels": 217276,
+          "supervised_background_prediction_rate": 0.03257607835195788
+        }
+      },
+      "reference": {
+        "checkpoint_epoch": 3,
+        "checkpoint_sha256": "252e5ec9f20557fdce9ecd8a3c97b3421be3f63fb73e6c05f4df4e24e95e3635",
+        "samples": 11,
+        "totals": {
+          "crops_with_any_supervised_background_pv_prediction": 2,
+          "ignored_pixels": 909124,
+          "pv_predictions_in_ignored_region_unscored": 21215,
+          "pv_predictions_in_supervised_background": 7212,
+          "supervised_background_pixels": 217276,
+          "supervised_background_prediction_rate": 0.033192805464018114
+        }
+      }
+    },
+    "test_used": false,
+    "threshold": 0.5,
+    "validation_used": false
+  },
+  "verification": {
+    "best_checkpoint_reload_exact_counts": true,
+    "cli_reference_self_comparison_all_278_tied": true,
+    "dataset_pixels_and_checkpoints_absent_from_packages": true,
+    "packaged_comparison_and_cli_match_source": true,
+    "sdist_build_passed": true,
+    "separate_validation_analysis_exact_counts": true,
+    "unit_tests_passed": 249,
+    "wheel_build_passed": true
+  }
+}

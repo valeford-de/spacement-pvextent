@@ -6,6 +6,11 @@ the validation partition for checkpoint selection. Test pixels remain unopened.
 The small randomly initialized [training smoke workflow](training-smoke.md)
 remains a separate check of the training pipeline.
 
+The [baseline comparison guide](baseline-comparison.md) covers a fresh run on
+`data/pvextent-training-v2` with the same training protocol and unchanged
+validation/test boundaries. Completed comparison measurements belong in the
+dedicated [comparison audit](research/baseline-negative-comparison-audit.md).
+
 ## Run the configured experiment
 
 Install the optional baseline dependencies and use a new run directory:

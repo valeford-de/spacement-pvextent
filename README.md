@@ -32,9 +32,14 @@ roof-level false-positive measurement, an independent benchmark and general
 inference remain outstanding. Explicitly authorized two-pass AI curation has
 created 11 partial background masks for experimental training, with four
 ambiguous crops left ignored. A new training snapshot includes these negatives
-while preserving the original validation/test records. This has not retrained
-the baseline or changed its reported scores. See the
-[research roadmap](docs/roadmap.md) for the next steps.
+while preserving the original validation/test records. A fresh three-epoch
+candidate run using the same protocol is complete: its best checkpoint reached
+validation IoU **0.91903** and Dice **0.95781**, with higher precision and lower
+recall than the original baseline. The original artifacts and scores remain
+preserved; this is a development comparison, with no isolated causal claim for
+the eleven masks. See the
+[comparison audit](docs/research/baseline-negative-comparison-audit.md) and
+[research roadmap](docs/roadmap.md) for evidence and next steps.
 
 ## Documentation
 
@@ -61,6 +66,9 @@ covers visual review of unannotated roofs without ground-truth scores.
 The [negative curation guide](docs/negative-curation.md) and
 [curation audit](docs/research/negative-curation-audit.md) describe the separate
 AI review format, partial masks and immutable training augmentation.
+The [baseline comparison guide](docs/baseline-comparison.md) and
+[comparison audit](docs/research/baseline-negative-comparison-audit.md) describe
+the fresh run on the augmented snapshot and its validation trade-off.
 
 For private vulnerability reports, see the [security policy](.github/SECURITY.md).
 
@@ -150,8 +158,8 @@ ground truth. No model predictions were used in the curation.
 The [augmentation workflow](docs/negative-curation.md) has prepared
 `data/pvextent-training-v2`: 3,293 training, 278 validation, 421 test and
 42 unassigned records. The original holdout declarations and pixel files are
-preserved. This snapshot is ready for a separate experiment; the completed
-baseline still describes its original 3,282 training examples.
+preserved. A separate fresh baseline run has now used this snapshot; the
+original baseline still describes its original 3,282 training examples.
 
 ## Run the training smoke test
 
@@ -188,6 +196,35 @@ epoch-boundary continuation. See the [baseline guide](docs/baseline-training.md)
 for configuration, checkpoints and failure recovery. Validation scores describe
 the internal source holdout and do not establish roof-level false-positive rates
 or independent test performance.
+
+## Compare augmented training
+
+The candidate trained from the same pretrained initialization and configuration
+for three epochs on 3,293 examples, with 4,941 optimizer updates. The reference
+used 3,282 examples and 4,923 updates. Both selected epoch 3 at threshold `0.5`
+using the same 278 validation crops; all 421 test images remain unopened.
+
+| Internal validation measure | Original baseline | Augmented candidate |
+| --- | ---: | ---: |
+| Pixel IoU | 0.91572 | 0.91903 |
+| Dice | 0.95600 | 0.95781 |
+| Precision | 0.95477 | 0.96085 |
+| Recall | 0.95724 | 0.95479 |
+| Mean crop IoU | 0.87085 | 0.87638 |
+| Median crop IoU | 0.92806 | 0.92733 |
+| False-positive pixels | 276,590 | 237,303 |
+| False-negative pixels | 260,814 | 275,765 |
+
+The candidate has 39,287 fewer false-positive pixels and 14,951 more
+false-negative pixels. Its modest IoU and precision gains come with worse
+recall; paired crop IoU improves on 139 images, worsens on 138 and ties on one.
+Added records also change shuffle order, flips, batches and update
+count, so this does not isolate the effect of the eleven new masks or establish
+a general quality improvement. These are development pixel scores against
+upstream labels, not an independent benchmark or roof-level false-positive
+rate. See the [comparison guide](docs/baseline-comparison.md) for reproduction
+and the [dedicated audit](docs/research/baseline-negative-comparison-audit.md)
+for evidence. No model weights have been released.
 
 ## Package layout
 

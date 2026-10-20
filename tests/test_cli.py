@@ -239,6 +239,17 @@ class ValidationCliTests(unittest.TestCase):
         self.assertIn("--config", result.stderr)
         self.assertIn("--weights-dir", result.stderr)
 
+    def test_validation_comparison_missing_reports_returns_clean_json(self) -> None:
+        output = self.root / "comparison"
+        result = self.command(
+            "evaluate", "compare-validations", str(self.root / "reference"),
+            str(self.root / "candidate"), str(output), "--json",
+        )
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertFalse(json.loads(result.stdout)["ok"])
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertFalse(output.exists())
+
     def test_bad_command_line_exits_two(self) -> None:
         result = self.command("data", "validate")
         self.assertEqual(result.returncode, 2)

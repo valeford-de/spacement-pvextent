@@ -79,7 +79,7 @@ def main(argv: list[str] | None = None) -> int:
     baseline.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
     baseline.add_argument("--resume", help="Local last.pt epoch checkpoint and .sha256 companion")
     baseline.add_argument("--json", action="store_true")
-    evaluate = commands.add_parser("evaluate", help="Frozen validation analysis and candidate prediction review")
+    evaluate = commands.add_parser("evaluate", help="Frozen validation analysis, comparisons and candidate review")
     evaluations = evaluate.add_subparsers(dest="action", required=True)
     analysis = evaluations.add_parser("validation", help="Analyze validation errors without opening test pixels")
     proposals = evaluations.add_parser("candidates", help="Inspect unreviewed candidate predictions; no accuracy scores")
@@ -90,6 +90,11 @@ def main(argv: list[str] | None = None) -> int:
         action.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
         action.add_argument("--json", action="store_true")
     analysis.add_argument("--top-k", type=int, default=12, help="Examples per error ranking (1–24)")
+    comparison = evaluations.add_parser("compare-validations", help="Compare paired validation reports without opening pixels")
+    comparison.add_argument("reference_dir", help="Reference validation analysis directory")
+    comparison.add_argument("candidate_dir", help="Candidate validation analysis directory")
+    comparison.add_argument("output_dir", help="New comparison report directory")
+    comparison.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     if args.command == "evaluate":
         try:
@@ -98,6 +103,9 @@ def main(argv: list[str] | None = None) -> int:
                 result = analyze_validation(args.dataset_dir, args.checkpoint, args.output_dir,
                                             device=args.device, top_k=args.top_k,
                                             progress=lambda message: print(message, file=sys.stderr))
+            elif args.action == "compare-validations":
+                from pvextent.evaluation.comparison import compare_validation_analyses
+                result = compare_validation_analyses(args.reference_dir, args.candidate_dir, args.output_dir)
             else:
                 from pvextent.inference.candidates import export_candidate_predictions
                 result = export_candidate_predictions(args.dataset_dir, args.checkpoint, args.output_dir,
