@@ -79,12 +79,21 @@ Decisions remain in the page's memory until downloaded. Refreshing or closing
 the page loses unsaved decisions. **Reset to pending** clears a decision when
 an example needs another look.
 
-The JSON is review evidence only. Applying approvals, importing corrected
-masks, resuming a downloaded review, and automatically updating canonical
-annotation status are not implemented. No gallery button changes masks,
-`annotation_status`, or split assignments. Keep a source mask marked `upstream`
-or `unreviewed` until a separate, explicit curation step records the completed
-review and any required corrections.
+The JSON is review evidence only. Importing these gallery decisions or
+corrected masks, resuming a downloaded review, and automatically updating
+canonical annotation status from the gallery are not implemented. No gallery
+button changes masks, `annotation_status`, or split assignments.
+
+A separate [negative curation workflow](negative-curation.md) now accepts two
+independent AI reviews under an explicit experimental-training authorization.
+It uses its own strict review JSON schema with image hashes and native-pixel
+background polygons; **the gallery download is not that input format**. It
+creates a new collection containing only consensus background `0` and ignore
+`255`, leaving the source snapshot unchanged. AI origin is retained explicitly;
+`reviewed` in that collection records the authorized AI process and does not
+claim human review or a fully PV-free crop. The subsequent training augmentation
+preserves the frozen holdout. See the
+[curation audit](research/negative-curation-audit.md) for the executed result.
 
 ## Candidate masks and source metadata
 

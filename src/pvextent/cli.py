@@ -43,6 +43,20 @@ def main(argv: list[str] | None = None) -> int:
     candidates.add_argument("output_dir", help="New unreviewed candidate dataset; masks contain only ignore pixels")
     candidates.add_argument("--limit", type=int, default=24)
     candidates.add_argument("--json", action="store_true")
+    curate = actions.add_parser("curate-negatives", help="Build a versioned negative collection from two explicit reviews")
+    curate.add_argument("output_dir")
+    curate.add_argument("--source", action="append", required=True, dest="source_dirs")
+    curate.add_argument("--review", action="append", required=True, dest="review_paths")
+    curate.add_argument("--dataset-version", required=True)
+    curate.add_argument("--allow-ai-review", action="store_true", help="Explicitly permit documented AI reviews for experimental labels")
+    curate.add_argument("--json", action="store_true")
+    augment = actions.add_parser("augment-training", help="Add curated negatives while preserving a frozen holdout")
+    augment.add_argument("base_dir")
+    augment.add_argument("negative_dir")
+    augment.add_argument("output_dir")
+    augment.add_argument("--dataset-version", required=True)
+    augment.add_argument("--buffer-m", type=float, default=1000.0)
+    augment.add_argument("--json", action="store_true")
     train = commands.add_parser("train", help="Standalone training workflows")
     training_actions = train.add_subparsers(dest="action", required=True)
     smoke = training_actions.add_parser("smoke", help="Check training, gradients, checkpoint reload and resume")
@@ -159,6 +173,14 @@ def main(argv: list[str] | None = None) -> int:
             elif args.action == "review":
                 from pvextent.data.review import export_review_bundle
                 result = export_review_bundle(args.source_dir, args.output_dir)
+            elif args.action == "curate-negatives":
+                from pvextent.data.curation import curate_negative_collection
+                result = curate_negative_collection(args.source_dirs, args.review_paths, args.output_dir,
+                                                    dataset_version=args.dataset_version, allow_ai_review=args.allow_ai_review)
+            elif args.action == "augment-training":
+                from pvextent.data.augmentation import augment_training_snapshot
+                result = augment_training_snapshot(args.base_dir, args.negative_dir, args.output_dir,
+                                                   dataset_version=args.dataset_version, buffer_m=args.buffer_m)
             else:
                 from pvextent.data.nrw import fetch_nrw_roof_candidates
                 result = fetch_nrw_roof_candidates(args.source_dir, args.output_dir, limit=args.limit)

@@ -58,6 +58,14 @@ Use `reviewed` only after local review. Imported curated labels remain
 unassigned. Validation checks these declarations and encodings, not annotation
 truth or model quality.
 
+For explicitly permitted experimental AI review, retain both independent visual
+passes and their reviewer types. Negative background supervision is restricted
+to the intersection of the areas both passes approved; all remaining pixels
+stay ignore. A partially supervised negative mask does not assert that the
+entire image or property is PV-free. Disagreement or unresolved collectors must
+not become background labels. Such annotations are AI-reviewed research labels,
+not human-reviewed benchmark truth.
+
 ## Local review gallery
 
 The [local label-review workflow](label-review.md) exports source images,

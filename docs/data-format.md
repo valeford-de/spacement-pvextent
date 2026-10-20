@@ -83,6 +83,11 @@ retain honest provenance. They remain limitations of the resulting dataset.
 - `reviewed`: annotations explicitly reviewed locally against the source image
   using the annotation guide.
 
+Record the reviewer type and process separately in provenance. The status alone
+does not establish human authorship. The experimental negative-curation workflow
+can accept two documented AI reviews when explicitly permitted; its labels must
+remain distinguishable from human-reviewed benchmark annotations.
+
 The validator cannot establish whether a claimed review really took place.
 Keep the evidence for annotation origin and review with the dataset's source
 records and annotation process.

@@ -1,0 +1,121 @@
+{
+  "ai_review_explicitly_authorized": true,
+  "audit_date": "2026-10-20",
+  "baseline_checkpoint_unchanged": true,
+  "baseline_retrained": false,
+  "curated_collection": {
+    "ai_review_authorized": true,
+    "background_pixels": 217276,
+    "coordinate_records": 15,
+    "dataset_fingerprint": "cd4073e9adb75610ed4b8be80c6fbce5b5aea16888fd3090a4b967afedaa876e",
+    "human_review_claimed": false,
+    "ignored_pixels": 1318724,
+    "manifest_sha256": "18ec530a52bbf9f2c3651b8fe44060a8460fd83c34675ac308a521fc8f0d6718",
+    "metadata_sha256": "504b0f9379fcb580e35ab36910dcd0cbe41ef4c0401c1709e4b13d3637e8999f",
+    "minimum_consensus_pixels": 256,
+    "model_predictions_used": false,
+    "pv_pixels": 0,
+    "records": 15,
+    "reviewed_samples": 11,
+    "reviewers": [
+      {
+        "file": "provenance/review-a.json",
+        "model_predictions_used": false,
+        "reviewer": "ai-visual-review-a",
+        "reviewer_type": "ai",
+        "sha256": "a8292bd9deca6665b23a3323f7f9d79fe2392f8261f452096f25d9433fc8400f"
+      },
+      {
+        "file": "provenance/review-b.json",
+        "model_predictions_used": false,
+        "reviewer": "ai-visual-review-b",
+        "reviewer_type": "ai",
+        "sha256": "54428a3995911d40e63c3045f77c557faa1c5abb5d8ac6d4f506f48454954b68"
+      }
+    ],
+    "unreviewed_samples": 4,
+    "validation": {
+      "error_count": 0,
+      "ok": true,
+      "warning_count": 24
+    }
+  },
+  "heldout_raster_identity_verification": "Same-file inode checks without opening or decoding held-out pixel files.",
+  "heldout_records_identical": 699,
+  "limitations": [
+    "AI-reviewed partial labels are experimental, not human-reviewed benchmark truth.",
+    "A partial negative does not assert the ignored pixels or whole roof are PV-free.",
+    "The collection is small and convenience-sampled; no accuracy improvement or prevalence claim.",
+    "Inherited pixel files are hard links and must remain immutable in parent and child snapshots."
+  ],
+  "mask_policy": "Background 0 only at the intersection of both approved polygon unions; all remaining pixels 255 ignore. Both reviews must approve and at least 256 consensus pixels are required.",
+  "negative_only_training_smoke": {
+    "batch_size": 2,
+    "checkpoint_sha256": "9b42616d19ee79f29e69e50edc1289c46189570528b369a8d1d77b8e2ae9171f",
+    "config_sha256": "7cc6fd109654b1d58f587133081c4fe6edd1abe91aec57fb087fb2a8b7194f1a",
+    "device": "mps",
+    "environment": {
+      "mps_fallback_env": "unset",
+      "platform": "Darwin arm64",
+      "python": "3.12.14",
+      "torch": "2.14.1"
+    },
+    "final_loss": 1.7567760944366455,
+    "gradient_norm_max": 0.7275891900062561,
+    "gradient_norm_min": 0.6989603638648987,
+    "initial_loss": 1.802924633026123,
+    "model": "tiny-unet-v1",
+    "ok": true,
+    "parameter_update_l2": 0.3136935641964846,
+    "reload_max_abs_logit_difference": 0.0,
+    "samples": 8,
+    "steps_completed": 4,
+    "test_used": false,
+    "validation_used": false,
+    "verified_reload": true,
+    "wall_time_seconds": 4.685051916996599
+  },
+  "purpose": "experimental-ai-negative-curation-and-training-snapshot",
+  "raw_masks_images_reviews_and_checkpoints_in_git": false,
+  "review_independence": "Two separate AI visual passes without model predictions; no statistical independence or human approval claimed.",
+  "training_augmentation": {
+    "buffer_m": 1000.0,
+    "curated_dataset_fingerprint": "cd4073e9adb75610ed4b8be80c6fbce5b5aea16888fd3090a4b967afedaa876e",
+    "curated_records": 15,
+    "dataset_fingerprint": "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14",
+    "heldout_pixels_opened": false,
+    "heldout_records_unchanged": true,
+    "inherited_pixel_storage": "Hard links; all source and output pixel files must remain immutable.",
+    "limitations": [
+      "Experimental AI-reviewed negative annotations are not human-reviewed benchmark truth.",
+      "Distances use source centres; reviewed negative enrichment does not estimate real-world prevalence."
+    ],
+    "minimum_added_train_to_holdout_center_m": 3258.6350335019715,
+    "ok": true,
+    "parent_coordinates_sha256": "70306eedff4ce713ed9635819c773233c1a389350575a339b36a558d78effd1c",
+    "parent_dataset_fingerprint": "597b9facb7f115448e81af3b88de7e1081d510c38108c294195de05763d841c5",
+    "records": 4034,
+    "reservation_provenance_sha256": "3c238f2c470c364b2801f084031a52577b826ee592fe68d3d447c5976b1e7851",
+    "reviewed_negatives_added_to_train": 11,
+    "splits": {
+      "test": 421,
+      "train": 3293,
+      "unassigned": 42,
+      "val": 278
+    },
+    "validation_scope": "Complete metadata/manifest checks and curated pixel validation; inherited holdout pixel files linked without reading or decoding."
+  },
+  "verification": {
+    "dataset_pixels_and_checkpoints_absent_from_packages": true,
+    "packaged_curation_augmentation_cli_match_source": true,
+    "sdist_build_passed": true,
+    "unit_tests_passed": 235,
+    "wheel_build_passed": true
+  },
+  "visual_mask_inspection": {
+    "confirmed_background_and_ignore_alignment": true,
+    "native_grid_preserved": true,
+    "samples": 15,
+    "sheets": 3
+  }
+}

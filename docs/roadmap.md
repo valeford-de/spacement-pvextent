@@ -11,12 +11,14 @@ implemented. Step 2's [PV4GER-SEG importer](pv4ger-import.md) prepares the first
 public segmentation dataset, preserving source provenance and native resolution.
 The [local review gallery](label-review.md) and
 [unreviewed NRW roof sampler](nrw-candidates.md) prepare annotation work.
-An AI visual pre-review of 15 candidate crops suggested 11 likely PV-free crops
-and four ambiguous cases. Every canonical mask and annotation status remains
-unchanged; none are verified negatives. [Candidate prediction support](candidate-predictions.md)
-is implemented and has run on all seven NRW crops for visual inspection
-without ground-truth scores.
-Completed label review, verified hard negatives, and an independent test set
+The [two-pass AI negative curator](negative-curation.md) is implemented and
+explicitly authorized for experimental training. Independent visual reviews of
+15 crops, without model predictions, produce 11 partial background masks from
+their polygon intersections; four ambiguous crops remain entirely ignored.
+AI provenance is explicit, source snapshots remain unchanged, and this does not
+claim human-reviewed benchmark truth. [Candidate prediction support](candidate-predictions.md)
+has separately run on all seven NRW crops for visual inspection without
+ground-truth scores. Human label adjudication and an independent test set
 remain outstanding. Imported publisher splits are retained as provenance;
 they are not adopted as independent evaluation splits.
 
@@ -37,6 +39,14 @@ on the complete PV4GER-SEG source. It creates a frozen internal holdout with
 explicit exclusions. See the [measured audit](research/geographic-split-audit.md).
 This does not establish independence from published model training data or
 replace the planned reviewed external test set.
+
+The executed [training augmentation](negative-curation.md) adds 11 eligible
+AI-reviewed negatives to training in a new immutable snapshot. It contains
+3,293 training, 278 validation, 421 test and 42 unassigned records. Frozen
+validation/test declarations are unchanged, and inherited holdout rasters were
+hard-linked without opening their pixels. Identity, reserved-block and 1 km
+centre-distance checks protect the holdout; the nearest added training centre
+is 3,258.635 m away. See the [curation audit](research/negative-curation-audit.md).
 
 - Group images by building and geographic area before creating splits.
 - Keep repeat captures of a building together; reserve additional acquisition
@@ -73,9 +83,12 @@ artifact hashes. All 421 test examples remain unopened, and PVExtent model
 weights have not been released. These validation results do not establish
 external or roof-level performance.
 
-- Adjudicate the selected validation disagreements and complete label review,
-  including reviewed hard-negative annotations, before further training or
-  architectural comparisons.
+- Run a separate controlled experiment using the augmented training snapshot;
+  retain the original baseline and fixed validation/test boundaries for
+  comparison. The new dataset has not yet fine-tuned the baseline.
+- Adjudicate the selected validation disagreements and improve annotation
+  coverage. Experimental AI-reviewed partial negatives do not replace a
+  human-reviewed evaluation set.
 - Add architectural alternatives only when comparison is useful; retain fixed
   evaluation boundaries and explicit experiment provenance.
 

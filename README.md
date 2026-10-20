@@ -28,8 +28,12 @@ unopened, and model weights have not been released. See the
 [run audit](docs/research/baseline-resnet18-audit.md) for the recorded evidence.
 Frozen error analysis has reproduced the original counts on all 278 validation
 crops and exported an offline gallery of difficult examples. Label adjudication,
-reviewed hard negatives, roof-level false-positive measurement,
-an independent benchmark and general inference remain outstanding. See the
+roof-level false-positive measurement, an independent benchmark and general
+inference remain outstanding. Explicitly authorized two-pass AI curation has
+created 11 partial background masks for experimental training, with four
+ambiguous crops left ignored. A new training snapshot includes these negatives
+while preserving the original validation/test records. This has not retrained
+the baseline or changed its reported scores. See the
 [research roadmap](docs/roadmap.md) for the next steps.
 
 ## Documentation
@@ -54,6 +58,9 @@ The [validation error guide](docs/validation-errors.md) and
 [analysis audit](docs/research/validation-error-audit.md) document the frozen
 checkpoint review. [Candidate prediction guidance](docs/candidate-predictions.md)
 covers visual review of unannotated roofs without ground-truth scores.
+The [negative curation guide](docs/negative-curation.md) and
+[curation audit](docs/research/negative-curation-audit.md) describe the separate
+AI review format, partial masks and immutable training augmentation.
 
 For private vulnerability reports, see the [security policy](.github/SECURITY.md).
 
@@ -129,11 +136,22 @@ to inspect copied images, masks and overlays. Downloaded review decisions are
 evidence; they do not automatically change canonical annotations.
 
 The [NRW sampler](docs/nrw-candidates.md) can also fetch up to 24 new roof
-candidates. They remain unreviewed, with all-ignore masks until annotation.
-An AI visual pre-review of 15 candidates suggested 11 likely PV-free crops and
-four ambiguous cases. Canonical labels and annotation statuses are unchanged;
-none are verified negatives. The candidate prediction exporter has run on all
-seven NRW crops, with predictions kept separate from source labels.
+candidates. Its source snapshot remains unreviewed with all-ignore masks.
+The candidate prediction exporter has run on all seven NRW crops, with
+predictions kept separate from source labels.
+
+Two independent AI inspections of 15 candidate crops, explicitly authorized
+for experimental training, now produce a separate curated collection. Only
+the intersection of their approved background polygons becomes label `0`;
+everything else stays ignore `255`. Eleven crops have partial reviewed masks,
+and four remain entirely ignored. This is AI review rather than human benchmark
+ground truth. No model predictions were used in the curation.
+
+The [augmentation workflow](docs/negative-curation.md) has prepared
+`data/pvextent-training-v2`: 3,293 training, 278 validation, 421 test and
+42 unassigned records. The original holdout declarations and pixel files are
+preserved. This snapshot is ready for a separate experiment; the completed
+baseline still describes its original 3,282 training examples.
 
 ## Run the training smoke test
 
@@ -198,6 +216,10 @@ separately and preserves upstream notices with each imported snapshot. The
 pinned `timm` encoder weights have an Apache-2.0 declaration in their publisher
 model card; their [provenance](docs/pretrained-weights.md) is recorded separately
 from dependency code and dataset licenses.
+New Valeford background/ignore masks from the experimental AI curation are
+Apache-2.0 annotations; this does not replace the original imagery or upstream
+annotation licenses. Their source notices and AI review evidence accompany the
+local curated snapshot.
 
 ## Maintained by
 
