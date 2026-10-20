@@ -1,0 +1,23 @@
+{
+  "dataset_version": "nrw-training-2026-10-21-v1-duelmen",
+  "distance_reference_splits": [
+    "val",
+    "test",
+    "unassigned"
+  ],
+  "min_candidate_distance_m": 200,
+  "min_reference_distance_m": 5045.254833995939,
+  "regions": [
+    {
+      "bbox_crs84": [
+        7.275,
+        51.825,
+        7.285,
+        51.835
+      ],
+      "id": "duelmen",
+      "limit": 8
+    }
+  ],
+  "schema_version": "1.0"
+}

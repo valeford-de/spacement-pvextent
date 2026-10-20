@@ -1,0 +1,23 @@
+{
+  "dataset_version": "nrw-training-2026-10-21-v1-schleiden",
+  "distance_reference_splits": [
+    "val",
+    "test",
+    "unassigned"
+  ],
+  "min_candidate_distance_m": 200,
+  "min_reference_distance_m": 5045.254833995939,
+  "regions": [
+    {
+      "bbox_crs84": [
+        6.465,
+        50.525,
+        6.475,
+        50.535
+      ],
+      "id": "schleiden",
+      "limit": 8
+    }
+  ],
+  "schema_version": "1.0"
+}
