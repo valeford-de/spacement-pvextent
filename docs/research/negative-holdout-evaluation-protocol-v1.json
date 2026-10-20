@@ -1,0 +1,29 @@
+{
+  "acquisition_protocol_sha256": "a05b55ffd69b4627088362d4e26841727dd3b58840aa60a824b098ab8937f72e",
+  "checkpoint_sha256": {
+    "candidate": "13dfd074d248ab71deee91b976082ad1ff4d9564f0c49eaf917e4334aff16368",
+    "reference": "252e5ec9f20557fdce9ecd8a3c97b3421be3f63fb73e6c05f4df4e24e95e3635"
+  },
+  "dataset_version": "negative-holdout-frozen-2026-10-20-v1",
+  "evaluation_policy": "Both fixed checkpoints once at threshold0.5; supervised-background pixel FP/TN and per-crop diagnostics, ignored predictions unscored. No IoU/Recall or roof-level false-positive/prevalence claim.",
+  "frozen_before_predictions": true,
+  "human_review_claimed": false,
+  "limits": [
+    "Three small geographic convenience samples; not representative.",
+    "AI label errors may be correlated; no human-reviewed benchmark truth.",
+    "Spatial separation from declared data does not establish independence from unknown ImageNet pretraining sources.",
+    "No model, seed, threshold, sampling or annotation tuning from these holdout predictions in this experiment."
+  ],
+  "minimum_background_fraction": 0.5,
+  "model_predictions_used_for_labels": false,
+  "old_test_pixels_must_remain_closed": true,
+  "purpose": "experimental-ai-negative-holdout",
+  "reference_dataset_fingerprints": [
+    "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14"
+  ],
+  "review_policy": "Two separate AI visual inspections of every complete native crop, blind to each other and model predictions. Recognizable PV anywhere or unresolved roof collectors defer the whole crop. Only mutually approved background polygons supply labels; trees, occlusion and unresolved non-roof areas remain ignored. Both approve and >=50% consensus background required for evaluation.",
+  "schema_version": "1.0",
+  "selection_policy": "Geometry, stable building IDs and geographic exclusion only; no model-based selection, no filling quota after PV review or failed metadata.",
+  "threshold": 0.5,
+  "training_use_allowed": false
+}
