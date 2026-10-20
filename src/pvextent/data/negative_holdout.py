@@ -47,7 +47,7 @@ def _finite(value) -> bool:
     return type(value) in (int, float) and math.isfinite(value)
 
 
-def _protocol(path: Path) -> tuple[dict, bytes]:
+def _protocol(path: Path, *, distance_reference_splits: tuple[str, ...] | None = None) -> tuple[dict, bytes]:
     if path.is_symlink() or not path.is_file() or path.stat().st_size > 64 * 1024:
         raise NegativeHoldoutError("Expected a regular protocol JSON file of at most 64 KiB.")
     with path.open("rb") as stream:
@@ -55,10 +55,13 @@ def _protocol(path: Path) -> tuple[dict, bytes]:
     if len(payload) > 64 * 1024:
         raise NegativeHoldoutError("Protocol exceeds its byte bound.")
     value = json.loads(payload, object_pairs_hook=_unique_object, parse_constant=_invalid_constant)
-    if (not isinstance(value, dict) or set(value) != PROTOCOL_FIELDS or value["schema_version"] != "1.0"
+    fields = PROTOCOL_FIELDS if distance_reference_splits is None else PROTOCOL_FIELDS | {"distance_reference_splits"}
+    if (not isinstance(value, dict) or set(value) != fields or value["schema_version"] != "1.0"
             or not isinstance(value["dataset_version"], str) or not value["dataset_version"].strip()
             or len(value["dataset_version"]) > 128):
         raise NegativeHoldoutError("Invalid protocol fields, schema or dataset version.")
+    if distance_reference_splits is not None and value["distance_reference_splits"] != list(distance_reference_splits):
+        raise NegativeHoldoutError("Protocol distance-reference splits differ from the fixed training selection rule.")
     for key, minimum in (("min_reference_distance_m", MIN_REFERENCE_DISTANCE_M), ("min_candidate_distance_m", 200.0)):
         if not _finite(value[key]) or not minimum <= value[key] <= 100000:
             raise NegativeHoldoutError(f"{key} must be finite and at least {minimum} metres.")
@@ -90,6 +93,24 @@ def fetch_negative_holdout_candidates(exclude_dirs: list[Path | str], output_dir
     Metadata/identity exclusions never trigger replacement slots or hidden retries.
     Acquisition does not establish negative labels or an independent benchmark.
     """
+    return _fetch_review_candidates(
+        exclude_dirs, output_dir, protocol_path=protocol_path,
+        dataset_id="nrw-negative-holdout-candidates", spatial_group_prefix="nrw-negative-holdout-",
+        purpose=None, distance_reference_splits=None,
+    )
+
+
+def _fetch_review_candidates(exclude_dirs: list[Path | str], output_dir: Path | str, *,
+                             protocol_path: Path | str, dataset_id: str,
+                             spatial_group_prefix: str, purpose: str | None,
+                             distance_reference_splits: tuple[str, ...] | None = None) -> dict:
+    """Shared acquisition; wrappers fix the pool namespace and intended use.
+
+    Identity exclusion and native-source evidence concern every reference row.
+    Training wrappers may fix a narrower geographic-distance reference split set.
+    No wrapper creates supervision or train rows.
+    ``purpose=None`` retains the existing negative-pool report contract.
+    """
     stage = None
     try:
         from pyproj import Transformer
@@ -108,26 +129,31 @@ def fetch_negative_holdout_candidates(exclude_dirs: list[Path | str], output_dir
         if (any(output.is_relative_to(source) or source.is_relative_to(output) for source in sources)
                 or protocol_at.resolve().is_relative_to(output)):
             raise NegativeHoldoutError("Output, protocol and exclusion snapshots must be separate.")
-        protocol, protocol_bytes = _protocol(protocol_at)
+        protocol, protocol_bytes = _protocol(protocol_at, distance_reference_splits=distance_reference_splits)
         project = Transformer.from_crs("EPSG:4326", "EPSG:25832", always_xy=True)
         inverse = Transformer.from_crs("EPSG:25832", "EPSG:4326", always_xy=True)
         reference_points, reference_info = [], []
+        identity_reference_records = 0
         excluded_ids, excluded_images, excluded_buildings, excluded_groups = set(), set(), set(), set()
         for source in sources:
             _, records, fingerprint = _read_manifest(source)
             centers, coordinate_hash = load_centers(source, records)
+            identity_reference_records += len(records)
             for row in records:
                 point = project.transform(*centers[row["id"]], errcheck=True)
                 if not all(math.isfinite(v) for v in point):
                     raise NegativeHoldoutError("Invalid exclusion centre projection.")
-                reference_points.append(point)
+                if distance_reference_splits is None or row["split"] in distance_reference_splits:
+                    reference_points.append(point)
                 excluded_ids.add(row["id"])
                 excluded_images.add(row["image_sha256"])
                 excluded_groups.add(row["spatial_group"])
                 excluded_buildings.update(row["building_ids"])
             reference_info.append({"dataset_fingerprint": fingerprint, "coordinate_sha256": coordinate_hash,
                                    "records": len(records), "split_counts": dict(Counter(r["split"] for r in records))})
-        groups = {region["id"]: "nrw-negative-holdout-" + region["id"] for region in protocol["regions"]}
+        if not reference_points:
+            raise NegativeHoldoutError("At least one geographic-distance reference row is required.")
+        groups = {region["id"]: spatial_group_prefix + region["id"] for region in protocol["regions"]}
         if set(groups.values()) & excluded_groups:
             raise NegativeHoldoutError("A requested region group already belongs to an exclusion snapshot.")
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -150,9 +176,15 @@ def fetch_negative_holdout_candidates(exclude_dirs: list[Path | str], output_dir
                  "Services are mutable; retrieval time is not acquisition time.\n"
                  "All masks are 255 ignore placeholders, unreviewed and unassigned. No negative label is inferred.\n"
                  "This geographically separated convenience sample is not representative or an independent labelled benchmark.\n")
+        if purpose is not None:
+            notes += ("Intended use: review for possible future training; this pool is not an evaluation holdout.\n"
+                      "No PV or background supervision exists until a separate review and snapshot step.\n"
+                      "ID, image hash, building and group exclusions include every reference row.\n")
+            if distance_reference_splits is not None:
+                notes += "Geographic distance-reference splits: " + ", ".join(distance_reference_splits) + ".\n"
         (provenance / "SOURCES.md").write_text(notes, encoding="utf-8")
         (stage / "dataset.toml").write_text(
-            'schema_version = "1.0"\ndataset_id = "nrw-negative-holdout-candidates"\ndataset_version = '
+            'schema_version = "1.0"\ndataset_id = ' + json.dumps(dataset_id) + '\ndataset_version = '
             + json.dumps(protocol["dataset_version"]) + '\n\n[sources.nrw-dop]\n'
             + 'name = "Geobasis NRW current digital orthophotos"\nurl = ' + json.dumps(nrw.WMS_URL)
             + '\nversion = ' + json.dumps("snapshot-" + today.isoformat())
@@ -277,7 +309,7 @@ def fetch_negative_holdout_candidates(exclude_dirs: list[Path | str], output_dir
         accepted_audit = [r for r in audit if r["accepted"]]
         report = {"ok": True, "records": len(records), "requested_records": sum(r["limit"] for r in protocol["regions"]),
             "dataset_fingerprint": validation.stats["dataset_fingerprint"], "protocol_sha256": _digest(protocol_bytes),
-            "references": reference_info, "reference_snapshot_count": len(sources), "reference_center_count": len(reference_points),
+            "references": reference_info, "reference_snapshot_count": len(sources), "reference_center_count": identity_reference_records,
             "regions": region_reports, "network_requests": dict(counts), "network_request_count": sum(counts.values()),
             "minimum_reference_distance_required_m": protocol["min_reference_distance_m"],
             "minimum_reference_distance_observed_m": min(r["nearest_reference_distance_m"] for r in accepted_audit),
@@ -291,6 +323,11 @@ def fetch_negative_holdout_candidates(exclude_dirs: list[Path | str], output_dir
                 "Geographic separation concerns supplied snapshots, not unknown pretraining imagery or acquisition campaigns.",
                 "Stable-ID geometry sampling is a small convenience sample, not representative of roof prevalence.",
                 "Mutable WMS responses preserve exact rendered bytes; requested grid and native metadata are separate evidence."]}
+        if purpose is not None:
+            report.update(purpose=purpose, intended_use="training-review", training_use_allowed=False,
+                          identity_reference_records=identity_reference_records,
+                          distance_reference_records=len(reference_points),
+                          distance_reference_splits=list(distance_reference_splits) if distance_reference_splits is not None else None)
         _write_json(stage / "candidate-report.json", report)
         _publish(stage, output)
         stage = None

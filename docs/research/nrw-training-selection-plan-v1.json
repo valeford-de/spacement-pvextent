@@ -1,0 +1,131 @@
+{
+  "distance_reference_records": 761,
+  "distance_reference_splits": [
+    "val",
+    "test",
+    "unassigned"
+  ],
+  "identity_reference_records": 4054,
+  "limitations": [
+    "Region choice used geometry/metadata only, no predictions or PV labels.",
+    "At most500 building features per region; convenience sampling is not representative.",
+    "Every crop must independently pass native0.1m and capture-date metadata checks."
+  ],
+  "new_rgb_requests_before_registration": 0,
+  "preflight": {
+    "distance_protected_records": 761,
+    "distance_reference_splits": [
+      "val",
+      "test",
+      "unassigned"
+    ],
+    "identity_exclusion_records": 4054,
+    "minimum_candidate_spacing_m": 200,
+    "minimum_required_distance_m": 5045.254833995939,
+    "official_building_requests": 6,
+    "official_metadata_requests": 6,
+    "official_preflight_points": 6,
+    "rgb_requests": 0,
+    "selected_regions": [
+      {
+        "bbox_crs84": [
+          6.465,
+          50.525,
+          6.475,
+          50.535
+        ],
+        "building_number_matched": 611,
+        "building_number_returned": 500,
+        "building_response_sha256": "764f4a7f24ac1abffc6613ab8f9b8f937168b0e5526d6cd95bbc4fd9c202eded",
+        "id": "nrw-training-region-a",
+        "limit": 8,
+        "metadata_response_sha256": "64f328eba815f6a5b7090f3b4af62b0cc6daf5a56b7e13cb58cee341822c74a6",
+        "minimum_preflight_slot_distance_to_protected_centres_m": 11399.652293489627,
+        "native_metadata_preflight": {
+          "capture_date": "2025-03-07",
+          "coverage": "metadata_tile_contains_patch",
+          "date_basis": "single_metadata_tile_contains_patch",
+          "native_gsd_m": 0.1,
+          "tile_id": "32320_5601"
+        },
+        "preflight_basis_town": "schleiden",
+        "preflight_geometry_slots": 8
+      },
+      {
+        "bbox_crs84": [
+          7.275,
+          51.825,
+          7.285,
+          51.835
+        ],
+        "building_number_matched": 1511,
+        "building_number_returned": 500,
+        "building_response_sha256": "01a1ea0ebcfe715c789742bacac901d7a806b3688ef9d131a8d57b032d990514",
+        "id": "nrw-training-region-b",
+        "limit": 8,
+        "metadata_response_sha256": "889a6859b2b4fbc963c889c3c2712c4583e0225dda4fb8fcfcfebfb921bcb07b",
+        "minimum_preflight_slot_distance_to_protected_centres_m": 10296.800298321305,
+        "native_metadata_preflight": {
+          "capture_date": "2026-04-07",
+          "coverage": "metadata_tile_contains_patch",
+          "date_basis": "single_metadata_tile_contains_patch",
+          "native_gsd_m": 0.1,
+          "tile_id": "32381_5743"
+        },
+        "preflight_basis_town": "duelmen",
+        "preflight_geometry_slots": 8
+      },
+      {
+        "bbox_crs84": [
+          8.865,
+          51.495,
+          8.875,
+          51.505
+        ],
+        "building_number_matched": 157,
+        "building_number_returned": 157,
+        "building_response_sha256": "3b40ce5cf4bb9113888b4c9b33866271304bbf7c0e113139aa1164771a78cdc1",
+        "id": "nrw-training-region-c",
+        "limit": 8,
+        "metadata_response_sha256": "b5382b8bb0f7f2ffdcd1fd1eb8df09159c00987ad49391e1d1695372a4e2625c",
+        "minimum_preflight_slot_distance_to_protected_centres_m": 5635.758024995695,
+        "native_metadata_preflight": {
+          "capture_date": "2025-06-30",
+          "coverage": "metadata_tile_contains_patch",
+          "date_basis": "single_metadata_tile_contains_patch",
+          "native_gsd_m": 0.1,
+          "tile_id": "32490_5705"
+        },
+        "preflight_basis_town": "marsberg",
+        "preflight_geometry_slots": 8
+      }
+    ],
+    "selection_note": "Three regions each provide eight geometry slots and native 10 cm/date support at the first slot. Actual acquisition must check metadata for every new crop. The six-point metadata-only preflight included a failed Rees GFI; there were no retries or RGB requests. Building responses retain at most 500 features and do not establish a complete regional sample."
+  },
+  "protocol_sha256": "3d39176528d6091b96c437c6a977c7c0d768a41fbccde13d540c73b0e67dac32",
+  "purpose": "Preparation of unlabelled training-review candidates; no new labels or use in the six-epoch control.",
+  "references": [
+    {
+      "coordinate_sha256": "c32c6d459344e8fbe6f613367919bb5cdbedbeae1838bc2abacb0a02744c3f44",
+      "dataset": "pvextent-training-v2",
+      "dataset_fingerprint": "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14",
+      "distance_records": 741,
+      "identity_records": 4034
+    },
+    {
+      "coordinate_sha256": "3055c4e8c47129870193271fd72aba33583cde271d4c0030e3cfcd2337117d56",
+      "dataset": "nrw-negative-holdout-candidates-v1",
+      "dataset_fingerprint": "7a3ec2dfdc495de62778803e35435bf9a6fbe1884dda798b61574a28a2467218",
+      "distance_records": 20,
+      "identity_records": 20
+    }
+  ],
+  "required_next_steps": [
+    "Two blind AI visual reviews",
+    "Positive-mask curation and frozen training snapshot",
+    "Separate registered NRW-enriched training experiment"
+  ],
+  "schema_version": "1.0",
+  "selection_decision_before_rgb": "Identity exclusions cover every row; training geography excludes val/test/unassigned only. Near existing train-only centres is allowed. This avoids unnecessarily excluding useful training locations; all20 external cases stay protected. Evaluation acquisition retains all-split distance exclusion.",
+  "training_uses_this_pool": false
+}

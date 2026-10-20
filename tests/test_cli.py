@@ -253,6 +253,8 @@ class ValidationCliTests(unittest.TestCase):
     def test_negative_holdout_missing_inputs_fail_without_publishing(self) -> None:
         output = self.root / "negative-holdout"
         commands = [
+            ("data", "fetch-training-candidates", str(output), "--exclude", str(self.root / "missing"),
+             "--protocol", str(self.root / "missing.json"), "--json"),
             ("data", "fetch-negative-holdout", str(output), "--exclude", str(self.root / "missing"),
              "--protocol", str(self.root / "missing.json"), "--json"),
             ("data", "freeze-negative-holdout", str(self.root / "curated"), str(self.root / "candidates"),

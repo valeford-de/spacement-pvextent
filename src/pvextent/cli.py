@@ -48,6 +48,11 @@ def main(argv: list[str] | None = None) -> int:
     holdout.add_argument("--exclude", action="append", required=True, dest="exclude_dirs")
     holdout.add_argument("--protocol", required=True)
     holdout.add_argument("--json", action="store_true")
+    training_pool = actions.add_parser("fetch-training-candidates", help="Acquire an unlabelled NRW training-review pool separate from reserved data")
+    training_pool.add_argument("output_dir")
+    training_pool.add_argument("--exclude", action="append", required=True, dest="exclude_dirs")
+    training_pool.add_argument("--protocol", required=True)
+    training_pool.add_argument("--json", action="store_true")
     freeze = actions.add_parser("freeze-negative-holdout", help="Reserve reviewed negatives for evaluation before predictions")
     freeze.add_argument("curated_dir")
     freeze.add_argument("candidate_dir")
@@ -239,6 +244,9 @@ def main(argv: list[str] | None = None) -> int:
             elif args.action == "fetch-negative-holdout":
                 from pvextent.data.negative_holdout import fetch_negative_holdout_candidates
                 result = fetch_negative_holdout_candidates(args.exclude_dirs, args.output_dir, protocol_path=args.protocol)
+            elif args.action == "fetch-training-candidates":
+                from pvextent.data.nrw_training import fetch_training_candidates
+                result = fetch_training_candidates(args.exclude_dirs, args.output_dir, protocol_path=args.protocol)
             elif args.action == "freeze-negative-holdout":
                 from pvextent.data.negative_freeze import freeze_negative_holdout
                 result = freeze_negative_holdout(args.curated_dir, args.candidate_dir, args.exclude_dirs, args.output_dir,

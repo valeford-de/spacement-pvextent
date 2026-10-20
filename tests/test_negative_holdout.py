@@ -168,11 +168,16 @@ class NegativeHoldoutTests(unittest.TestCase):
         self.assertTrue(result["ok"])
         self.assertEqual(result["records"], 3)
         metadata, rows, _ = _read_manifest(self.output)
+        self.assertEqual(metadata["dataset_id"], "nrw-negative-holdout-candidates")
+        self.assertNotIn("purpose", result)
+        self.assertNotIn("intended_use", result)
+        self.assertNotIn("training_use_allowed", result)
         self.assertEqual(len(rows), 3)
         for row in rows:
             self.assertEqual((row["split"], row["annotation_status"]), ("unassigned", "unreviewed"))
             self.assertEqual((row["width"], row["height"], row["gsd_m"]), (320, 320, .1))
             self.assertEqual(row["capture_date"], "2025-03-07")
+            self.assertEqual(row["spatial_group"], "nrw-negative-holdout-dortmund")
             with Image.open(self.output / row["mask"]) as mask:
                 self.assertEqual((mask.mode, mask.getextrema()), ("L", (255, 255)))
             bbox = row["georeference"]["transform"]
@@ -314,6 +319,7 @@ class NegativeHoldoutTests(unittest.TestCase):
             rule = copy.deepcopy(self.rules);rule["regions"][0].update(change);cases.append(rule)
         rule = copy.deepcopy(self.rules);rule["regions"] *= 2;cases.append(rule)
         rule = copy.deepcopy(self.rules);rule["unexpected"] = True;cases.append(rule)
+        rule = copy.deepcopy(self.rules);rule["distance_reference_splits"] = ["val", "test", "unassigned"];cases.append(rule)
         for rule in cases:
             with self.subTest(rule=rule):
                 self.protocol.write_text(json.dumps(rule))
