@@ -15,9 +15,10 @@ evaluation, and inference.
 
 ## Status
 
-This repository contains an early Python package scaffold. Training and
-inference are not implemented yet, and no trained model or performance result
-has been released. See the [research roadmap](docs/roadmap.md) for the next steps.
+The dataset format, annotation rules, and an offline dataset validator are
+implemented. Training and inference are not implemented yet, and no trained
+model or performance result has been released. See the
+[research roadmap](docs/roadmap.md) for the next steps.
 
 ## Documentation
 
@@ -25,18 +26,42 @@ The [project wiki](https://github.com/valeford-de/spacement-pvextent/wiki)
 provides an introduction and getting-started documentation. The versioned
 [research roadmap](docs/roadmap.md) remains in this repository.
 
+Start with the [dataset format](docs/data-format.md) and
+[annotation guide](docs/annotation-guide.md) when preparing imagery and masks.
+
 For private vulnerability reports, see the [security policy](.github/SECURITY.md).
 
 ## Development setup
 
-Requires Python 3.11 or newer.
+Requires Python 3.11 or newer; development uses Python 3.12. Install
+[uv](https://docs.astral.sh/uv/getting-started/installation/), then run:
 
 ```sh
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -e .
-python -c "import pvextent; print(pvextent.__version__)"
+uv sync --locked
+uv run --locked pvextent --help
+uv run --locked python -m unittest discover -s tests -v
 ```
+
+## Validate a dataset
+
+```sh
+uv run --locked pvextent data validate /path/to/dataset --json
+```
+
+The validator checks metadata, file hashes, image/mask alignment, mask classes,
+and declared split boundaries. A passing report does not certify annotation
+truth, usage rights, or geographic independence.
+
+To try the format using generated synthetic pixels, without downloading imagery:
+
+```sh
+uv run --locked python examples/create_demo_dataset.py data/demo
+uv run --locked pvextent data validate data/demo --json
+```
+
+The demo is a structural example with unreviewed labels and unknown capture
+dates/georeferences, so its valid report includes warnings. It is not a training
+dataset.
 
 ## Package layout
 
@@ -48,8 +73,8 @@ python -c "import pvextent; print(pvextent.__version__)"
 | `pvextent.evaluation` | Segmentation and array detection evaluation |
 | `pvextent.inference` | Predictions from images and trained checkpoints |
 
-The initial modules define project boundaries; they do not yet provide a
-working training pipeline.
+The data module provides validation; the remaining modules define project
+boundaries for the planned training pipeline.
 
 ## License and attribution
 

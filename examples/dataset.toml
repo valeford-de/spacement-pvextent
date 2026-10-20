@@ -1,0 +1,15 @@
+# Metadata-only template; no images or masks are included.
+# The accompanying manifest uses placeholder hashes and is not a valid dataset.
+# Replace every source field with the actual provenance before importing data.
+
+schema_version = "1.0"
+dataset_id = "pvextent-example"
+dataset_version = "0.1.0"
+
+[sources.example]
+name = "Example source; replace before use"
+url = "https://example.org/replace-with-source"
+version = "replace-with-source-version"
+image_license = "replace-with-image-license"
+annotation_license = "replace-with-annotation-license"
+attribution = "replace-with-required-image-and-annotation-attribution"

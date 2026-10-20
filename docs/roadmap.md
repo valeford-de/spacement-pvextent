@@ -5,6 +5,11 @@ baseline for photovoltaic array segmentation from orthophotos.
 
 ## 1. Establish the dataset
 
+Step 1's [data contract and validator](data-format.md),
+[annotation rules](annotation-guide.md), and synthetic format demonstration are
+implemented. Real dataset import, label review, and an independent test set are
+the next milestones.
+
 - Record imagery source, capture date, ground sampling distance, geographic
   reference, usage rights, and content hash.
 - Define the target consistently: visible PV array regions, with documented
@@ -50,4 +55,5 @@ baseline for photovoltaic array segmentation from orthophotos.
 - State the license of each released artifact separately and retain applicable
   third-party attribution.
 
-These are planned milestones, not implemented capabilities or measured results.
+Unless explicitly marked implemented above, these are planned milestones, not
+implemented capabilities or measured results.

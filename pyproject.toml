@@ -11,6 +11,7 @@ version = "0.1.0.dev0"
 description = "Photovoltaic array segmentation from orthophotos"
 readme = "README.md"
 requires-python = ">=3.11"
+dependencies = ["Pillow>=13,<14"]
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
 authors = [{ name = "Valeford" }]
@@ -27,6 +28,9 @@ classifiers = [
 [project.urls]
 Repository = "https://github.com/valeford-de/spacement-pvextent"
 Issues = "https://github.com/valeford-de/spacement-pvextent/issues"
+
+[project.scripts]
+pvextent = "pvextent.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
