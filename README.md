@@ -46,6 +46,15 @@ within 150,374 approved background pixels. Ignored areas remain unscored. Its
 small sample and amended coverage protocol do not establish a roof-level rate,
 recall or general model superiority. See the
 [holdout audit](docs/research/negative-holdout-audit.md).
+A subsequent blind positive pilot exposes poor transfer: on three newly
+AI-reviewed crops with 3,577 confirmed PV pixels, the reference has **0%** recall
+and the candidate only **4.05%**. A known-validation control exactly reproduces
+both models' earlier predictions; no input-path defect was found. These partial
+labels do not establish whole-array recall, but the observed misses prevent a
+general operational detection claim. See the
+[positive audit](docs/research/positive-holdout-audit.md). The next priority is
+separate NRW training positives and investigation of source differences, with
+the pilot retained outside training and tuning.
 
 ## Documentation
 
@@ -78,6 +87,10 @@ the fresh run on the augmented snapshot and its validation trade-off.
 The [negative holdout guide](docs/negative-holdout.md) and
 [pilot audit](docs/research/negative-holdout-audit.md) document geographically
 separate acquisition, blind AI review, the V1-to-V2 amendment and pixel diagnostics.
+The [positive holdout guide](docs/positive-holdout.md) documents the separate
+blind positive reviews, consensus masks and recall on confirmed PV pixels;
+its [audit](docs/research/positive-holdout-audit.md) records the observed failure
+and validation control.
 
 For private vulnerability reports, see the [security policy](.github/SECURITY.md).
 
@@ -261,7 +274,7 @@ and [audit](docs/research/negative-holdout-audit.md) for protocol history and ev
 | `pvextent.data` | Dataset preparation, provenance, validation, and train/validation tensor views |
 | `pvextent.models` | Tiny smoke U-Net and pretrained U-Net/ResNet18 adapter |
 | `pvextent.training` | Smoke runs, configured baseline training, and resumable checkpoints |
-| `pvextent.evaluation` | Pixel metrics, validation comparisons/galleries, and experimental negative-holdout diagnostics |
+| `pvextent.evaluation` | Pixel metrics, validation comparisons/galleries, and experimental positive/negative pilot diagnostics |
 | `pvextent.inference` | Offline candidate review predictions; general inference planned |
 
 Quantitative array matching, roof-level false-positive measurement, an external
@@ -281,7 +294,7 @@ separately and preserves upstream notices with each imported snapshot. The
 pinned `timm` encoder weights have an Apache-2.0 declaration in their publisher
 model card; their [provenance](docs/pretrained-weights.md) is recorded separately
 from dependency code and dataset licenses.
-New Valeford background/ignore masks from the experimental AI curation are
+New Valeford PV/background/ignore masks from the experimental AI curation are
 Apache-2.0 annotations; this does not replace the original imagery or upstream
 annotation licenses. Their source notices and AI review evidence accompany the
 local curated snapshot.

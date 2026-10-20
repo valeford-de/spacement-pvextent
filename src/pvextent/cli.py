@@ -56,6 +56,14 @@ def main(argv: list[str] | None = None) -> int:
     freeze.add_argument("--protocol", required=True)
     freeze.add_argument("--acquisition-protocol", required=True)
     freeze.add_argument("--json", action="store_true")
+    positives = actions.add_parser("freeze-positive-holdout", help="Freeze two blind positive reviews on the untouched cohort complement")
+    positives.add_argument("candidate_dir")
+    positives.add_argument("negative_holdout_dir")
+    positives.add_argument("output_dir")
+    positives.add_argument("--exclude", action="append", required=True, dest="exclude_dirs")
+    positives.add_argument("--review", action="append", required=True, dest="review_paths")
+    positives.add_argument("--protocol", required=True)
+    positives.add_argument("--json", action="store_true")
     curate = actions.add_parser("curate-negatives", help="Build a versioned negative collection from two explicit reviews")
     curate.add_argument("output_dir")
     curate.add_argument("--source", action="append", required=True, dest="source_dirs")
@@ -115,6 +123,13 @@ def main(argv: list[str] | None = None) -> int:
     negatives.add_argument("output_dir")
     negatives.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
     negatives.add_argument("--json", action="store_true")
+    positives = evaluations.add_parser("positive-holdout", help="Measure recall on independently reviewed experimental PV pixels")
+    positives.add_argument("dataset_dir")
+    positives.add_argument("reference_checkpoint")
+    positives.add_argument("candidate_checkpoint")
+    positives.add_argument("output_dir")
+    positives.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
+    positives.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     if args.command == "evaluate":
         try:
@@ -129,6 +144,12 @@ def main(argv: list[str] | None = None) -> int:
             elif args.action == "negative-holdout":
                 from pvextent.evaluation.negative import evaluate_negative_holdout
                 result = evaluate_negative_holdout(args.dataset_dir, args.reference_checkpoint,
+                                                   args.candidate_checkpoint, args.output_dir,
+                                                   device=args.device,
+                                                   progress=lambda message: print(message, file=sys.stderr))
+            elif args.action == "positive-holdout":
+                from pvextent.evaluation.positive import evaluate_positive_holdout
+                result = evaluate_positive_holdout(args.dataset_dir, args.reference_checkpoint,
                                                    args.candidate_checkpoint, args.output_dir,
                                                    device=args.device,
                                                    progress=lambda message: print(message, file=sys.stderr))
@@ -222,6 +243,11 @@ def main(argv: list[str] | None = None) -> int:
                 from pvextent.data.negative_freeze import freeze_negative_holdout
                 result = freeze_negative_holdout(args.curated_dir, args.candidate_dir, args.exclude_dirs, args.output_dir,
                                                  protocol_path=args.protocol, acquisition_protocol_path=args.acquisition_protocol)
+            elif args.action == "freeze-positive-holdout":
+                from pvextent.data.positive_holdout import freeze_positive_holdout
+                result = freeze_positive_holdout(args.candidate_dir, args.negative_holdout_dir,
+                                                 args.exclude_dirs, args.output_dir,
+                                                 review_paths=args.review_paths, protocol_path=args.protocol)
             else:
                 from pvextent.data.nrw import fetch_nrw_roof_candidates
                 result = fetch_nrw_roof_candidates(args.source_dir, args.output_dir, limit=args.limit)

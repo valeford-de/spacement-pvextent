@@ -66,6 +66,13 @@ entire image or property is PV-free. Disagreement or unresolved collectors must
 not become background labels. Such annotations are AI-reviewed research labels,
 not human-reviewed benchmark truth.
 
+The [experimental positive holdout](positive-holdout.md) uses two new blind
+passes on its fixed selection. PV and background are each supervised only in
+the respective intersection of both reviewers' polygons; everything else stays
+ignored. Admission also requires both positive decisions and at least 100
+consensus PV pixels. This partial-label recall concerns confirmed PV pixels,
+not complete arrays or roofs. Separate AI passes can share systematic errors.
+
 ## Local review gallery
 
 The [local label-review workflow](label-review.md) exports source images,

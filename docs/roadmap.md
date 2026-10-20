@@ -169,6 +169,32 @@ gate changed from V1 to V2 before predictions, as recorded above; both original
 runs and the old holdout are preserved. No new training or tuning occurred.
 The [pilot audit](research/negative-holdout-audit.md) records the fixed evidence.
 
+The subsequent [positive pilot](positive-holdout.md) is also complete. Two new
+blind AI reviews inspected the thirteen previously unevaluated cases from that
+same acquisition cohort. Three pass the unchanged 100-consensus-PV-pixel gate;
+ten remain ignored and unassigned. On 3,577 confirmed PV pixels, the original
+reference has zero TP and 3,577 FN (**0% recall**); the candidate has 145 TP and
+3,432 FN (**4.053676% recall**). There are no confirmed background pixels, so
+this subset cannot estimate a background FP rate or full-mask precision/IoU/Dice.
+The 457 candidate PV predictions in ignored regions remain unscored.
+
+This exposes poor transfer to these three crops despite high internal validation
+scores. A post-result control on two known validation crops exactly reproduced
+both models' retained predictions and counts, and the input tensors match the
+existing validation loader. No preprocessing or checkpoint-loading defect was
+demonstrated; the cause of the source difference remains unresolved. This tiny,
+partially annotated AI subset does not estimate complete-array/roof recall or
+representative performance. The [positive audit](research/positive-holdout-audit.md)
+records the failure, control and frozen evidence.
+
+Neither the negative pilot's low FP counts nor the candidate's small positive
+advantage justifies an operational model choice. Keep all twenty acquisition
+cases reserved from training and tuning. The immediate development priority is
+to inspect source differences using training data, acquire separate NRW training
+positives with fuller labels, and register the next comparison before training.
+Do not adapt the pilot's labels, probability threshold or model selection to
+improve its reported result.
+
 The following evaluation work remains:
 
 - Evaluate the original reserved test partition under a fixed protocol after

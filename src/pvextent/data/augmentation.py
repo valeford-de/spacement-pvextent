@@ -109,8 +109,8 @@ def augment_training_snapshot(base_dir: Path | str, negative_dir: Path | str, ou
             if not isinstance(evidence, dict) or not isinstance(evidence.get("sources"), list):
                 raise TrainingAugmentationError("Invalid curation lineage evidence.")
             if any(isinstance(source, dict) and source.get("dataset_id") in
-                   ("nrw-negative-holdout-candidates", "pvextent-negative-holdout") for source in evidence["sources"]):
-                raise TrainingAugmentationError("Reserved negative-holdout lineage cannot enter training.")
+                   ("nrw-negative-holdout-candidates", "pvextent-negative-holdout", "pvextent-positive-holdout") for source in evidence["sources"]):
+                raise TrainingAugmentationError("Reserved holdout lineage cannot enter training.")
         if (len(negative_rows) > 64 or any(row["split"] != "unassigned" for row in negative_rows)
                 or not all(any(row["split"] == split for row in base_rows) for split in ("train", "val", "test"))):
             raise TrainingAugmentationError("Expected a frozen base split and at most 64 unassigned curated records.")

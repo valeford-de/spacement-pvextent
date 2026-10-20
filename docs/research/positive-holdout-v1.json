@@ -1,0 +1,242 @@
+{
+  "evaluation": {
+    "batch_size": 2,
+    "delta": {
+      "background_pixel_false_positive_rate": null,
+      "background_pixel_false_positive_rate_percentage_points": null,
+      "crops_with_zero_true_positive_pixels": -2,
+      "direction": "candidate minus reference",
+      "false_negative_pixels": -145,
+      "false_positive_pixels": 0,
+      "ignored_pixels": 0,
+      "missed_consensus_pv_pixel_fraction": -0.04053676265026562,
+      "missed_consensus_pv_pixel_fraction_percentage_points": -4.053676265026562,
+      "pixel_recall_on_consensus_pv": 0.04053676265026559,
+      "pixel_recall_on_consensus_pv_percentage_points": 4.053676265026559,
+      "predicted_pv_pixels_in_ignored_region_unscored": 457,
+      "supervised_background_pixels": 0,
+      "supervised_positive_pixels": 0,
+      "true_negative_pixels": 0,
+      "true_positive_pixels": 145
+    },
+    "device": "mps",
+    "finished_at_utc": "2026-10-20T22:20:48.069741+00:00",
+    "package_versions": {
+      "safetensors": "0.8.0",
+      "segmentation-models-pytorch": "0.5.0",
+      "timm": "1.0.30",
+      "torch": "2.14.1",
+      "torchvision": "0.29.1"
+    },
+    "pilot_inference_passes_per_model": 1,
+    "report_sha256": "ce800d6b2386f4c04ebb1cc76bd1129a1d7ab07ffda3573b0972e8143dcc4d2a",
+    "results": {
+      "candidate": {
+        "checkpoint_device": "mps",
+        "checkpoint_epoch": 3,
+        "checkpoint_package_versions": {
+          "safetensors": "0.8.0",
+          "segmentation-models-pytorch": "0.5.0",
+          "timm": "1.0.30",
+          "torch": "2.14.1",
+          "torchvision": "0.29.1"
+        },
+        "checkpoint_sha256": "13dfd074d248ab71deee91b976082ad1ff4d9564f0c49eaf917e4334aff16368",
+        "same_device_and_libraries": true,
+        "totals": {
+          "background_pixel_false_positive_rate": null,
+          "crops_with_zero_true_positive_pixels": 1,
+          "false_negative_pixels": 3432,
+          "false_positive_pixels": 0,
+          "ignored_pixels": 303623,
+          "missed_consensus_pv_pixel_fraction": 0.9594632373497344,
+          "pixel_recall_on_consensus_pv": 0.04053676265026559,
+          "predicted_pv_pixels_in_ignored_region_unscored": 457,
+          "supervised_background_pixels": 0,
+          "supervised_positive_pixels": 3577,
+          "true_negative_pixels": 0,
+          "true_positive_pixels": 145
+        }
+      },
+      "reference": {
+        "checkpoint_device": "mps",
+        "checkpoint_epoch": 3,
+        "checkpoint_package_versions": {
+          "safetensors": "0.8.0",
+          "segmentation-models-pytorch": "0.5.0",
+          "timm": "1.0.30",
+          "torch": "2.14.1",
+          "torchvision": "0.29.1"
+        },
+        "checkpoint_sha256": "252e5ec9f20557fdce9ecd8a3c97b3421be3f63fb73e6c05f4df4e24e95e3635",
+        "same_device_and_libraries": true,
+        "totals": {
+          "background_pixel_false_positive_rate": null,
+          "crops_with_zero_true_positive_pixels": 3,
+          "false_negative_pixels": 3577,
+          "false_positive_pixels": 0,
+          "ignored_pixels": 303623,
+          "missed_consensus_pv_pixel_fraction": 1.0,
+          "pixel_recall_on_consensus_pv": 0.0,
+          "predicted_pv_pixels_in_ignored_region_unscored": 0,
+          "supervised_background_pixels": 0,
+          "supervised_positive_pixels": 3577,
+          "true_negative_pixels": 0,
+          "true_positive_pixels": 0
+        }
+      }
+    },
+    "samples_sha256": "76599d7c660d4dddf8f7df9d0b852b4f00cfbc087382b7d1b28b0fcb04d29924",
+    "started_at_utc": "2026-10-20T22:20:41.622327+00:00",
+    "training_performed": false,
+    "wall_seconds_including_cli_startup": 6.447968290987774
+  },
+  "experiment": "positive-holdout-2026-10-21-v1",
+  "frozen_dataset": {
+    "all_thirteen_ignored_pixels": 1327623,
+    "consensus_background_pixels": 0,
+    "consensus_pv_area_m2": 35.77,
+    "consensus_pv_pixels": 3577,
+    "dataset_fingerprint": "9726f7b6636f5beae6878e635092557a96d004a1422a210cab7ee43ebbdba8f6",
+    "dataset_id": "pvextent-positive-holdout",
+    "deferred_unassigned_cases": 10,
+    "eligible_capture_date_counts": {
+      "2025-06-20": 1,
+      "2026-03-18": 1,
+      "2026-03-19": 1
+    },
+    "eligible_region_counts": {
+      "lienen": 2,
+      "medebach": 1
+    },
+    "eligible_test_cases": 3,
+    "evaluated_ignored_pixels": 303623,
+    "freeze_report_sha256": "52f3e99def436d76d4852d79c8de6bf33a26b105166bcc42e272217b42bbb302",
+    "gsd_m": 0.1,
+    "ignored_coverage": 0.9883561197916667,
+    "imagery_license": "DL-DE-Zero-2.0",
+    "minimum_reference_distance_evaluated_m": 7130.312309373909,
+    "native_image_dimensions": [
+      320,
+      320
+    ],
+    "new_annotation_license": "Apache-2.0; copyright 2026 Valeford",
+    "positive_pixels_per_eligible_crop_max": 1695,
+    "positive_pixels_per_eligible_crop_min": 849,
+    "records": 13,
+    "supervised_positive_coverage": 0.011643880208333334
+  },
+  "limitations": [
+    "Only three AI-reviewed positive crops from two regions, selected from a previously negative-screened cohort.",
+    "Consensus intersections can preferentially retain easy PV interiors; incomplete AI labels are not human-confirmed truth.",
+    "Independent review workflows may share systematic AI errors.",
+    "No confirmed background pixels: FP and TN zero are empty-denominator counts; background rate, full-mask precision, IoU and Dice are not estimable here.",
+    "Ignored predictions remain unscored; no whole-array, roof or representative prevalence claims.",
+    "Positive and negative pilots share geography and acquisition; do not combine class-screened rates into a representative confusion matrix.",
+    "Near-zero reference and 4.05% candidate recall indicate a serious failure on these confirmed surfaces; they do not establish the causal source of the transfer problem."
+  ],
+  "local_date": "2026-10-21",
+  "post_result_diagnostic": {
+    "distinct_validation_crops": 2,
+    "input_tensors_match_existing_validation_loader": true,
+    "interpretation": "No demonstrated preprocessing or checkpoint-loading defect; limited transfer is supported on these three crops, its cause is unresolved.",
+    "model_crop_pairs": 4,
+    "positive_pilot_inference_repeated": false,
+    "predictions_and_counts_exactly_match_retained_validation": true,
+    "reason": "Unexpected near-zero external recall; check inference pathway without adapting the pilot.",
+    "report_sha256": "5155a8488b3312813e1f279ad2acad02a121b763b0c8dc7777e79e471a07c47b",
+    "threshold_or_weights_changed": false,
+    "validation_crops_per_model": 2
+  },
+  "protocol": {
+    "amended": false,
+    "commit": "083d056a6f03f12dd4a2b067baf9d2cd401bda33",
+    "committed_at": "2026-10-21T00:13:18+02:00",
+    "minimum_positive_area_m2": 1.0,
+    "minimum_positive_pixels": 100,
+    "sha256": "c31dfe862a48a958e4cbd0e721cc42c89f290c521be58120e9e784318f3ec14f",
+    "threshold": 0.5
+  },
+  "purpose": "experimental partial AI-consensus positive pilot; poor transfer observed",
+  "reviews": [
+    {
+      "background_polygon_count": 0,
+      "decision_counts": {
+        "approve-positive": 3,
+        "defer": 10
+      },
+      "full_native_images_inspected": 13,
+      "model_predictions_used": false,
+      "positive_polygon_count": 85,
+      "reviewer": "ai-positive-holdout-review-a",
+      "reviewer_type": "ai",
+      "sha256": "8d3d6011db718ef9e02e7926f0aca28b66cc46bce31a95967547527268b952d9"
+    },
+    {
+      "background_polygon_count": 0,
+      "decision_counts": {
+        "approve-positive": 4,
+        "defer": 9
+      },
+      "full_native_images_inspected": 13,
+      "model_predictions_used": false,
+      "positive_polygon_count": 40,
+      "reviewer": "ai-positive-holdout-review-b",
+      "reviewer_type": "ai",
+      "sha256": "c2e27ff348c96787b313ea50605d16e38aa1e6f93c2940cc740a74fba6737b56"
+    }
+  ],
+  "schema_version": "1.0",
+  "selection": {
+    "candidate_dataset_fingerprint": "7a3ec2dfdc495de62778803e35435bf9a6fbe1884dda798b61574a28a2467218",
+    "known_retained_prediction_overlap_before_positive_review": 0,
+    "minimum_reference_distance_required_m": 5045.254833995939,
+    "minimum_reference_distance_selected_m": 6649.257446622033,
+    "negative_parent_dataset_fingerprint": "303f4f1429bf2a56c64e35cf2d3f218bdcb51bfe4549e66efae748820341587f",
+    "new_rgb_requests": 0,
+    "previously_inferred_negative_cases_excluded": 7,
+    "reference_coordinate_sha256": [
+      "c32c6d459344e8fbe6f613367919bb5cdbedbeae1838bc2abacb0a02744c3f44"
+    ],
+    "reference_dataset_fingerprints": [
+      "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14"
+    ],
+    "reference_records": 4034,
+    "same_acquisition_cohort_as_negative_pilot": true,
+    "selected_cases": 13,
+    "selected_region_counts": {
+      "bad-laasphe": 3,
+      "lienen": 5,
+      "medebach": 5
+    },
+    "source_cohort_cases": 20
+  },
+  "timezone": "Europe/Berlin",
+  "verification": {
+    "all_twenty_acquisition_cases_reserved_from_training_and_tuning": true,
+    "gallery_counts_reproduced": true,
+    "native_mask_and_prediction_contact_sheets_inspected": true,
+    "old_421_test_pixels_opened": false,
+    "original_validation_test_record_dictionaries_unchanged": 699,
+    "packaging": {
+      "artifacts": {
+        "spacement_pvextent-0.1.0.dev0-py3-none-any.whl": "efe2ae524eba4cc278572e643c3e662b28d610fd67df6d05b78927affb787cb8",
+        "spacement_pvextent-0.1.0.dev0.tar.gz": "c8e864a6813b22c68407e83d1a9744bf297e3d36fcdd45cea7e6f9b5e5027267"
+      },
+      "build_directory": "artifacts/build-positive-holdout-v2",
+      "changed_module_bytes_match": true,
+      "implementation_sha256": {
+        "pvextent/cli.py": "671cf32a299f6276d7c66ad017d9f66d4684ea709c3a6d1a435fa72821b41c36",
+        "pvextent/data/augmentation.py": "49e26fb7d138c23a095a3fb19f49340967356ca33fbe472ca4359fea9169301d",
+        "pvextent/data/positive_holdout.py": "91bfd6b9f9cdc0366d033c90d3a91221edf0e8b1ff9f8b126dba9bf48f8b0ebc",
+        "pvextent/evaluation/positive.py": "e283dc6fd5ca1cfa64d24297d3e6d3c22a21335095828c76f33f3de269aa919f"
+      },
+      "raw_imagery_labels_reviews_checkpoints_excluded": true,
+      "readme_matches_package_metadata": true,
+      "wheel_and_sdist_built": true
+    },
+    "prior_seven_negative_rasters_opened": false,
+    "retained_source_model_artifacts_unchanged": 26,
+    "unit_tests_passed": 326
+  }
+}
