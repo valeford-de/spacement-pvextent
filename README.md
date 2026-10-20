@@ -1,5 +1,9 @@
 ![Spacement PVExtent](docs/assets/pvextent-banner.png)
 
+![Python](https://img.shields.io/badge/python-%233670A0.svg?style=for-the-badge&logo=python&logoColor=ffdd54)
+![uv](https://img.shields.io/badge/uv-%23DE5FE9.svg?style=for-the-badge&logo=uv&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=pytorch&logoColor=white)
+
 Photovoltaic array segmentation from orthophotos.
 
 Developed and maintained by **Valeford** under the **Spacement** brand.
