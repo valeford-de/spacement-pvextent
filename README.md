@@ -23,8 +23,8 @@ reload and local continuation. The configured U-Net/ResNet18 baseline now trains
 on the full training split, uses validation for checkpoint selection, and records
 global pixel metrics and resumable state. The first full three-epoch run is
 complete: its best checkpoint reached pixel IoU **0.91572** and Dice
-**0.95600** on the internal validation split. The 421 test images remain
-unopened, and model weights have not been released. See the
+**0.95600** on the internal validation split. The original 421 PV4GER test images
+remain unopened, and model weights have not been released. See the
 [run audit](docs/research/baseline-resnet18-audit.md) for the recorded evidence.
 Frozen error analysis has reproduced the original counts on all 278 validation
 crops and exported an offline gallery of difficult examples. Label adjudication,
@@ -40,6 +40,12 @@ preserved; this is a development comparison, with no isolated causal claim for
 the eleven masks. See the
 [comparison audit](docs/research/baseline-negative-comparison-audit.md) and
 [research roadmap](docs/roadmap.md) for evidence and next steps.
+A spatially separate exploratory negative pilot has also evaluated both fixed
+models on seven AI-reviewed partial masks: 31 versus zero false-positive pixels
+within 150,374 approved background pixels. Ignored areas remain unscored. Its
+small sample and amended coverage protocol do not establish a roof-level rate,
+recall or general model superiority. See the
+[holdout audit](docs/research/negative-holdout-audit.md).
 
 ## Documentation
 
@@ -69,6 +75,9 @@ AI review format, partial masks and immutable training augmentation.
 The [baseline comparison guide](docs/baseline-comparison.md) and
 [comparison audit](docs/research/baseline-negative-comparison-audit.md) describe
 the fresh run on the augmented snapshot and its validation trade-off.
+The [negative holdout guide](docs/negative-holdout.md) and
+[pilot audit](docs/research/negative-holdout-audit.md) document geographically
+separate acquisition, blind AI review, the V1-to-V2 amendment and pixel diagnostics.
 
 For private vulnerability reports, see the [security policy](.github/SECURITY.md).
 
@@ -202,7 +211,8 @@ or independent test performance.
 The candidate trained from the same pretrained initialization and configuration
 for three epochs on 3,293 examples, with 4,941 optimizer updates. The reference
 used 3,282 examples and 4,923 updates. Both selected epoch 3 at threshold `0.5`
-using the same 278 validation crops; all 421 test images remain unopened.
+using the same 278 validation crops; all original 421 PV4GER test images remain
+unopened.
 
 | Internal validation measure | Original baseline | Augmented candidate |
 | --- | ---: | ---: |
@@ -226,6 +236,24 @@ rate. See the [comparison guide](docs/baseline-comparison.md) for reproduction
 and the [dedicated audit](docs/research/baseline-negative-comparison-audit.md)
 for evidence. No model weights have been released.
 
+## Exploratory negative holdout
+
+A separate geometry-selected NRW pool contains 20 new images. Blind AI reviews
+produced seven eligible partial masks; thirteen crops remain unassigned. The
+original 50% background-coverage rule admitted none. Before any model
+predictions, a registered V2 lowered that gate to 5%, retaining identical
+images, review files and checkpoints without expanding labels or filling the
+quota. The new holdout stays outside training.
+
+Both fixed models were then evaluated on 150,374 consensus background pixels
+across seven new test crops. The reference produced 31 false-positive pixels
+(0.0206153% of scored background); the candidate produced zero. Another
+566,426 pixels were ignored, including 220 reference and 93 candidate PV
+predictions that remain **unscored**. This small AI-labelled pilot does not
+measure whole-roof false-positive rates, recall or representative performance.
+The candidate remains experimental. See the [guide](docs/negative-holdout.md)
+and [audit](docs/research/negative-holdout-audit.md) for protocol history and evidence.
+
 ## Package layout
 
 | Module | Responsibility |
@@ -233,7 +261,7 @@ for evidence. No model weights have been released.
 | `pvextent.data` | Dataset preparation, provenance, validation, and train/validation tensor views |
 | `pvextent.models` | Tiny smoke U-Net and pretrained U-Net/ResNet18 adapter |
 | `pvextent.training` | Smoke runs, configured baseline training, and resumable checkpoints |
-| `pvextent.evaluation` | Global pixel metrics, crop strata, and frozen validation error analysis/gallery |
+| `pvextent.evaluation` | Pixel metrics, validation comparisons/galleries, and experimental negative-holdout diagnostics |
 | `pvextent.inference` | Offline candidate review predictions; general inference planned |
 
 Quantitative array matching, roof-level false-positive measurement, an external

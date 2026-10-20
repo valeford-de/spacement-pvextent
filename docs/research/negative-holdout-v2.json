@@ -1,0 +1,343 @@
+{
+  "acquisition": {
+    "background_pixels": 0,
+    "dataset_fingerprint": "7a3ec2dfdc495de62778803e35435bf9a6fbe1884dda798b61574a28a2467218",
+    "dated_records": 20,
+    "excluded_reference_building_ids": 7,
+    "excluded_reference_ids": 4034,
+    "excluded_reference_image_hashes": 4034,
+    "exclusion_rasters_opened": false,
+    "ignored_pixels": 2048000,
+    "limitations": [
+      "All masks are unreviewed ignore placeholders; no negative labels or benchmark scores exist.",
+      "Geographic separation concerns supplied snapshots, not unknown pretraining imagery or acquisition campaigns.",
+      "Stable-ID geometry sampling is a small convenience sample, not representative of roof prevalence.",
+      "Mutable WMS responses preserve exact rendered bytes; requested grid and native metadata are separate evidence."
+    ],
+    "minimum_candidate_center_spacing_m": 200.0,
+    "minimum_reference_distance_observed_m": 6649.234473394368,
+    "minimum_reference_distance_required_m": 5045.254833995939,
+    "model_predictions_used": false,
+    "network_request_count": 46,
+    "network_requests": {
+      "building_requests": 3,
+      "image_requests": 20,
+      "metadata_requests": 23
+    },
+    "ok": true,
+    "protocol_sha256": "a05b55ffd69b4627088362d4e26841727dd3b58840aa60a824b098ab8937f72e",
+    "pv_pixels": 0,
+    "records": 20,
+    "reference_center_count": 4034,
+    "reference_snapshot_count": 1,
+    "references": [
+      {
+        "coordinate_sha256": "c32c6d459344e8fbe6f613367919bb5cdbedbeae1838bc2abacb0a02744c3f44",
+        "dataset_fingerprint": "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14",
+        "records": 4034,
+        "split_counts": {
+          "test": 421,
+          "train": 3293,
+          "unassigned": 42,
+          "val": 278
+        }
+      }
+    ],
+    "regions": [
+      {
+        "accepted_records": 6,
+        "bbox_crs84": [
+          8.7,
+          51.19,
+          8.71,
+          51.2
+        ],
+        "building_features_returned": 500,
+        "building_response_sha256": "997d1e8d9a3ffb1d0d9ba719362c4ecd5f536ce673f6366dfea112f02084970e",
+        "candidate_slots": 7,
+        "id": "medebach",
+        "requested_records": 8,
+        "selection_exclusions": {
+          "center_outside_query": 11,
+          "native_gsd_unverified": 1,
+          "near_selected_candidate": 282,
+          "unsuitable_geometry_or_function": 200
+        },
+        "selection_exhausted": true
+      },
+      {
+        "accepted_records": 6,
+        "bbox_crs84": [
+          8.405,
+          50.92,
+          8.415,
+          50.93
+        ],
+        "building_features_returned": 500,
+        "building_response_sha256": "469ba67a66af91c5043fde87c193a8e731f79b38e0a6b6db9a60f2fc1678af88",
+        "candidate_slots": 8,
+        "id": "bad-laasphe",
+        "requested_records": 8,
+        "selection_exclusions": {
+          "center_outside_query": 1,
+          "native_gsd_unverified": 2,
+          "near_selected_candidate": 13,
+          "unsuitable_geometry_or_function": 26
+        },
+        "selection_exhausted": true
+      },
+      {
+        "accepted_records": 8,
+        "bbox_crs84": [
+          7.97,
+          52.14,
+          7.98,
+          52.15
+        ],
+        "building_features_returned": 500,
+        "building_response_sha256": "537e9b60083a18a7aeb51ce12e57c1ea071f7c0d96c1e9ef20a370a59df77dad",
+        "candidate_slots": 8,
+        "id": "lienen",
+        "requested_records": 8,
+        "selection_exclusions": {
+          "center_outside_query": 7,
+          "near_selected_candidate": 162,
+          "unsuitable_geometry_or_function": 89
+        },
+        "selection_exhausted": false
+      }
+    ],
+    "requested_records": 24,
+    "snapshot_retrieved_at": "2026-10-20T21:49:12.062100+00:00",
+    "validation": {
+      "ok": true,
+      "warning_count": 40
+    }
+  },
+  "acquisition_protocol_sha256": "a05b55ffd69b4627088362d4e26841727dd3b58840aa60a824b098ab8937f72e",
+  "amendment": {
+    "annotations_or_imagery_changed": false,
+    "minimum_background_area_m2": 51.2,
+    "minimum_background_fraction": 0.05,
+    "minimum_background_pixels": 5120,
+    "model_predictions_before_amendment": false,
+    "reason": "The preregistered 50% full-crop gate admitted zero of seven conservatively labelled negative crops. Before any model predictions, retain identical acquired imagery, review files and checkpoints, and require at least 5% of native crop pixels (5120 pixels, 51.2 square metres) of agreed background for exploratory pixel diagnostics. No label expansion, candidate backfill or performance-based selection."
+  },
+  "audit_date_berlin": "2026-10-21",
+  "curation": {
+    "background_pixels": 150374,
+    "dataset_fingerprint": "b80d0c3ccd20a653132364911a341b090f0fd4cede0804d389a0439871018749",
+    "human_review_claimed": false,
+    "ignored_pixels": 1897626,
+    "pv_pixels": 0,
+    "records": 20,
+    "reviewed_samples": 7,
+    "unreviewed_samples": 13
+  },
+  "evaluation": {
+    "batch_size": 2,
+    "dataset_fingerprint": "303f4f1429bf2a56c64e35cf2d3f218bdcb51bfe4549e66efae748820341587f",
+    "delta": {
+      "direction": "candidate minus reference",
+      "false_positive_pixels": -31,
+      "ignored_pixels": 0,
+      "pixel_false_positive_rate": -0.00020615265936930587,
+      "pixel_false_positive_rate_percentage_points": -0.020615265936930586,
+      "predicted_pv_pixels_in_ignored_region_unscored": -127,
+      "supervised_background_pixels": 0,
+      "true_negative_pixels": 31
+    },
+    "device": "mps",
+    "freeze_report_sha256": "e7cea1d0a97de446cc3106e849ed417980b68afc0056bf6fed0f0fe203900e11",
+    "gsd_m": 0.1,
+    "human_review_claimed": false,
+    "image_dimensions": [
+      320,
+      320
+    ],
+    "limitations": [
+      "Exploratory spatially separate AI-reviewed partial negatives, not human-confirmed benchmark truth.",
+      "Only approved background pixels are scored; predictions in ignored areas are unscored.",
+      "Samples with any false-positive pixels are crop diagnostics, not a roof-level false-positive rate.",
+      "This selected small collection does not estimate real-world prevalence or recall on PV-positive roofs."
+    ],
+    "minimum_background_fraction": 0.05,
+    "model_predictions_used_for_labels": false,
+    "ok": true,
+    "old_test_pixels_opened": false,
+    "package_versions": {
+      "safetensors": "0.8.0",
+      "segmentation-models-pytorch": "0.5.0",
+      "timm": "1.0.30",
+      "torch": "2.14.1",
+      "torchvision": "0.29.1"
+    },
+    "protocol_sha256": "34a661fec2da5a1bd98d3714a648ce6cd93946b1e8a89be5073fd0a90b2ec06f",
+    "purpose": "experimental-ai-negative-holdout-evaluation",
+    "results": {
+      "candidate": {
+        "checkpoint_device": "mps",
+        "checkpoint_epoch": 3,
+        "checkpoint_package_versions": {
+          "safetensors": "0.8.0",
+          "segmentation-models-pytorch": "0.5.0",
+          "timm": "1.0.30",
+          "torch": "2.14.1",
+          "torchvision": "0.29.1"
+        },
+        "checkpoint_sha256": "13dfd074d248ab71deee91b976082ad1ff4d9564f0c49eaf917e4334aff16368",
+        "same_device_and_libraries": true,
+        "totals": {
+          "crops_with_any_false_positive_pixels": 0,
+          "false_positive_pixels": 0,
+          "ignored_pixels": 566426,
+          "pixel_false_positive_rate": 0.0,
+          "predicted_pv_pixels_in_ignored_region_unscored": 93,
+          "supervised_background_pixels": 150374,
+          "true_negative_pixels": 150374
+        }
+      },
+      "reference": {
+        "checkpoint_device": "mps",
+        "checkpoint_epoch": 3,
+        "checkpoint_package_versions": {
+          "safetensors": "0.8.0",
+          "segmentation-models-pytorch": "0.5.0",
+          "timm": "1.0.30",
+          "torch": "2.14.1",
+          "torchvision": "0.29.1"
+        },
+        "checkpoint_sha256": "252e5ec9f20557fdce9ecd8a3c97b3421be3f63fb73e6c05f4df4e24e95e3635",
+        "same_device_and_libraries": true,
+        "totals": {
+          "crops_with_any_false_positive_pixels": 1,
+          "false_positive_pixels": 31,
+          "ignored_pixels": 566426,
+          "pixel_false_positive_rate": 0.00020615265936930587,
+          "predicted_pv_pixels_in_ignored_region_unscored": 220,
+          "supervised_background_pixels": 150374,
+          "true_negative_pixels": 150343
+        }
+      }
+    },
+    "samples": 7,
+    "samples_sha256": "550ea72d0770f3b3b1a3cdbce853076a852c2739a10c73f5ed0a56272bf8a852",
+    "source_metadata": {
+      "dataset_id": "pvextent-negative-holdout",
+      "dataset_version": "negative-holdout-frozen-2026-10-20-v2",
+      "schema_version": "1.0",
+      "sources": {
+        "ai-negative-6de5e245fb1edc28e6805c90": {
+          "annotation_license": "Apache-2.0",
+          "attribution": "Geobasis NRW/openNRW. All-255 masks are unannotated placeholders, not negative labels. New background/ignore masks: copyright 2026 Valeford, Apache-2.0. Two independent AI visual review passes, explicitly authorized for experimental use; no model predictions used and no human review claimed. Annotation version: negative-holdout-ai-consensus-2026-10-20-v1.",
+          "image_license": "dl-de-zero-2.0",
+          "name": "Geobasis NRW current digital orthophotos",
+          "url": "https://www.wms.nrw.de/geobasis/wms_nw_dop",
+          "version": "snapshot-2026-10-20; AI-negative annotation negative-holdout-ai-consensus-2026-10-20-v1"
+        }
+      }
+    },
+    "supervised_background_coverage": 0.20978515625,
+    "threshold": 0.5,
+    "training_performed": false
+  },
+  "evaluation_protocol_v1_sha256": "0343029316938b4bfce460e10b41f0b5532516f23a35135e81b52417f33e72f9",
+  "evaluation_protocol_v2_sha256": "34a661fec2da5a1bd98d3714a648ce6cd93946b1e8a89be5073fd0a90b2ec06f",
+  "frozen_holdout": {
+    "acquisition_protocol_sha256": "a05b55ffd69b4627088362d4e26841727dd3b58840aa60a824b098ab8937f72e",
+    "candidate_dataset_fingerprint": "7a3ec2dfdc495de62778803e35435bf9a6fbe1884dda798b61574a28a2467218",
+    "checkpoint_sha256": {
+      "candidate": "13dfd074d248ab71deee91b976082ad1ff4d9564f0c49eaf917e4334aff16368",
+      "reference": "252e5ec9f20557fdce9ecd8a3c97b3421be3f63fb73e6c05f4df4e24e95e3635"
+    },
+    "curated_dataset_fingerprint": "b80d0c3ccd20a653132364911a341b090f0fd4cede0804d389a0439871018749",
+    "dataset_fingerprint": "303f4f1429bf2a56c64e35cf2d3f218bdcb51bfe4549e66efae748820341587f",
+    "evaluation_region_counts": {
+      "nrw-negative-holdout-bad-laasphe": 3,
+      "nrw-negative-holdout-lienen": 3,
+      "nrw-negative-holdout-medebach": 1
+    },
+    "evaluation_samples": 7,
+    "frozen_before_predictions": true,
+    "human_review_claimed": false,
+    "limitations": [
+      "AI-reviewed partial background labels, not human-confirmed benchmark truth.",
+      "Only supervised background pixels may be scored; no roof-level false-positive rate or prevalence estimate."
+    ],
+    "minimum_background_fraction": 0.05,
+    "minimum_eligible_reference_center_m": 7364.646281806607,
+    "minimum_reference_distance_observed_m": 6649.257446622033,
+    "minimum_reference_distance_required_m": 5045.254833995939,
+    "model_predictions_used_for_labels": false,
+    "ok": true,
+    "old_reference_pixels_opened": false,
+    "protocol_sha256": "34a661fec2da5a1bd98d3714a648ce6cd93946b1e8a89be5073fd0a90b2ec06f",
+    "purpose": "experimental-ai-negative-holdout",
+    "records": 20,
+    "reference_dataset_fingerprints": [
+      "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14"
+    ],
+    "reference_records": 4034,
+    "split_counts": {
+      "test": 7,
+      "unassigned": 13
+    },
+    "training_use_allowed": false
+  },
+  "limitations": [
+    "Seven small AI-reviewed partial negative examples, not human-confirmed benchmark truth.",
+    "Protocol V1 yielded no eligible masks; V2 changes the coverage criterion after seeing annotations but before any model predictions. This is exploratory.",
+    "Only 150,374 approved background pixels are scored; ignored predictions have no ground truth.",
+    "Zero candidate false-positive pixels here does not establish a zero population error rate or roof-level performance.",
+    "Geometry and stable-ID convenience selection across three regions are not representative sampling.",
+    "Spatial separation covers supplied snapshots; no blanket unknown-pretraining independence claim.",
+    "Both checkpoints remain unchanged. No training, threshold tuning, annotation expansion or model selection followed these predictions.",
+    "The already reserved 421 test examples remain unopened; the newly created negative test partition is a separate experimental set."
+  ],
+  "protocol_commits": {
+    "initial": "9e68cb4",
+    "pre_inference_amendment": "f6c771f"
+  },
+  "purpose": "spatially-separated-experimental-ai-negative-evaluation",
+  "recorded_at_utc": "2026-10-20T22:02:47.214143+00:00",
+  "reviews": [
+    {
+      "approved": 9,
+      "deferred": 11,
+      "model_predictions_used": false,
+      "reviewer": "ai-negative-holdout-review-a",
+      "sha256": "039655e02c63270a197d3bb5e029cc2fc14b250bb82d2708ebc19a922d2216b4"
+    },
+    {
+      "approved": 7,
+      "deferred": 13,
+      "model_predictions_used": false,
+      "reviewer": "ai-negative-holdout-review-b",
+      "sha256": "c20fb402d32d7a3f180685af0189f94cacb05e130b6617e275bb28f27d2dbf31"
+    }
+  ],
+  "v1_attempt": {
+    "candidates": 20,
+    "eligible_at_50_percent": 0,
+    "error": "No masks pass the two-review and 50% background-coverage gate.",
+    "freeze_output_published": false,
+    "model_predictions_made": false,
+    "retained_protocol_unchanged": true,
+    "reviewed_partial_negative_masks": 7
+  },
+  "verification": {
+    "all_original_metadata_coordinates_and_models_hashes_preserved": true,
+    "dataset_pixels_reviews_and_checkpoints_absent_from_packages": true,
+    "gallery_pixel_counts_recomputed_and_match_report": true,
+    "new_negative_test_samples_evaluated": 7,
+    "old_holdout_metadata_records_identical": 699,
+    "old_test_pixels_opened": false,
+    "packaged_holdout_and_augmentation_cli_match_source": true,
+    "reserved_holdout_curation_rejected_by_training_augmentation": true,
+    "source_distribution_build_passed": true,
+    "unit_tests_passed": 295,
+    "visual_mask_contact_sheets_inspected": 2,
+    "visual_prediction_contact_sheets_inspected": 2,
+    "wheel_build_passed": true
+  }
+}

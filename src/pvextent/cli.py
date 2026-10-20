@@ -43,6 +43,19 @@ def main(argv: list[str] | None = None) -> int:
     candidates.add_argument("output_dir", help="New unreviewed candidate dataset; masks contain only ignore pixels")
     candidates.add_argument("--limit", type=int, default=24)
     candidates.add_argument("--json", action="store_true")
+    holdout = actions.add_parser("fetch-negative-holdout", help="Acquire a spatially separate review pool under a frozen protocol")
+    holdout.add_argument("output_dir")
+    holdout.add_argument("--exclude", action="append", required=True, dest="exclude_dirs")
+    holdout.add_argument("--protocol", required=True)
+    holdout.add_argument("--json", action="store_true")
+    freeze = actions.add_parser("freeze-negative-holdout", help="Reserve reviewed negatives for evaluation before predictions")
+    freeze.add_argument("curated_dir")
+    freeze.add_argument("candidate_dir")
+    freeze.add_argument("output_dir")
+    freeze.add_argument("--exclude", action="append", required=True, dest="exclude_dirs")
+    freeze.add_argument("--protocol", required=True)
+    freeze.add_argument("--acquisition-protocol", required=True)
+    freeze.add_argument("--json", action="store_true")
     curate = actions.add_parser("curate-negatives", help="Build a versioned negative collection from two explicit reviews")
     curate.add_argument("output_dir")
     curate.add_argument("--source", action="append", required=True, dest="source_dirs")
@@ -95,6 +108,13 @@ def main(argv: list[str] | None = None) -> int:
     comparison.add_argument("candidate_dir", help="Candidate validation analysis directory")
     comparison.add_argument("output_dir", help="New comparison report directory")
     comparison.add_argument("--json", action="store_true")
+    negatives = evaluations.add_parser("negative-holdout", help="Score two frozen models on experimental negative pixels")
+    negatives.add_argument("dataset_dir")
+    negatives.add_argument("reference_checkpoint")
+    negatives.add_argument("candidate_checkpoint")
+    negatives.add_argument("output_dir")
+    negatives.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
+    negatives.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     if args.command == "evaluate":
         try:
@@ -106,6 +126,12 @@ def main(argv: list[str] | None = None) -> int:
             elif args.action == "compare-validations":
                 from pvextent.evaluation.comparison import compare_validation_analyses
                 result = compare_validation_analyses(args.reference_dir, args.candidate_dir, args.output_dir)
+            elif args.action == "negative-holdout":
+                from pvextent.evaluation.negative import evaluate_negative_holdout
+                result = evaluate_negative_holdout(args.dataset_dir, args.reference_checkpoint,
+                                                   args.candidate_checkpoint, args.output_dir,
+                                                   device=args.device,
+                                                   progress=lambda message: print(message, file=sys.stderr))
             else:
                 from pvextent.inference.candidates import export_candidate_predictions
                 result = export_candidate_predictions(args.dataset_dir, args.checkpoint, args.output_dir,
@@ -189,6 +215,13 @@ def main(argv: list[str] | None = None) -> int:
                 from pvextent.data.augmentation import augment_training_snapshot
                 result = augment_training_snapshot(args.base_dir, args.negative_dir, args.output_dir,
                                                    dataset_version=args.dataset_version, buffer_m=args.buffer_m)
+            elif args.action == "fetch-negative-holdout":
+                from pvextent.data.negative_holdout import fetch_negative_holdout_candidates
+                result = fetch_negative_holdout_candidates(args.exclude_dirs, args.output_dir, protocol_path=args.protocol)
+            elif args.action == "freeze-negative-holdout":
+                from pvextent.data.negative_freeze import freeze_negative_holdout
+                result = freeze_negative_holdout(args.curated_dir, args.candidate_dir, args.exclude_dirs, args.output_dir,
+                                                 protocol_path=args.protocol, acquisition_protocol_path=args.acquisition_protocol)
             else:
                 from pvextent.data.nrw import fetch_nrw_roof_candidates
                 result = fetch_nrw_roof_candidates(args.source_dir, args.output_dir, limit=args.limit)

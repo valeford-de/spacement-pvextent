@@ -250,6 +250,25 @@ class ValidationCliTests(unittest.TestCase):
         self.assertNotIn("Traceback", result.stderr)
         self.assertFalse(output.exists())
 
+    def test_negative_holdout_missing_inputs_fail_without_publishing(self) -> None:
+        output = self.root / "negative-holdout"
+        commands = [
+            ("data", "fetch-negative-holdout", str(output), "--exclude", str(self.root / "missing"),
+             "--protocol", str(self.root / "missing.json"), "--json"),
+            ("data", "freeze-negative-holdout", str(self.root / "curated"), str(self.root / "candidates"),
+             str(output), "--exclude", str(self.root / "missing"), "--protocol", str(self.root / "missing.json"),
+             "--acquisition-protocol", str(self.root / "missing-acquisition.json"), "--json"),
+            ("evaluate", "negative-holdout", str(self.root / "missing"), str(self.root / "ref.pt"),
+             str(self.root / "candidate.pt"), str(output), "--device", "cpu", "--json"),
+        ]
+        for command in commands:
+            with self.subTest(action=command[1]):
+                result = self.command(*command)
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertFalse(json.loads(result.stdout)["ok"])
+                self.assertNotIn("Traceback", result.stderr)
+                self.assertFalse(output.exists())
+
     def test_bad_command_line_exits_two(self) -> None:
         result = self.command("data", "validate")
         self.assertEqual(result.returncode, 2)

@@ -18,8 +18,8 @@ their polygon intersections; four ambiguous crops remain entirely ignored.
 AI provenance is explicit, source snapshots remain unchanged, and this does not
 claim human-reviewed benchmark truth. [Candidate prediction support](candidate-predictions.md)
 has separately run on all seven NRW crops for visual inspection without
-ground-truth scores. Human label adjudication and an independent test set
-remain outstanding. Imported publisher splits are retained as provenance;
+ground-truth scores. Human label adjudication and a representative independent
+benchmark remain outstanding. Imported publisher splits are retained as provenance;
 they are not adopted as independent evaluation splits.
 
 - Record imagery source, capture date, ground sampling distance, geographic
@@ -47,6 +47,17 @@ validation/test declarations are unchanged, and inherited holdout rasters were
 hard-linked without opening their pixels. Identity, reserved-block and 1 km
 centre-distance checks protect the holdout; the nearest added training centre
 is 3,258.635 m away. See the [curation audit](research/negative-curation-audit.md).
+
+The [exploratory negative holdout](negative-holdout.md) is also implemented and
+executed separately from training. Three NRW regions supplied twenty new crops
+under geometry/identity selection and metadata-only exclusion against all
+4,034 existing records. Blind AI review and a pre-inference V1-to-V2 protocol
+amendment produced seven new test crops and thirteen unassigned records. V1's
+50% background gate admitted none; V2 requires 5% without changing images,
+review masks or fixed model identities. This is an amended exploratory pilot,
+not a result under the original gate. The nearest eligible crop centre is
+7,364.646 m from the reference data. The original 421 PV4GER test rasters remain
+unopened. See the [pilot audit](research/negative-holdout-audit.md).
 
 - Group images by building and geographic area before creating splits.
 - Keep repeat captures of a building together; reserve additional acquisition
@@ -79,8 +90,8 @@ three epochs on 3,282 training and 278 validation examples, with 4,923 optimizer
 updates. The best checkpoint is epoch 3, with internal validation pixel IoU
 `0.91572` and Dice `0.95600`. The
 [baseline audit](research/baseline-resnet18-audit.md) records the experiment and
-artifact hashes. All 421 test examples remain unopened, and PVExtent model
-weights have not been released. These validation results do not establish
+artifact hashes. All original 421 PV4GER test examples remain unopened, and
+PVExtent model weights have not been released. These validation results do not establish
 external or roof-level performance.
 
 A fresh [comparison run](baseline-comparison.md) on the augmented snapshot is
@@ -98,7 +109,8 @@ This is a modest IoU/precision gain with a recall trade-off, not a general
 quality improvement. Adding records changes shuffling, flips, batches and
 optimizer-update count; these runs do not isolate a causal effect of the eleven
 new masks. The original baseline artifacts and validation scores are preserved,
-and all 421 test examples remain unopened. No weights have been released.
+and all original 421 PV4GER test examples remain unopened. No weights have been
+released.
 
 - Inspect paired validation diagnostics and annotation disagreements before
   changing sampling or running further training comparisons.
@@ -126,7 +138,7 @@ errors; those disagreements still require adjudication. The
 [analysis audit](research/validation-error-audit.md) records the evidence.
 The original checkpoint and threshold remain frozen. The augmented candidate
 is a separate training run; its comparison uses the same validation boundaries
-and fixed threshold. All 421 test examples remain unopened.
+and fixed threshold. All original 421 PV4GER test examples remain unopened.
 
 The [paired comparison](baseline-comparison.md) has also completed, reproducing
 the candidate checkpoint's counts exactly. Crop IoU improves on 139 validation
@@ -142,10 +154,25 @@ of the eleven crops. Ignored areas remain unscored. This uses training images,
 so it does not supply independent evidence of a lower false-positive rate.
 See the [comparison audit](research/baseline-negative-comparison-audit.md).
 
+Both fixed checkpoints have now been evaluated on the
+[new spatially separate negative pilot](negative-holdout.md). Seven crops
+supply 150,374 consensus background pixels (1,503.74 m²), covering 20.9785% of
+their combined pixels; 566,426 pixels remain ignored. The reference has 31 FP
+and 150,343 TN pixels, with FP / (FP + TN) of `0.0206153%`; the candidate has
+zero FP and 150,374 TN pixels. One reference crop and no candidate crops contain
+such FP pixels. These are crop diagnostics, not roof-level rates. The 220
+reference and 93 candidate PV predictions in ignored regions remain unscored.
+
+This small AI-reviewed partial-label result supplies no recall, Dice or IoU,
+human-confirmed benchmark truth or general model-quality claim. The coverage
+gate changed from V1 to V2 before predictions, as recorded above; both original
+runs and the old holdout are preserved. No new training or tuning occurred.
+The [pilot audit](research/negative-holdout-audit.md) records the fixed evidence.
+
 The following evaluation work remains:
 
-- Evaluate the selected checkpoint under a fixed test protocol after experiment
-  selection; report internal and external evidence separately.
+- Evaluate the original reserved test partition under a fixed protocol after
+  experiment selection; report internal and external evidence separately.
 - Measure array detection precision and recall using a documented spatial
   matching rule, including false positives on negative images and roof-level
   false-positive rates.

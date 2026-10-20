@@ -364,6 +364,16 @@ class TrainingAugmentationTests(unittest.TestCase):
             augment_training_snapshot(self.base, self.negative, self.output, dataset_version="v2")
         self.assertFalse(self.output.exists())
 
+    def test_reserved_negative_holdout_curation_cannot_enter_training(self) -> None:
+        self.write_manifest(self.negative, [self.negative_row()])
+        (self.negative / "curation-report.json").write_text(json.dumps({
+            "sources": [{"dataset_id": "nrw-negative-holdout-candidates"}],
+        }))
+        with patch.object(augmentation, "validate_dataset", side_effect=AssertionError("No pixels before lineage guard")):
+            with self.assertRaisesRegex(TrainingAugmentationError, "holdout lineage"):
+                augment_training_snapshot(self.base, self.negative, self.output, dataset_version="v2")
+        self.assertFalse(self.output.exists())
+
 
 if __name__ == "__main__":
     unittest.main()

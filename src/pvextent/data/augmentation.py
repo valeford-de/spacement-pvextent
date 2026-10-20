@@ -100,6 +100,17 @@ def augment_training_snapshot(base_dir: Path | str, negative_dir: Path | str, ou
             raise TrainingAugmentationError("Base, negative collection and output must be separate directories.")
         base_meta, base_rows, base_fingerprint = _read_manifest(base)
         negative_meta, negative_rows, negative_fingerprint = _read_manifest(negative)
+        curation_evidence = negative / "curation-report.json"
+        if os.path.lexists(curation_evidence):
+            from .curation import _bounded_bytes
+            from .validation import _unique_object, _invalid_constant
+            evidence = json.loads(_bounded_bytes(curation_evidence, 2 * 1024 * 1024),
+                                  object_pairs_hook=_unique_object, parse_constant=_invalid_constant)
+            if not isinstance(evidence, dict) or not isinstance(evidence.get("sources"), list):
+                raise TrainingAugmentationError("Invalid curation lineage evidence.")
+            if any(isinstance(source, dict) and source.get("dataset_id") in
+                   ("nrw-negative-holdout-candidates", "pvextent-negative-holdout") for source in evidence["sources"]):
+                raise TrainingAugmentationError("Reserved negative-holdout lineage cannot enter training.")
         if (len(negative_rows) > 64 or any(row["split"] != "unassigned" for row in negative_rows)
                 or not all(any(row["split"] == split for row in base_rows) for split in ("train", "val", "test"))):
             raise TrainingAugmentationError("Expected a frozen base split and at most 64 unassigned curated records.")
