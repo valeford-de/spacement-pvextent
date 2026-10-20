@@ -43,7 +43,41 @@ def main(argv: list[str] | None = None) -> int:
     candidates.add_argument("output_dir", help="New unreviewed candidate dataset; masks contain only ignore pixels")
     candidates.add_argument("--limit", type=int, default=24)
     candidates.add_argument("--json", action="store_true")
+    train = commands.add_parser("train", help="Standalone training workflows")
+    training_actions = train.add_subparsers(dest="action", required=True)
+    smoke = training_actions.add_parser("smoke", help="Check training, gradients, checkpoint reload and resume")
+    smoke.add_argument("dataset_dir", help="Canonical split dataset; only train pixels are loaded")
+    smoke.add_argument("output_dir", help="New run directory; existing runs are never overwritten")
+    smoke.add_argument("--steps", type=int, default=8, help="Total target global steps, including any resumed steps (1–100)")
+    smoke.add_argument("--samples", type=int, default=8, help="Maximum selected training examples (1–64)")
+    smoke.add_argument("--batch-size", type=int, default=2)
+    smoke.add_argument("--seed", type=int, default=20261020)
+    smoke.add_argument("--lr", type=float, default=0.001)
+    smoke.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
+    smoke.add_argument("--resume", help="Local checkpoint.pt with its .sha256 companion")
+    smoke.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
+    if args.command == "train":
+        from pvextent.training.smoke import TrainingSmokeError, run_smoke
+        try:
+            result = run_smoke(
+                args.dataset_dir, args.output_dir, steps=args.steps, max_samples=args.samples,
+                batch_size=args.batch_size, seed=args.seed, learning_rate=args.lr,
+                device=args.device, resume=args.resume,
+                progress=lambda message: print(message, file=sys.stderr),
+            )
+        except TrainingSmokeError as error:
+            if args.json:
+                print(json.dumps({"ok": False, "error": str(error)}))
+            else:
+                print(f"TRAINING SMOKE FAILED: {error}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(result, indent=2, allow_nan=False))
+        else:
+            print(f"TRAINING SMOKE OK: {result['steps_completed']} updates on {result['device']}; "
+                  f"checkpoint reload verified. Output: {args.output_dir}")
+        return 0
     if args.action != "validate":
         from pvextent.data.pv4ger import DatasetImportError
 

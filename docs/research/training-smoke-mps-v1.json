@@ -1,0 +1,199 @@
+{
+  "audit_date": "2026-10-20",
+  "checkpoint_binaries_in_repository": false,
+  "mps_continuation_comparison": {
+    "entire_checkpoint_state_equal": true,
+    "global_step": 12,
+    "max_model_parameter_abs_difference": 0.0,
+    "model_state_equal": true,
+    "optimizer_state_equal": true,
+    "rng_state_equal": true
+  },
+  "note": "Reports contain only aggregate checks and fingerprints. Pixels, per-sample supervision, full configs, logs and checkpoints remain outside Git.",
+  "purpose": "training-pipeline-smoke-only",
+  "runs": {
+    "smoke-mps-001": {
+      "batch_size": 2,
+      "checkpoint_file": "checkpoint.pt",
+      "checkpoint_sha256": "f46e01ed98da125e28109e302eba366bae9dfdaaecf1f356693d1d8bcc26ce12",
+      "config_sha256": "e8367dcb642dac89b0d8ffa934b73dda5c4e00e39875493e53db44f2a8e0fc90",
+      "dataset_fingerprint": "597b9facb7f115448e81af3b88de7e1081d510c38108c294195de05763d841c5",
+      "device": "mps",
+      "environment": {
+        "mps_fallback_env": "unset",
+        "platform": "Darwin arm64",
+        "python": "3.12.14",
+        "torch": "2.14.1"
+      },
+      "final_loss": 1.3493181467056274,
+      "gradient_norm_max": 0.5150564312934875,
+      "gradient_norm_min": 0.08635051548480988,
+      "gsd_m": 0.1,
+      "image_dimensions": [
+        320,
+        320
+      ],
+      "initial_loss": 1.3853901624679565,
+      "input_validation_scope": "Full metadata/manifest and selected train pixels only; held-out pixels are not opened.",
+      "limitations": [
+        "Randomly initialized tiny U-Net, not the planned pretrained baseline.",
+        "Losses use a fixed training probe; no accuracy or generalisation claim.",
+        "No validation or test metrics; source labels remain upstream/unreviewed as declared.",
+        "CPU continuation is regression-tested exactly; cross-device/version bitwise equality is not promised."
+      ],
+      "model": "tiny-unet-v1",
+      "ok": true,
+      "original_initial_loss": 1.3853901624679565,
+      "parameter_count": 29761,
+      "parameter_update_l2": 0.5966402752532183,
+      "probe": {
+        "final": {
+          "bce": 0.7027349472045898,
+          "dice_loss": 0.6465831995010376,
+          "loss": 1.3493181467056274
+        },
+        "initial": {
+          "bce": 0.7481811046600342,
+          "dice_loss": 0.6372090578079224,
+          "loss": 1.3853901624679565
+        },
+        "split": "train"
+      },
+      "purpose": "training-pipeline-smoke-only",
+      "reload_max_abs_logit_difference": 0.0,
+      "resume_checkpoint_sha256": null,
+      "samples": 8,
+      "selection_fingerprint": "9acb4d27e6d43777c591bd5a8b8ea772e3b8359c760a5da7d2800f125719f5af",
+      "start_step": 0,
+      "steps_completed": 8,
+      "test_used": false,
+      "total_steps": 8,
+      "training_elapsed_seconds": 1.0207049579912564,
+      "validation_used": false,
+      "verified_reload": true,
+      "wall_time_seconds": 5.659178499990958
+    },
+    "smoke-mps-001-continuous": {
+      "batch_size": 2,
+      "checkpoint_file": "checkpoint.pt",
+      "checkpoint_sha256": "233231f1d8212da1e74417c17c6b26f09373afac58bf973653faaadca3b433a9",
+      "config_sha256": "37f53ee31f2e0b982c6cf2f3109f669193d27460caeab8a32b0ea38ce9a88a32",
+      "dataset_fingerprint": "597b9facb7f115448e81af3b88de7e1081d510c38108c294195de05763d841c5",
+      "device": "mps",
+      "environment": {
+        "mps_fallback_env": "unset",
+        "platform": "Darwin arm64",
+        "python": "3.12.14",
+        "torch": "2.14.1"
+      },
+      "final_loss": 1.314520001411438,
+      "gradient_norm_max": 0.5966137647628784,
+      "gradient_norm_min": 0.08635051548480988,
+      "gsd_m": 0.1,
+      "image_dimensions": [
+        320,
+        320
+      ],
+      "initial_loss": 1.3853901624679565,
+      "input_validation_scope": "Full metadata/manifest and selected train pixels only; held-out pixels are not opened.",
+      "limitations": [
+        "Randomly initialized tiny U-Net, not the planned pretrained baseline.",
+        "Losses use a fixed training probe; no accuracy or generalisation claim.",
+        "No validation or test metrics; source labels remain upstream/unreviewed as declared.",
+        "CPU continuation is regression-tested exactly; cross-device/version bitwise equality is not promised."
+      ],
+      "model": "tiny-unet-v1",
+      "ok": true,
+      "original_initial_loss": 1.3853901624679565,
+      "parameter_count": 29761,
+      "parameter_update_l2": 0.7980923509977306,
+      "probe": {
+        "final": {
+          "bce": 0.6512536406517029,
+          "dice_loss": 0.6632663607597351,
+          "loss": 1.314520001411438
+        },
+        "initial": {
+          "bce": 0.7481811046600342,
+          "dice_loss": 0.6372090578079224,
+          "loss": 1.3853901624679565
+        },
+        "split": "train"
+      },
+      "purpose": "training-pipeline-smoke-only",
+      "reload_max_abs_logit_difference": 0.0,
+      "resume_checkpoint_sha256": null,
+      "samples": 8,
+      "selection_fingerprint": "9acb4d27e6d43777c591bd5a8b8ea772e3b8359c760a5da7d2800f125719f5af",
+      "start_step": 0,
+      "steps_completed": 12,
+      "test_used": false,
+      "total_steps": 12,
+      "training_elapsed_seconds": 0.7688916670012986,
+      "validation_used": false,
+      "verified_reload": true,
+      "wall_time_seconds": 2.1871862080006395
+    },
+    "smoke-mps-001-resumed": {
+      "batch_size": 2,
+      "checkpoint_file": "checkpoint.pt",
+      "checkpoint_sha256": "233231f1d8212da1e74417c17c6b26f09373afac58bf973653faaadca3b433a9",
+      "config_sha256": "16fd304c9b37dc6d337c1c57b3b1080ab1e898f6581984fdbe0d6560ebaa20d7",
+      "dataset_fingerprint": "597b9facb7f115448e81af3b88de7e1081d510c38108c294195de05763d841c5",
+      "device": "mps",
+      "environment": {
+        "mps_fallback_env": "unset",
+        "platform": "Darwin arm64",
+        "python": "3.12.14",
+        "torch": "2.14.1"
+      },
+      "final_loss": 1.314520001411438,
+      "gradient_norm_max": 0.5966137647628784,
+      "gradient_norm_min": 0.1929342895746231,
+      "gsd_m": 0.1,
+      "image_dimensions": [
+        320,
+        320
+      ],
+      "initial_loss": 1.3493181467056274,
+      "input_validation_scope": "Full metadata/manifest and selected train pixels only; held-out pixels are not opened.",
+      "limitations": [
+        "Randomly initialized tiny U-Net, not the planned pretrained baseline.",
+        "Losses use a fixed training probe; no accuracy or generalisation claim.",
+        "No validation or test metrics; source labels remain upstream/unreviewed as declared.",
+        "CPU continuation is regression-tested exactly; cross-device/version bitwise equality is not promised."
+      ],
+      "model": "tiny-unet-v1",
+      "ok": true,
+      "original_initial_loss": 1.3853901624679565,
+      "parameter_count": 29761,
+      "parameter_update_l2": 0.23896122364451566,
+      "probe": {
+        "final": {
+          "bce": 0.6512536406517029,
+          "dice_loss": 0.6632663607597351,
+          "loss": 1.314520001411438
+        },
+        "initial": {
+          "bce": 0.7027349472045898,
+          "dice_loss": 0.6465831995010376,
+          "loss": 1.3493181467056274
+        },
+        "split": "train"
+      },
+      "purpose": "training-pipeline-smoke-only",
+      "reload_max_abs_logit_difference": 0.0,
+      "resume_checkpoint_sha256": "f46e01ed98da125e28109e302eba366bae9dfdaaecf1f356693d1d8bcc26ce12",
+      "samples": 8,
+      "selection_fingerprint": "9acb4d27e6d43777c591bd5a8b8ea772e3b8359c760a5da7d2800f125719f5af",
+      "start_step": 8,
+      "steps_completed": 4,
+      "test_used": false,
+      "total_steps": 12,
+      "training_elapsed_seconds": 0.4991503329947591,
+      "validation_used": false,
+      "verified_reload": true,
+      "wall_time_seconds": 2.1911575839912985
+    }
+  }
+}

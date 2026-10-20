@@ -28,6 +28,7 @@ classifiers = [
 [project.optional-dependencies]
 import = ["h5py>=3.12,<4", "numpy>=2,<3"]
 geo = ["pyproj>=3.7,<4"]
+train = ["torch>=2.8,<3"]
 
 [project.urls]
 Repository = "https://github.com/valeford-de/spacement-pvextent"

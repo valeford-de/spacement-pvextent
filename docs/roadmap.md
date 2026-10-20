@@ -42,6 +42,12 @@ replace the planned reviewed external test set.
 
 ## 3. Train a baseline
 
+The [training smoke workflow](training-smoke.md) is implemented and executed on
+MPS. A small randomly initialized U-Net verifies data loading, masked loss,
+gradients, optimizer updates, checkpoint reload and continuation; CPU regression
+tests verify exact resumed state. See the [measured smoke audit](research/training-smoke-audit.md).
+This is a pipeline check, not the pretrained baseline or a model-quality result.
+
 - Select a pretrained segmentation backbone after checking code, weight, and
   dataset licenses.
 - Add explicit experiment configuration for preprocessing, spatial resolution,

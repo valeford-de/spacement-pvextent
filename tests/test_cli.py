@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -136,6 +137,70 @@ class ValidationCliTests(unittest.TestCase):
         self.assertFalse(document["ok"])
         self.assertIn("between 1 and 24", document["error"])
         self.assertFalse(output.exists())
+
+    def test_training_missing_dataset_exits_one_with_json_error(self) -> None:
+        output = self.root / "train-output"
+        result = self.command(
+            "train", "smoke", str(self.root / "missing-dataset"), str(output),
+            "--device", "cpu", "--json",
+        )
+        self.assertEqual(result.returncode, 1, result.stderr)
+        document = json.loads(result.stdout)
+        self.assertFalse(document["ok"])
+        self.assertTrue(document["error"])
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertFalse(output.exists())
+
+    def test_training_nonpositive_steps_are_a_clean_error(self) -> None:
+        output = self.root / "train-output"
+        result = self.command(
+            "train", "smoke", str(self.root / "missing-dataset"), str(output),
+            "--steps", "0", "--device", "cpu", "--json",
+        )
+        self.assertEqual(result.returncode, 1, result.stderr)
+        document = json.loads(result.stdout)
+        self.assertFalse(document["ok"])
+        self.assertTrue(document["error"])
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertFalse(output.exists())
+
+    def test_training_invalid_device_is_a_usage_error(self) -> None:
+        result = self.command(
+            "train", "smoke", str(self.root / "missing-dataset"), str(self.root / "train-output"),
+            "--device", "invented", "--json",
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("--device", result.stderr)
+
+    @unittest.skipUnless(importlib.util.find_spec("torch"), "Install the train extra for CLI optimization")
+    def test_training_command_performs_cpu_updates_and_emits_a_json_report(self) -> None:
+        dataset = self.root / "training-dataset"
+        dataset.mkdir()
+        (dataset / "dataset.toml").write_bytes((self.root / "dataset.toml").read_bytes())
+        image_path, mask_path = dataset / "image.png", dataset / "mask.png"
+        Image.new("RGB", (32, 32), (20, 60, 140)).save(image_path)
+        label = Image.new("L", (32, 32), 0)
+        label.putpixel((10, 10), 1)
+        label.save(mask_path)
+        record = json.loads((self.root / "manifest.jsonl").read_text())
+        record.update(
+            split="train", width=32, height=32,
+            image_sha256=hashlib.sha256(image_path.read_bytes()).hexdigest(),
+            mask_sha256=hashlib.sha256(mask_path.read_bytes()).hexdigest(),
+        )
+        (dataset / "manifest.jsonl").write_text(json.dumps(record) + "\n", encoding="utf-8")
+        output = self.root / "training-run"
+        result = self.command(
+            "train", "smoke", str(dataset), str(output), "--steps", "2", "--samples", "1",
+            "--batch-size", "1", "--seed", "7", "--lr", "0.001", "--device", "cpu", "--json",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        document = json.loads(result.stdout)
+        self.assertTrue(document["ok"])
+        self.assertEqual(document["device"], "cpu")
+        self.assertGreater(document["parameter_update_l2"], 0)
+        self.assertTrue((output / "checkpoint.pt").is_file())
 
     def test_bad_command_line_exits_two(self) -> None:
         result = self.command("data", "validate")

@@ -18,9 +18,10 @@ evaluation, and inference.
 Dataset import, validation, geographic split snapshots, a local label-review
 gallery, and a bounded NRW roof candidate fetcher are implemented. The complete
 PV4GER-SEG release has been imported and split with a 1 km geographic buffer.
-Label review and an independent benchmark remain outstanding. Training and
-inference are not implemented yet; no trained model or performance result has
-been released. See the
+The small training smoke workflow now verifies gradients, optimizer updates,
+checkpoint reload and exact local continuation on CPU and MPS. Label review,
+an independent benchmark, full baseline training and inference remain
+outstanding; no model or segmentation-quality result has been released. See the
 [research roadmap](docs/roadmap.md) for the next steps.
 
 ## Documentation
@@ -36,6 +37,8 @@ convert the first public segmentation dataset.
 Continue with [geographic splits](docs/geographic-splits.md),
 [local label review](docs/label-review.md), and
 [unreviewed NRW roof candidates](docs/nrw-candidates.md).
+The [training smoke guide](docs/training-smoke.md) documents the first executable
+training workflow and its [measured audit](docs/research/training-smoke-audit.md).
 
 For private vulnerability reports, see the [security policy](.github/SECURITY.md).
 
@@ -86,7 +89,7 @@ publisher's split boundaries. See the [import guide](docs/pv4ger-import.md) for
 offline use, smoke runs, licenses, and the limits of proximity grouping.
 
 Run the complete test suite, including synthetic HDF5 import fixtures, with
-`uv run --locked --extra import --extra geo python -m unittest discover -s tests -v`.
+`uv run --locked --extra import --extra geo --extra train python -m unittest discover -s tests -v`.
 
 ## Prepare geographic splits and review
 
@@ -108,6 +111,21 @@ evidence; they do not automatically change canonical annotations.
 The [NRW sampler](docs/nrw-candidates.md) can also fetch up to 24 new roof
 candidates. They remain unreviewed, with all-ignore masks until annotation.
 
+## Run the training smoke test
+
+```sh
+uv sync --locked --extra train
+uv run --locked --extra train pvextent train smoke \
+  data/pv4ger-seg-geographic-v1 runs/smoke-001 \
+  --device auto --steps 8 --samples 8 --batch-size 2 --json
+```
+
+This trains a small, randomly initialized U-Net using only selected training
+pixels. It checks finite losses and gradients, changed parameters, and a
+checkpoint reload. See the [training guide](docs/training-smoke.md) for
+continuation with optimizer/RNG state and exact dataset fingerprints. Probe
+losses describe the same training examples; they are not accuracy results.
+
 ## Package layout
 
 | Module | Responsibility |
@@ -118,9 +136,9 @@ candidates. They remain unreviewed, with all-ignore masks until annotation.
 | `pvextent.evaluation` | Segmentation and array detection evaluation |
 | `pvextent.inference` | Predictions from images and trained checkpoints |
 
-The data module provides import, validation, geographic splitting, candidate
-collection and review export. The remaining modules define project boundaries
-for the planned training pipeline.
+The data module provides preparation and training-only tensor views. Model and
+training modules provide the tiny U-Net and bounded smoke workflow. Evaluation,
+general inference and the full pretrained baseline remain planned.
 
 ## License and attribution
 
