@@ -1,0 +1,78 @@
+{
+  "acquisition_protocol_sha256": "a05b55ffd69b4627088362d4e26841727dd3b58840aa60a824b098ab8937f72e",
+  "annotation_schema": {
+    "decisions": [
+      "approve-positive",
+      "defer"
+    ],
+    "review_schema_version": "1.0",
+    "reviewer_type": "ai",
+    "sample_fields": [
+      "id",
+      "image_sha256",
+      "full_image_inspected",
+      "decision",
+      "positive_polygons",
+      "background_polygons",
+      "notes"
+    ]
+  },
+  "candidate_dataset_fingerprint": "7a3ec2dfdc495de62778803e35435bf9a6fbe1884dda798b61574a28a2467218",
+  "checkpoint_sha256": {
+    "candidate": "13dfd074d248ab71deee91b976082ad1ff4d9564f0c49eaf917e4334aff16368",
+    "reference": "252e5ec9f20557fdce9ecd8a3c97b3421be3f63fb73e6c05f4df4e24e95e3635"
+  },
+  "dataset_version": "positive-holdout-2026-10-21-v1",
+  "evaluation_policy": "Both unchanged checkpoints once at probability>=0.5. Primary TP/FN and recall on consensus PV pixels; no whole-array or roof recall. Background FP/TN and unscored ignored predictions separate. No derived precision/IoU/Dice presented as full-mask performance.",
+  "frozen_before_predictions": true,
+  "human_review_claimed": false,
+  "limits": [
+    "Partial AI consensus can miss PV or preferentially retain easy interiors; recall is only on labelled pixels.",
+    "Positive and negative pilots share an acquisition cohort and geography; do not combine their class-screened scores into representative prevalence.",
+    "All 421 original PV4GER test images and the seven negative-pilot rasters remain outside this positive evaluation.",
+    "No training, seed/threshold/model tuning or label expansion from predictions."
+  ],
+  "minimum_positive_area_m2": 1.0,
+  "minimum_positive_pixels": 100,
+  "model_predictions_used_for_labels": false,
+  "negative_holdout_dataset_fingerprint": "303f4f1429bf2a56c64e35cf2d3f218bdcb51bfe4549e66efae748820341587f",
+  "purpose": "experimental-ai-positive-holdout",
+  "reference_dataset_fingerprints": [
+    "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14"
+  ],
+  "review_policy": "Two separate blind full-native-image reviews on all thirteen crops. Approve-positive only for clearly recognizable photovoltaic module surfaces. Draw visible module footprints and resolved gaps, not array bounding rectangles. Independently mark clear background; occlusion, uncertain collectors and unclear boundaries remain ignored. No confirmed PV or unresolved overall identification => defer. Consensus PV=intersection, consensus BG=intersection; disagreement and all other pixels ignored. Both approve and at least 100 consensus PV pixels required. No filling quota or changing the gate after review.",
+  "schema_version": "1.0",
+  "selected_ids": [
+    "nrw-DENW07AL0000ytM5BL",
+    "nrw-DENW07AL0000ytMWBL",
+    "nrw-DENW07AL0000ytPgBL",
+    "nrw-DENW07AL0000ytXZBL",
+    "nrw-DENW07AL0000ytZaBL",
+    "nrw-DENW10AL1000CTsABL",
+    "nrw-DENW10AL1000CTuBBL",
+    "nrw-DENW10AL1000CTuDBL",
+    "nrw-DENW53AL0000IVKJBL",
+    "nrw-DENW53AL0000OYpVBL",
+    "nrw-DENW53AL0000StB8BL",
+    "nrw-DENW53AL0000mo4NBL",
+    "nrw-DENW53AL0000moE6BL"
+  ],
+  "selected_image_sha256": {
+    "nrw-DENW07AL0000ytM5BL": "e4a835b24794d19827024289135d3c1a37ee4cdcb01933fd605ced0207364997",
+    "nrw-DENW07AL0000ytMWBL": "f0a1860ca89fa9511b93f5ba9ec443bbdb2432c5b0753eccd72bb801b189e105",
+    "nrw-DENW07AL0000ytPgBL": "54964ceabf2ed8544a6268b718c1f325d52a8449c317cb13962eeec510258b11",
+    "nrw-DENW07AL0000ytXZBL": "98d824703baf03f458b99f5bab1524534c5e6e7348f48a078cbfb91094479e85",
+    "nrw-DENW07AL0000ytZaBL": "3854de9fd4a321663cd269571aae79e666b428e6a5f2584e7c399f6a7d42fc91",
+    "nrw-DENW10AL1000CTsABL": "a2627855b7b1b6f4fd17f099b92751849d6c5d6df5fe52c62d24264996c5d2ed",
+    "nrw-DENW10AL1000CTuBBL": "50e59f16271183f5d4ed80bae8bf26a7c637aea6100a5cd10b8661d592debc0e",
+    "nrw-DENW10AL1000CTuDBL": "9d1e956c31a27fd592e4c362a9c0bf26e066fc0e212c626736be80c18a1ce563",
+    "nrw-DENW53AL0000IVKJBL": "60b4f6bdc45e6ce74b9648f5d05e3b169c65c4d3ce87368f712e035fa4a61af4",
+    "nrw-DENW53AL0000OYpVBL": "259a43a9e0ec702a64703b487ac6ce745abb3d0d17c25e2ffd3008de323227ea",
+    "nrw-DENW53AL0000StB8BL": "bd7dcd751c449b526b8b5a0549f3872c3515dcb169e8ec55a0f4b33b4ed0ef95",
+    "nrw-DENW53AL0000mo4NBL": "db6614b64a3a3a67a546b9cc21abbf870ee30929e46b4d937f885b1324361a2d",
+    "nrw-DENW53AL0000moE6BL": "2a7d3d82c54e5bfd52b5f5cd9bd738b51182e2ee63b9b6b51be7bb5ddf986604"
+  },
+  "selection_policy": "Exactly the thirteen unassigned cases from the prior negative review cohort. The seven previously inferred negative cases are excluded. No new RGB requests or prediction-based selection. Same geographically separate external acquisition cohort, not a statistically independent new regional sample.",
+  "threshold": 0.5,
+  "training_use_allowed": false
+}
