@@ -1,0 +1,79 @@
+{
+  "base_dataset_fingerprint": "597b9facb7f115448e81af3b88de7e1081d510c38108c294195de05763d841c5",
+  "batch_size": 2,
+  "candidate_dataset_fingerprint": "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14",
+  "candidate_optimizer_updates": 4941,
+  "candidate_run": "baseline-resnet18-negatives-001",
+  "candidate_supervised_training_pixels_per_epoch": 336294076,
+  "candidate_train_samples": 3293,
+  "checkpoint_selection": "Best validation IoU among completed epochs, ties retain earlier. Also report fixed final epoch.",
+  "config_contract_differences": {
+    "dataset_fingerprint": {
+      "candidate": "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14",
+      "reference": "597b9facb7f115448e81af3b88de7e1081d510c38108c294195de05763d841c5"
+    },
+    "train_selection_fingerprint": {
+      "candidate": "d64f6b0e15af8740d1a9d21d9a9c813ecfb0746a8b1a3e44aaa3530ecbf3e97c",
+      "reference": "42c7fe5215c51f726e997af4498f2d43fad4ef2b82cad631b1f4504c74fa3117"
+    }
+  },
+  "config_file_sha256": "1bde83e401ca13a08ec4e3527751de27f179839317bf86bce87c5558525575ec",
+  "config_path": "configs/baseline-resnet18.toml",
+  "date": "2026-10-20",
+  "epochs": 3,
+  "fresh_pretrained_initialization": true,
+  "initial_validation_exactly_identical": true,
+  "limitations": [
+    "Added samples change shuffling, augmentation draws, batch composition and update count; no isolated causal attribution.",
+    "Same seed on MPS does not guarantee bitwise repeatability.",
+    "Valid-pixel and sample shares are not exact batchwise loss weights.",
+    "Validation selected checkpoints; no independent benchmark or roof-level false-positive estimate."
+  ],
+  "negative_record_share": 0.0033404190707561495,
+  "new_background_pixels_per_epoch": 217276,
+  "new_background_share_of_supervised_pixels": 0.0006460892876388343,
+  "new_negative_records": 11,
+  "planned_comparison_command": "pvextent evaluate compare-validations artifacts/baseline-resnet18-errors-001 artifacts/baseline-resnet18-negatives-errors-001 artifacts/baseline-resnet18-negative-comparison-001 --json",
+  "primary_metrics": [
+    "global_validation_iou",
+    "dice",
+    "precision",
+    "recall",
+    "fp",
+    "fn"
+  ],
+  "purpose": "same-protocol-augmented-training-comparison",
+  "qualitative_selection": "Up to four largest paired validation crop IoU improvements and four largest regressions; display both directions, not a representative sample.",
+  "recorded_before_first_epoch_result": true,
+  "reference_analysis_frozen_sha256": {
+    "analysis-report.json": "eb39b9596b687d1dd1260be5eff0baac92e5e4f841e21d084c97a111edbbbe37",
+    "samples.json": "dce8f20c3ccd0cae2abebfc5e10193a8ce2c71d0bb842fdc97eca024ceb0fdcb"
+  },
+  "reference_optimizer_updates": 4923,
+  "reference_run": "baseline-resnet18-001",
+  "reference_train_samples": 3282,
+  "resume": false,
+  "sampling": "One uniformly shuffled pass over all training records per epoch, no oversampling.",
+  "secondary_diagnostic": {
+    "candidate_has_trained_on_probe": true,
+    "ignored_predictions_scored": false,
+    "independent_evaluation": false,
+    "purpose": "Both best checkpoints on the eleven added training negatives, only consensus background pixels scored.",
+    "use_for_checkpoint_selection": false
+  },
+  "source_commit_at_start": "f11a9bb",
+  "test_samples_reserved_unopened": 421,
+  "test_used": false,
+  "threshold": 0.5,
+  "training_code_and_lock_sha256": {
+    "src/pvextent/data/segmentation.py": "5a972e95adf10ac9d570e3ed0b67983decc626ba769fa68ae0384b35c4f3d85e",
+    "src/pvextent/data/training.py": "b686557d86510e762aeb6d15a7415694c1aab312c3fc945e224575cdcddecff6",
+    "src/pvextent/models/resnet_unet.py": "877ee1a9626fb0965302d5c80974f6980be55d40258f2219412b1fe0327f8101",
+    "src/pvextent/training/baseline.py": "be872733b4d7a8195e012a3b3ac0f7ecaef71f945650a34cc4411e3686d016a6",
+    "src/pvextent/training/losses.py": "6b2bdc3be21a70a9dea9a4f9e88d9e8864b6be334543f35c4e121a2ee08e2d1e",
+    "src/pvextent/training/smoke.py": "e39df38a705115795800c18755be3b352301bb75c2d6a99c4f25885faa476b56",
+    "uv.lock": "bb0c550bc487772b3aed5ab417ef2d621aec03804ef0546d8d7e9542e2b8b417"
+  },
+  "val_selection_fingerprint": "18f47f06d8382037f16c0322ff8475b3b9794ad198cf4c81cb171adeaf17e5a2",
+  "validation_samples": 278
+}
