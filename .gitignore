@@ -1,0 +1,30 @@
+# Python environments and build output
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local datasets, checkpoints, and experiment output
+/data/
+/datasets/
+/checkpoints/
+/runs/
+/artifacts/
+*.pt
+*.pth
+*.onnx
+*.safetensors
+*.ckpt
+
+# Local configuration and operating system files
+.env
+.env.*
+!.env.example
+.DS_Store

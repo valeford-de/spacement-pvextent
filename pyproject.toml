@@ -1,0 +1,32 @@
+# Copyright 2026 Valeford
+# SPDX-License-Identifier: Apache-2.0
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spacement-pvextent"
+version = "0.1.0.dev0"
+description = "Photovoltaic array segmentation from orthophotos"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{ name = "Valeford" }]
+maintainers = [{ name = "Valeford" }]
+keywords = ["photovoltaics", "segmentation", "orthophotos", "remote-sensing"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
+
+[project.urls]
+Repository = "https://github.com/valeford-de/spacement-pvextent"
+Issues = "https://github.com/valeford-de/spacement-pvextent/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
