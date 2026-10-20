@@ -1,0 +1,98 @@
+{
+  "limits": [
+    "600 recaptures are additional photos at existing train locations; they are not 600 new roofs.",
+    "Source photos are a selected convenience sample, not a representative NRW benchmark.",
+    "Fresh ALKIS roof selection favors smaller roofs under the existing geometry rules.",
+    "Imagery may contain no PV, changed PV, or ambiguous objects. Labels require independent review.",
+    "Evaluation/test coordinates may be checked, but their rasters must never be opened.",
+    "Only original train imagery may be decoded to reject pixel-identical recaptures."
+  ],
+  "metadata_preflight": {
+    "fixed_metadata_only_fallback_regions": 15,
+    "native_resolution_verified_for_each_accepted_crop": true,
+    "official_requests": 30,
+    "regions_with_building_and_representative_metadata_requests": 15,
+    "rgb_requests": 0
+  },
+  "new_rgb_requests_before_registration": 0,
+  "protocol_file": "nrw-training-bulk-protocol-v1.json",
+  "protocol_sha256": "060d08e052ae3061647e738b8157d627f99c363f77b6c8293f211af6eb7cf5a7",
+  "purpose": "Acquire 1000 additional distinct, native-resolution NRW photos for experimental training review. This is collection, not completed annotation or a new model.",
+  "raw_data_contract": {
+    "annotation_status": "unreviewed",
+    "gsd_m": 0.1,
+    "height": 320,
+    "license": "Datenlizenz Deutschland – Zero – Version 2.0",
+    "mask_value": 255,
+    "split": "unassigned",
+    "width": 320
+  },
+  "references": [
+    {
+      "coordinate_sha256": "c32c6d459344e8fbe6f613367919bb5cdbedbeae1838bc2abacb0a02744c3f44",
+      "dataset": "pvextent-training-v2",
+      "dataset_fingerprint": "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14",
+      "distance_protected_records": 741,
+      "records": 4034,
+      "role": "training"
+    },
+    {
+      "coordinate_sha256": "3055c4e8c47129870193271fd72aba33583cde271d4c0030e3cfcd2337117d56",
+      "dataset": "nrw-negative-holdout-candidates-v1",
+      "dataset_fingerprint": "7a3ec2dfdc495de62778803e35435bf9a6fbe1884dda798b61574a28a2467218",
+      "distance_protected_records": 20,
+      "records": 20,
+      "role": "protected"
+    },
+    {
+      "coordinate_sha256": "c26693897ff39b3d25dfddf352681b9858b8ef21664e5137d622fbfa228e7fab",
+      "dataset": "nrw-training-schleiden-v1",
+      "dataset_fingerprint": "356ef565deef04ea236b99b07dbeb3de0abf76c9865c694c8ba942a70690c2b4",
+      "distance_protected_records": 0,
+      "records": 8,
+      "role": "identity-only"
+    },
+    {
+      "coordinate_sha256": "e025fc51858c84357b625cb0f924d1d84bf5dbafe050149da92e94a7edb1a1c9",
+      "dataset": "nrw-training-duelmen-v1",
+      "dataset_fingerprint": "bd39f70c500586fa993fe5fa81f72c9ebb05f1e58df52eda5ccf539c104768a6",
+      "distance_protected_records": 0,
+      "records": 8,
+      "role": "identity-only"
+    },
+    {
+      "coordinate_sha256": "c5f540f06422bd54fcd552e51c1f363cac0eea5205f4d7d61240bf3d93177a41",
+      "dataset": "nrw-training-marsberg-area-v1",
+      "dataset_fingerprint": "d3c5f502163abf39143228112d17218e698664402c1d9f261dfe8a44f6f59d26",
+      "distance_protected_records": 0,
+      "records": 6,
+      "role": "identity-only"
+    }
+  ],
+  "review": {
+    "batch_size": 25,
+    "expected_batches_per_lane": 40,
+    "independent_ai_visual_reviews_authorized": true,
+    "lanes": 2,
+    "pending_templates_do_not_count_as_reviews": true
+  },
+  "schema_version": "1.0",
+  "selection": {
+    "geometry_candidate_slots": 1500,
+    "geometry_region_count": 30,
+    "global_crop_spacing_m": 80,
+    "known": "Deterministic stable ranking and round-robin over projected 10 km cells; original PV4GER train locations only. The exact operational plan is sealed in the protocol-keyed cache before RGB.",
+    "known_candidate_limit": 1600,
+    "known_seed_metadata_advisory_sha256": "97444572faae0c9cd4068cf6feb32f1c471927e7361b2398e0bb844a27a0138f",
+    "known_spacing_m": 200,
+    "old_masks_transferred": false,
+    "reserved_center_clearance_m": 5045.254833995939,
+    "source_labels_or_predictions_used": false
+  },
+  "targets": {
+    "current_captures_at_original_train_locations": 600,
+    "fresh_alkis_roof_crops": 400,
+    "total": 1000
+  },
+  "training_uses_this_collection": false
+}
