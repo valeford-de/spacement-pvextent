@@ -1,3 +1,5 @@
+![Spacement PVExtent](docs/assets/pvextent-banner.png)
+
 # Spacement PVExtent
 
 Photovoltaic array segmentation from orthophotos.
@@ -58,3 +60,9 @@ Datasets and model checkpoints have their own provenance and licensing
 requirements. No third-party imagery or model weights are included in this
 initial scaffold. Future releases will document their sources and terms
 separately.
+
+## Maintained by
+
+<a href="https://valeford.de">
+  <img src="docs/assets/valeford-logo.png" alt="Valeford" width="220">
+</a>
