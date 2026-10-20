@@ -15,6 +15,14 @@ This repository contains an early Python package scaffold. Training and
 inference are not implemented yet, and no trained model or performance result
 has been released. See the [research roadmap](docs/roadmap.md) for the next steps.
 
+## Documentation
+
+The [project wiki](https://github.com/valeford-de/spacement-pvextent/wiki)
+provides an introduction and getting-started documentation. The versioned
+[research roadmap](docs/roadmap.md) remains in this repository.
+
+For private vulnerability reports, see the [security policy](.github/SECURITY.md).
+
 ## Development setup
 
 Requires Python 3.11 or newer.
