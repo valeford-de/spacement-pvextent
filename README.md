@@ -15,9 +15,9 @@ evaluation, and inference.
 
 ## Status
 
-The dataset format, annotation rules, and an offline dataset validator are
-implemented. Training and inference are not implemented yet, and no trained
-model or performance result has been released. See the
+The dataset format, annotation rules, offline validator, and a pinned
+PV4GER-SEG importer are implemented. Training and inference are not implemented
+yet, and no trained model or performance result has been released. See the
 [research roadmap](docs/roadmap.md) for the next steps.
 
 ## Documentation
@@ -28,6 +28,8 @@ provides an introduction and getting-started documentation. The versioned
 
 Start with the [dataset format](docs/data-format.md) and
 [annotation guide](docs/annotation-guide.md) when preparing imagery and masks.
+The [PV4GER-SEG import guide](docs/pv4ger-import.md) explains how to obtain and
+convert the first public segmentation dataset.
 
 For private vulnerability reports, see the [security policy](.github/SECURITY.md).
 
@@ -63,6 +65,23 @@ The demo is a structural example with unreviewed labels and unknown capture
 dates/georeferences, so its valid report includes warnings. It is not a training
 dataset.
 
+## Import PV4GER-SEG
+
+```sh
+uv sync --locked --extra import
+uv run --locked --extra import pvextent data import-pv4ger-seg \
+  data/raw/pv4ger-seg-v0.9.1 data/pv4ger-seg-v0.9.1 --download
+```
+
+This converts 4,027 native 320 × 320 RGB crops and masks at 10 cm/pixel from the
+pinned GEO-Bench release. Source hashes, notices, and publisher assignments are
+preserved. Canonical splits remain unassigned because nearby crops cross the
+publisher's split boundaries. See the [import guide](docs/pv4ger-import.md) for
+offline use, smoke runs, licenses, and the limits of proximity grouping.
+
+Run the complete test suite, including synthetic HDF5 import fixtures, with
+`uv run --locked --extra import python -m unittest discover -s tests -v`.
+
 ## Package layout
 
 | Module | Responsibility |
@@ -73,8 +92,8 @@ dataset.
 | `pvextent.evaluation` | Segmentation and array detection evaluation |
 | `pvextent.inference` | Predictions from images and trained checkpoints |
 
-The data module provides validation; the remaining modules define project
-boundaries for the planned training pipeline.
+The data module provides validation and dataset import; the remaining modules
+define project boundaries for the planned training pipeline.
 
 ## License and attribution
 
@@ -85,8 +104,8 @@ license.
 
 Datasets and model checkpoints have their own provenance and licensing
 requirements. No third-party imagery or model weights are included in this
-initial scaffold. Future releases will document their sources and terms
-separately.
+repository. The importer records the [PV4GER-SEG sources and terms](docs/pv4ger-import.md#source-versions-and-licenses)
+separately and preserves upstream notices with each imported snapshot.
 
 ## Maintained by
 

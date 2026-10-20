@@ -25,6 +25,9 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Image Processing",
 ]
 
+[project.optional-dependencies]
+import = ["h5py>=3.12,<4", "numpy>=2,<3"]
+
 [project.urls]
 Repository = "https://github.com/valeford-de/spacement-pvextent"
 Issues = "https://github.com/valeford-de/spacement-pvextent/issues"
@@ -34,3 +37,6 @@ pvextent = "pvextent.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"pvextent.data" = ["licenses/*.txt"]

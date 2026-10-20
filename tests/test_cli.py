@@ -75,6 +75,42 @@ class ValidationCliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertFalse(json.loads(result.stdout)["ok"])
 
+    def test_import_failure_exits_one_with_json_error_and_no_traceback(self) -> None:
+        output = self.root / "imported"
+        result = self.command(
+            "data", "import-pv4ger-seg", str(self.root / "missing-cache"), str(output), "--json"
+        )
+        self.assertEqual(result.returncode, 1, result.stderr)
+        document = json.loads(result.stdout)
+        self.assertFalse(document["ok"])
+        self.assertIsInstance(document["error"], str)
+        self.assertTrue(document["error"])
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertFalse(output.exists())
+
+    def test_import_nonpositive_limit_exits_one_with_explanation(self) -> None:
+        output = self.root / "imported"
+        for limit in ("0", "-1"):
+            with self.subTest(limit=limit):
+                result = self.command(
+                    "data", "import-pv4ger-seg", str(self.root / "missing-cache"),
+                    str(output), "--limit", limit, "--json",
+                )
+                self.assertEqual(result.returncode, 1, result.stderr)
+                document = json.loads(result.stdout)
+                self.assertFalse(document["ok"])
+                self.assertIn("positive integer", document["error"])
+                self.assertFalse(output.exists())
+
+    def test_import_noninteger_limit_is_a_usage_error(self) -> None:
+        result = self.command(
+            "data", "import-pv4ger-seg", str(self.root / "missing-cache"),
+            str(self.root / "imported"), "--limit", "many", "--json",
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("--limit", result.stderr)
+
     def test_bad_command_line_exits_two(self) -> None:
         result = self.command("data", "validate")
         self.assertEqual(result.returncode, 2)

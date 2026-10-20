@@ -1,0 +1,72 @@
+{
+  "annotation_status": "upstream",
+  "background_pixels": 333457020,
+  "dataset_fingerprint": "84e4600b0b64da5a15972fb045bfd412ccd7a3541109a6c77073dcbc8d0ca805",
+  "importer": "pv4ger-seg-v1",
+  "limitations": [
+    "Publisher splits are retained only as provenance; all records are unassigned.",
+    "100 m proximity groups do not establish geographic or building independence.",
+    "Capture dates, building identifiers and original georeferences are unknown.",
+    "All-zero source masks are not locally reviewed hard negatives.",
+    "Labels are upstream annotations without local review; published-model overlap is possible."
+  ],
+  "limited": false,
+  "negative_samples": 8,
+  "ok": true,
+  "positive_samples": 4019,
+  "pv_pixels": 78907780,
+  "records": 4027,
+  "sample_count_basis": "Nonzero versus all-zero source masks; not verified image-level PV presence.",
+  "snapshot_file_bytes": 253584360,
+  "source_files": [
+    {
+      "name": "data.zip",
+      "sha256": "70438a20797bba6eecd905358bf26ace7738709a38848f8a58145f6b0448f82d",
+      "size": 316013928
+    },
+    {
+      "name": "default_partition.json",
+      "sha256": "b0068e4a7516f29b47155dfb674d2003603af687779d91df29a2c17d334890f6",
+      "size": 129229
+    },
+    {
+      "name": "LICENSE",
+      "sha256": "bdebe1f65b5d5a86435e11edd275dbcb5b61d4fcad90672ff1728cd6a2839e84",
+      "size": 105
+    },
+    {
+      "name": "README",
+      "sha256": "79bfe9f379d2e3b0ce7c72aca98d24ddc1548c2f5510b1c56d6af21acec7df31",
+      "size": 678
+    }
+  ],
+  "source_split_counts": {
+    "test": 403,
+    "train": 3221,
+    "valid": 403
+  },
+  "source_url": "https://zenodo.org/records/8277054",
+  "source_version": "v0.9.1",
+  "spatial_grouping": {
+    "distance_m": 100.0,
+    "groups": 3628,
+    "largest_group": 32,
+    "method": "connected-center-distance",
+    "publisher_cross_split_groups": 82
+  },
+  "split": "unassigned",
+  "validation": {
+    "error_count": 0,
+    "ok": true,
+    "warning_count": 12081
+  },
+  "verification_environment": {
+    "dependencies": {
+      "Pillow": "13.0.0",
+      "h5py": "3.16.0",
+      "numpy": "2.5.4"
+    },
+    "platform": "Darwin arm64",
+    "python": "3.12.14"
+  }
+}

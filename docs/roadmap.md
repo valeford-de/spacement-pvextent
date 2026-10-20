@@ -7,8 +7,11 @@ baseline for photovoltaic array segmentation from orthophotos.
 
 Step 1's [data contract and validator](data-format.md),
 [annotation rules](annotation-guide.md), and synthetic format demonstration are
-implemented. Real dataset import, label review, and an independent test set are
-the next milestones.
+implemented. Step 2's [PV4GER-SEG importer](pv4ger-import.md) prepares the first
+public segmentation dataset, preserving source provenance and native resolution.
+Label review, additional hard negatives, and an independent test set are the
+next milestones. Imported publisher splits are retained as provenance; they are
+not adopted as independent evaluation splits.
 
 - Record imagery source, capture date, ground sampling distance, geographic
   reference, usage rights, and content hash.

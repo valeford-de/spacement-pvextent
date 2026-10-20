@@ -5,6 +5,7 @@
 
 import argparse
 import json
+import sys
 
 from pvextent import __version__
 from pvextent.data import validate_dataset
@@ -19,7 +20,34 @@ def main(argv: list[str] | None = None) -> int:
     validate = actions.add_parser("validate", help="Validate a dataset directory offline")
     validate.add_argument("directory", help="Directory containing dataset.toml and manifest.jsonl")
     validate.add_argument("--json", action="store_true", help="Write a machine-readable JSON report")
+    importer = actions.add_parser("import-pv4ger-seg", help="Import pinned GEO-Bench PV4GER segmentation data")
+    importer.add_argument("source_dir", help="Cache directory for the four pinned upstream files")
+    importer.add_argument("output_dir", help="New dataset directory; must not already exist")
+    importer.add_argument("--download", action="store_true", help="Download missing source files from Zenodo")
+    importer.add_argument("--limit", type=int, help="Convert only the first N sorted IDs for a smoke run")
+    importer.add_argument("--json", action="store_true", help="Write a machine-readable import report")
     args = parser.parse_args(argv)
+    if args.action == "import-pv4ger-seg":
+        from pvextent.data.pv4ger import DatasetImportError, import_pv4ger_seg
+
+        try:
+            result = import_pv4ger_seg(
+                args.source_dir, args.output_dir, download=args.download, limit=args.limit,
+                progress=lambda message: print(message, file=sys.stderr),
+            )
+        except DatasetImportError as error:
+            if args.json:
+                print(json.dumps({"ok": False, "error": str(error)}))
+            else:
+                print(f"IMPORT FAILED: {error}", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(result, indent=2, allow_nan=False))
+        else:
+            print(f"IMPORTED: {result['records']} records to {args.output_dir}; "
+                  f"{result['validation']['error_count']} errors, "
+                  f"{result['validation']['warning_count']} warnings. Splits remain unassigned.")
+        return 0
     report = validate_dataset(args.directory)
     if args.json:
         print(json.dumps(report.to_dict(), indent=2, allow_nan=False))

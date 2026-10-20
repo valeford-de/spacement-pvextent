@@ -5,3 +5,8 @@ Developed and maintained by Valeford under the Spacement brand.
 https://github.com/valeford-de/spacement-pvextent
 
 This project is licensed under the Apache License, Version 2.0.
+
+The PV4GER-SEG importer includes the original 3D-PV-Locator MIT license
+in src/pvextent/data/licenses/3d-pv-locator-MIT.txt, copyright (c) 2020 Kevin,
+to preserve that notice with imported datasets. Third-party dataset terms
+are documented separately in docs/pv4ger-import.md; no imagery is bundled.
