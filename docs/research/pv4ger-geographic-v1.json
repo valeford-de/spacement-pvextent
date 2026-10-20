@@ -1,0 +1,56 @@
+{
+  "assignment_method": "SHA-256 of policy, seed and component-mean metric cell; fractions are expectations, not exact counts.",
+  "block_size_m": 10000.0,
+  "buffer_m": 1000.0,
+  "components": 3628,
+  "dataset_fingerprint": "597b9facb7f115448e81af3b88de7e1081d510c38108c294195de05763d841c5",
+  "excluded_counts": {
+    "geographic_buffer": 38,
+    "zero_mask_requires_review": 8
+  },
+  "geographic_blocks": 360,
+  "limitations": [
+    "Internal source holdout, not independent of published model training data.",
+    "Distances use approximate filename centres in EPSG:25832, not surveyed building boundaries.",
+    "Source annotation status is preserved; upstream labels are not locally reviewed.",
+    "All-zero upstream masks remain unassigned until review; representative hard negatives are still needed.",
+    "A frozen test partition must not be used for threshold, architecture or seed selection."
+  ],
+  "metric_crs": "EPSG:25832",
+  "minimum_cross_split_center_distance_m": {
+    "train-test": 1010.4871290862451,
+    "train-val": 1012.8240884687651,
+    "val-test": 1146.6805586307928
+  },
+  "ok": true,
+  "policy": "geographic-block-buffer-v1",
+  "records": 4027,
+  "seed": 20261020,
+  "source_coordinates_sha256": "70306eedff4ce713ed9635819c773233c1a389350575a339b36a558d78effd1c",
+  "source_dataset_fingerprint": "84e4600b0b64da5a15972fb045bfd412ccd7a3541109a6c77073dcbc8d0ca805",
+  "source_reports_sha256": {
+    "import-report.json": "9684925081fa6ad065bf6b34d7a01e67beede470ab46f0c36a0d14ccc27b9736",
+    "validation-report.json": "4443551797bfac31cadfeae9d4004d52f1aa3938d248e639b24d362e6291e4ca"
+  },
+  "splits": {
+    "test": 421,
+    "train": 3282,
+    "unassigned": 46,
+    "val": 278
+  },
+  "target_fractions": {
+    "test": 0.1,
+    "train": 0.8,
+    "val": 0.1
+  },
+  "validation": {
+    "error_count": 0,
+    "ok": true,
+    "warning_count": 12081
+  },
+  "verification_environment": {
+    "platform": "Darwin arm64",
+    "pyproj": "3.8.0",
+    "python": "3.12.14"
+  }
+}

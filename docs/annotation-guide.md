@@ -57,3 +57,18 @@ Use `reviewed` only after local review. Imported curated labels remain
 `upstream` until reviewed locally; provisional labels remain `unreviewed` and
 unassigned. Validation checks these declarations and encodings, not annotation
 truth or model quality.
+
+## Local review gallery
+
+The [local label-review workflow](label-review.md) exports source images,
+unchanged masks, and overlays into an offline browser gallery. Start with:
+
+```sh
+uv run --locked pvextent data review SOURCE OUTPUT --json
+```
+
+Open `OUTPUT/index.html`, inspect each selected image, and download the named
+reviewer's decisions as JSON. Every decision starts pending. The gallery does
+not apply mask corrections, change source annotation status, or assign splits;
+its JSON is evidence for a later explicit curation step. An all-zero or
+all-ignore mask alone does not establish that an image contains no visible PV.

@@ -1,0 +1,56 @@
+{
+  "background_pixels": 0,
+  "building_features_matched": 235,
+  "building_features_returned": 235,
+  "building_license_url": "https://www.govdata.de/dl-de/zero-2-0",
+  "building_query_url": "https://ogc-api.nrw.de/lika/v1/collections/gebaeude_bauwerk/items?f=json&bbox=7.435%2C51.545%2C7.445%2C51.555&limit=500&gebnutzbez=Geb%C3%A4ude&crs=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832",
+  "building_response_sha256": "e4920ce274668b8cd71fa81a7adf126cad653043b1f899d2860f3be41c72c31f",
+  "building_response_truncated": false,
+  "capture_dates": [
+    "2025-03-07"
+  ],
+  "dataset_fingerprint": "eca012bdf1b788ee81d7105e7d889f8c2983af04fb8a9dd45a42f801b107139c",
+  "dated_records": 7,
+  "ignored_pixels": 716800,
+  "limitations": [
+    "Unreviewed ignore masks: no positive, negative or hard-negative labels exist.",
+    "Convenience sample from one geographic block; not an accuracy benchmark.",
+    "Separation from PV4GER centers does not prove independence from unknown model training.",
+    "Requested 0.1 m sampling is distinct from source native GSD.",
+    "Building currency and retrieval dates are not imagery acquisition dates."
+  ],
+  "minimum_candidate_center_spacing_m": 80.0,
+  "minimum_source_distance_observed_m": 2337.893798718101,
+  "minimum_source_distance_required_m": 1045.254833995939,
+  "network_request_count": 12,
+  "network_requests": {
+    "building_requests": 1,
+    "image_requests": 7,
+    "metadata_requests": 4
+  },
+  "ok": true,
+  "pv_pixels": 0,
+  "query_bbox_crs84": [
+    7.435,
+    51.545,
+    7.445,
+    51.555
+  ],
+  "records": 7,
+  "requested_records": 24,
+  "selection_exclusions": {
+    "center_outside_query": 11,
+    "native_gsd_unknown_or_not_10cm": 15,
+    "near_selected_candidate": 79,
+    "unsuitable_geometry_or_function": 123
+  },
+  "selection_exhausted": true,
+  "snapshot_retrieved_at": "2026-10-20T19:34:13.200200+00:00",
+  "source_center_count": 4027,
+  "source_coordinates_sha256": "b0068e4a7516f29b47155dfb674d2003603af687779d91df29a2c17d334890f6",
+  "source_dataset_fingerprint": "84e4600b0b64da5a15972fb045bfd412ccd7a3541109a6c77073dcbc8d0ca805",
+  "validation": {
+    "ok": true,
+    "warning_count": 14
+  }
+}

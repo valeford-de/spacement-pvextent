@@ -15,9 +15,12 @@ evaluation, and inference.
 
 ## Status
 
-The dataset format, annotation rules, offline validator, and a pinned
-PV4GER-SEG importer are implemented. Training and inference are not implemented
-yet, and no trained model or performance result has been released. See the
+Dataset import, validation, geographic split snapshots, a local label-review
+gallery, and a bounded NRW roof candidate fetcher are implemented. The complete
+PV4GER-SEG release has been imported and split with a 1 km geographic buffer.
+Label review and an independent benchmark remain outstanding. Training and
+inference are not implemented yet; no trained model or performance result has
+been released. See the
 [research roadmap](docs/roadmap.md) for the next steps.
 
 ## Documentation
@@ -30,6 +33,9 @@ Start with the [dataset format](docs/data-format.md) and
 [annotation guide](docs/annotation-guide.md) when preparing imagery and masks.
 The [PV4GER-SEG import guide](docs/pv4ger-import.md) explains how to obtain and
 convert the first public segmentation dataset.
+Continue with [geographic splits](docs/geographic-splits.md),
+[local label review](docs/label-review.md), and
+[unreviewed NRW roof candidates](docs/nrw-candidates.md).
 
 For private vulnerability reports, see the [security policy](.github/SECURITY.md).
 
@@ -80,7 +86,27 @@ publisher's split boundaries. See the [import guide](docs/pv4ger-import.md) for
 offline use, smoke runs, licenses, and the limits of proximity grouping.
 
 Run the complete test suite, including synthetic HDF5 import fixtures, with
-`uv run --locked --extra import python -m unittest discover -s tests -v`.
+`uv run --locked --extra import --extra geo python -m unittest discover -s tests -v`.
+
+## Prepare geographic splits and review
+
+```sh
+uv sync --locked --extra import --extra geo
+uv run --locked --extra geo pvextent data split \
+  data/pv4ger-seg-v0.9.1 data/pv4ger-seg-geographic-v1 --json
+uv run --locked pvextent data review \
+  data/pv4ger-seg-v0.9.1 data/review-pv4ger-seg-v0.9.1 --json
+```
+
+The [measured split audit](docs/research/geographic-split-audit.md) records
+3,282 training, 278 validation and 421 test samples; 46 stay unassigned for
+review or spatial buffering. This is an internal source holdout, not a new
+independent benchmark. Open the review directory's `index.html` in a browser
+to inspect copied images, masks and overlays. Downloaded review decisions are
+evidence; they do not automatically change canonical annotations.
+
+The [NRW sampler](docs/nrw-candidates.md) can also fetch up to 24 new roof
+candidates. They remain unreviewed, with all-ignore masks until annotation.
 
 ## Package layout
 
@@ -92,8 +118,9 @@ Run the complete test suite, including synthetic HDF5 import fixtures, with
 | `pvextent.evaluation` | Segmentation and array detection evaluation |
 | `pvextent.inference` | Predictions from images and trained checkpoints |
 
-The data module provides validation and dataset import; the remaining modules
-define project boundaries for the planned training pipeline.
+The data module provides import, validation, geographic splitting, candidate
+collection and review export. The remaining modules define project boundaries
+for the planned training pipeline.
 
 ## License and attribution
 

@@ -111,6 +111,32 @@ class ValidationCliTests(unittest.TestCase):
         self.assertEqual(result.stdout, "")
         self.assertIn("--limit", result.stderr)
 
+    def test_new_data_actions_report_missing_datasets_as_json_errors(self) -> None:
+        for action in ("split", "review", "fetch-nrw-candidates"):
+            with self.subTest(action=action):
+                output = self.root / action
+                result = self.command(
+                    "data", action, str(self.root / "missing-dataset"), str(output), "--json"
+                )
+                self.assertEqual(result.returncode, 1, result.stderr)
+                document = json.loads(result.stdout)
+                self.assertFalse(document["ok"])
+                self.assertTrue(document["error"])
+                self.assertNotIn("Traceback", result.stderr)
+                self.assertFalse(output.exists())
+
+    def test_candidate_limit_above_bounded_pool_is_rejected_before_fetch(self) -> None:
+        output = self.root / "candidates"
+        result = self.command(
+            "data", "fetch-nrw-candidates", str(self.root / "missing-dataset"),
+            str(output), "--limit", "25", "--json",
+        )
+        self.assertEqual(result.returncode, 1, result.stderr)
+        document = json.loads(result.stdout)
+        self.assertFalse(document["ok"])
+        self.assertIn("between 1 and 24", document["error"])
+        self.assertFalse(output.exists())
+
     def test_bad_command_line_exits_two(self) -> None:
         result = self.command("data", "validate")
         self.assertEqual(result.returncode, 2)

@@ -9,9 +9,11 @@ Step 1's [data contract and validator](data-format.md),
 [annotation rules](annotation-guide.md), and synthetic format demonstration are
 implemented. Step 2's [PV4GER-SEG importer](pv4ger-import.md) prepares the first
 public segmentation dataset, preserving source provenance and native resolution.
-Label review, additional hard negatives, and an independent test set are the
-next milestones. Imported publisher splits are retained as provenance; they are
-not adopted as independent evaluation splits.
+The [local review gallery](label-review.md) and
+[unreviewed NRW roof sampler](nrw-candidates.md) prepare annotation work.
+Completed label review, verified hard negatives, and an independent test set
+remain outstanding. Imported publisher splits are retained as provenance;
+they are not adopted as independent evaluation splits.
 
 - Record imagery source, capture date, ground sampling distance, geographic
   reference, usage rights, and content hash.
@@ -23,6 +25,13 @@ not adopted as independent evaluation splits.
   are not ground truth.
 
 ## 2. Separate training and evaluation
+
+The [geographic split policy](geographic-splits.md) is implemented and executed
+on the complete PV4GER-SEG source. It creates a frozen internal holdout with
+10 km blocks, a 1 km centre buffer, duplicate/group/building constraints and
+explicit exclusions. See the [measured audit](research/geographic-split-audit.md).
+This does not establish independence from published model training data or
+replace the planned reviewed external test set.
 
 - Group images by building and geographic area before creating splits.
 - Keep repeat captures of a building together; reserve additional acquisition
