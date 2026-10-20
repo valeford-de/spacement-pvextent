@@ -1,0 +1,386 @@
+{
+  "change_from_parent_best_to_continued_best": {
+    "dice_percentage_points": 0.15201743463100215,
+    "fn": -18448,
+    "fp": 742,
+    "iou_percentage_points": 0.2803258373855755,
+    "precision_percentage_points": 0.00015324062140331662,
+    "recall_percentage_points": 0.3024457149452431,
+    "tn": -742,
+    "tp": 18448
+  },
+  "experiment": "baseline-resnet18-training-extension-001",
+  "limitations": [
+    "Duration control on the existing dataset only; no new positive labels were added.",
+    "Internal validation selected the best epoch and is not an independent test.",
+    "The earlier external pilot scores refer to their original fixed checkpoints; no new external claim is made.",
+    "New pools contain unreviewed ignore placeholders and may contain no usable PV.",
+    "New target-domain labels need separate curation, immutable snapshot integration, suitable sampling and a registered training comparison.",
+    "Concurrent acquisition and CPU tests ran on this machine; wall time is not a dedicated throughput benchmark."
+  ],
+  "local_date": "2026-10-21",
+  "new_training_review_pools": {
+    "canonical_positive_curation_completed": false,
+    "distance_reference_records": 761,
+    "human_review_claimed": false,
+    "identity_reference_records": 4054,
+    "included_in_this_training_run": false,
+    "minimum_pairwise_actual_candidate_centre_distance_m": 207.29353583744748,
+    "minimum_required_protected_distance_m": 5045.254833995939,
+    "new_supervised_pixels": 0,
+    "published_records": 22,
+    "reference_fingerprints_and_coordinate_hashes": [
+      {
+        "coordinate_sha256": "c32c6d459344e8fbe6f613367919bb5cdbedbeae1838bc2abacb0a02744c3f44",
+        "dataset_fingerprint": "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14"
+      },
+      {
+        "coordinate_sha256": "3055c4e8c47129870193271fd72aba33583cde271d4c0030e3cfcd2337117d56",
+        "dataset_fingerprint": "7a3ec2dfdc495de62778803e35435bf9a6fbe1884dda798b61574a28a2467218"
+      }
+    ],
+    "region_batching_registration_commit": "939a3c9",
+    "region_runs": [
+      {
+        "background_pixels": 0,
+        "candidate_report_sha256": "f94a9dd342a587def43336a2a21346d792cdaa1b3f4da0169d40b8fd326121c3",
+        "capture_date_counts": {
+          "2025-03-07": 8
+        },
+        "dataset": "data/nrw-training-schleiden-v1",
+        "dataset_fingerprint": "356ef565deef04ea236b99b07dbeb3de0abf76c9865c694c8ba942a70690c2b4",
+        "ignored_pixels": 819200,
+        "minimum_actual_affine_centre_to_protected_reference_m": 11399.725001684385,
+        "network_requests": {
+          "building_requests": 1,
+          "image_requests": 8,
+          "metadata_requests": 8
+        },
+        "protocol_sha256": "d12f151efcae56a7460591ffc81176f4bd27cc02d019f096d32294b0644240cf",
+        "pv_pixels": 0,
+        "records": 8,
+        "region": "schleiden",
+        "request_count": 17,
+        "training_use_allowed": false
+      },
+      {
+        "background_pixels": 0,
+        "candidate_report_sha256": "a64e45b48508485bff998afe2ddbf637296db0cc78bd63b345908a9bf1342238",
+        "capture_date_counts": {
+          "2026-04-07": 8
+        },
+        "dataset": "data/nrw-training-duelmen-v1",
+        "dataset_fingerprint": "bd39f70c500586fa993fe5fa81f72c9ebb05f1e58df52eda5ccf539c104768a6",
+        "ignored_pixels": 819200,
+        "minimum_actual_affine_centre_to_protected_reference_m": 10296.754031515453,
+        "network_requests": {
+          "building_requests": 1,
+          "image_requests": 8,
+          "metadata_requests": 8
+        },
+        "protocol_sha256": "28a7e964c4deae7eca1ac8efedccd60e56a649fa5d95e180655be5097ead86da",
+        "pv_pixels": 0,
+        "records": 8,
+        "region": "duelmen",
+        "request_count": 17,
+        "training_use_allowed": false
+      },
+      {
+        "background_pixels": 0,
+        "candidate_report_sha256": "4cd532e07f2a24a431fb2ea2561f3e080ad034e44c571888cbb05c87a15a9254",
+        "capture_date_counts": {
+          "2025-06-30": 6
+        },
+        "dataset": "data/nrw-training-marsberg-area-v1",
+        "dataset_fingerprint": "d3c5f502163abf39143228112d17218e698664402c1d9f261dfe8a44f6f59d26",
+        "ignored_pixels": 614400,
+        "minimum_actual_affine_centre_to_protected_reference_m": 5635.661460719587,
+        "network_requests": {
+          "building_requests": 1,
+          "image_requests": 6,
+          "metadata_requests": 8
+        },
+        "protocol_sha256": "38e3017db57120dfe88ae41030656651e034a42f67dbcb1cf545df5614e0fd0f",
+        "pv_pixels": 0,
+        "records": 6,
+        "region": "marsberg-area",
+        "request_count": 15,
+        "training_use_allowed": false
+      }
+    ],
+    "review_proposals": {
+      "both_approve_cases": 7,
+      "canonical_supervised_pixels": 0,
+      "gate_eligible_cases": 7,
+      "preliminary_gate": {
+        "background_pixels": 256,
+        "pv_pixels": 100
+      },
+      "proposed_consensus_background_pixels": 20899,
+      "proposed_consensus_pv_pixels": 8938,
+      "purpose": "Two blind training-review proposals; canonical pool masks unchanged and no training assignment",
+      "reviews": [
+        {
+          "decisions": {
+            "approve-positive": 7,
+            "defer": 15
+          },
+          "reviewer": "ai-nrw-training-positive-review-a",
+          "samples": 22,
+          "sha256": "ae62d74b25e63b995839007f2ce8bc19cd371585887a90fdf86e2e6a1add1237"
+        },
+        {
+          "decisions": {
+            "approve-positive": 7,
+            "defer": 15
+          },
+          "reviewer": "ai-nrw-training-positive-review-b",
+          "samples": 22,
+          "sha256": "ce5045df28bf7371df25e16533a03924ef9924ab32b78f5658fc6a9bc6514509"
+        }
+      ],
+      "source_images": 22,
+      "used_for_training": false
+    },
+    "source_code_registration_commit": "d769751",
+    "two_independent_reviews_completed": true,
+    "whole_pool_attempts_failed": 2
+  },
+  "parent": {
+    "best_checkpoint_sha256": "13dfd074d248ab71deee91b976082ad1ff4d9564f0c49eaf917e4334aff16368",
+    "best_epoch": 3,
+    "best_val": {
+      "dice": 0.957809517043025,
+      "fn": 275765,
+      "fp": 237303,
+      "iou": 0.9190349870836102,
+      "loss": 0.12823272361118587,
+      "pixel_accuracy": 0.9819768716276979,
+      "precision": 0.9608484865483337,
+      "recall": 0.9547897102223143,
+      "samples": 278,
+      "split": "val",
+      "threshold": 0.5,
+      "tn": 22130290,
+      "tp": 5823842,
+      "valid_pixels": 28467200
+    },
+    "checkpoint_sha256": "cdb958053609ee1b3cb4781f59518da9eb921ab28c5f8d2d379a6fcbd728e720"
+  },
+  "registration": {
+    "commit": "6a32373",
+    "only_changed_setting": "epochs3to6",
+    "protocol_sha256": "9c10719fafb40a36f5127e705cb917a6aaab19ecca374be3c7ee8a2be71267e2"
+  },
+  "run": {
+    "best_checkpoint_sha256": "2e04c0e009f3b76a1a0c233aa9efea064251f6aed572d8db9272c2455c83edc6",
+    "best_epoch": 5,
+    "best_reload_verified": true,
+    "best_val": {
+      "dice": 0.959329691389335,
+      "fn": 257317,
+      "fp": 238045,
+      "iou": 0.921838245457466,
+      "loss": 0.1244183496149967,
+      "pixel_accuracy": 0.9825988506070144,
+      "precision": 0.9608500189545477,
+      "recall": 0.9578141673717667,
+      "samples": 278,
+      "split": "val",
+      "threshold": 0.5,
+      "tn": 22129548,
+      "tp": 5842290,
+      "valid_pixels": 28467200
+    },
+    "config_sha256": "0d4936d3c0a9bc888a076f806b6a6ae2fddfb11e20bd3da806b284fe61da6cd1",
+    "dataset_fingerprint": "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14",
+    "device": "mps",
+    "environment": {
+      "mps_fallback_env": "unset",
+      "package_versions": {
+        "safetensors": "0.8.0",
+        "segmentation-models-pytorch": "0.5.0",
+        "timm": "1.0.30",
+        "torch": "2.14.1",
+        "torchvision": "0.29.1"
+      },
+      "platform": "Darwin arm64",
+      "python": "3.12.14"
+    },
+    "epochs_completed": 3,
+    "final_val": {
+      "dice": 0.9571549038609084,
+      "fn": 233095,
+      "fp": 292110,
+      "iou": 0.9178303732784164,
+      "loss": 0.1285349711132564,
+      "pixel_accuracy": 0.9815505213017086,
+      "precision": 0.9525689350637204,
+      "recall": 0.9617852428853203,
+      "samples": 278,
+      "split": "val",
+      "threshold": 0.5,
+      "tn": 22075483,
+      "tp": 5866512,
+      "valid_pixels": 28467200
+    },
+    "global_step": 9882,
+    "history": [
+      {
+        "best_epoch": 3,
+        "elapsed_seconds": 424.8265612910036,
+        "epoch": 4,
+        "event": "epoch",
+        "global_step": 6588,
+        "gradient_norm_max": 35.62685775756836,
+        "gradient_norm_min": 0.07885968685150146,
+        "train_loss": 0.144649225054549,
+        "train_valid_pixels": 336294076,
+        "validation": {
+          "dice": 0.9532867809792878,
+          "fn": 340517,
+          "fp": 223900,
+          "iou": 0.9107430417962691,
+          "loss": 0.14676381464002372,
+          "pixel_accuracy": 0.9801730763826438,
+          "precision": 0.9625772398081895,
+          "recall": 0.9441739443213308,
+          "samples": 278,
+          "split": "val",
+          "threshold": 0.5,
+          "tn": 22143693,
+          "tp": 5759090,
+          "valid_pixels": 28467200
+        }
+      },
+      {
+        "best_epoch": 5,
+        "elapsed_seconds": 464.14531970799726,
+        "epoch": 5,
+        "event": "epoch",
+        "global_step": 8235,
+        "gradient_norm_max": 67.39988708496094,
+        "gradient_norm_min": 0.06605985760688782,
+        "train_loss": 0.13261537989516506,
+        "train_valid_pixels": 336294076,
+        "validation": {
+          "dice": 0.959329691389335,
+          "fn": 257317,
+          "fp": 238045,
+          "iou": 0.921838245457466,
+          "loss": 0.1244183496149967,
+          "pixel_accuracy": 0.9825988506070144,
+          "precision": 0.9608500189545477,
+          "recall": 0.9578141673717667,
+          "samples": 278,
+          "split": "val",
+          "threshold": 0.5,
+          "tn": 22129548,
+          "tp": 5842290,
+          "valid_pixels": 28467200
+        }
+      },
+      {
+        "best_epoch": 5,
+        "elapsed_seconds": 467.03094474998943,
+        "epoch": 6,
+        "event": "epoch",
+        "global_step": 9882,
+        "gradient_norm_max": 24.42889404296875,
+        "gradient_norm_min": 0.0627356767654419,
+        "train_loss": 0.12612821648209677,
+        "train_valid_pixels": 336294076,
+        "validation": {
+          "dice": 0.9571549038609084,
+          "fn": 233095,
+          "fp": 292110,
+          "iou": 0.9178303732784164,
+          "loss": 0.1285349711132564,
+          "pixel_accuracy": 0.9815505213017086,
+          "precision": 0.9525689350637204,
+          "recall": 0.9617852428853203,
+          "samples": 278,
+          "split": "val",
+          "threshold": 0.5,
+          "tn": 22075483,
+          "tp": 5866512,
+          "valid_pixels": 28467200
+        }
+      }
+    ],
+    "initial_val": {
+      "dice": 0.09981145106986312,
+      "fn": 5730374,
+      "fp": 929770,
+      "iou": 0.05252713007141316,
+      "loss": 1.3276855928434743,
+      "pixel_accuracy": 0.7660414793165468,
+      "precision": 0.2842433774209913,
+      "recall": 0.06053389997093255,
+      "samples": 278,
+      "split": "val",
+      "threshold": 0.5,
+      "tn": 21437823,
+      "tp": 369233,
+      "valid_pixels": 28467200
+    },
+    "last_checkpoint_sha256": "d7ed0d58e3230c55edac19aaca23d593bf16e1b8695f399a948fd9a70a298747",
+    "parameter_count": 14328209,
+    "parameter_update_l2": 24.586676495382868,
+    "start_epoch": 3,
+    "start_val": {
+      "dice": 0.957809517043025,
+      "fn": 275765,
+      "fp": 237303,
+      "iou": 0.9190349870836102,
+      "loss": 0.12823272361118587,
+      "pixel_accuracy": 0.9819768716276979,
+      "precision": 0.9608484865483337,
+      "recall": 0.9547897102223143,
+      "samples": 278,
+      "split": "val",
+      "threshold": 0.5,
+      "tn": 22130290,
+      "tp": 5823842,
+      "valid_pixels": 28467200
+    },
+    "total_epochs": 6,
+    "train_samples": 3293,
+    "train_selection_fingerprint": "d64f6b0e15af8740d1a9d21d9a9c813ecfb0746a8b1a3e44aaa3530ecbf3e97c",
+    "val_samples": 278,
+    "val_selection_fingerprint": "18f47f06d8382037f16c0322ff8475b3b9794ad198cf4c81cb171adeaf17e5a2",
+    "wall_time_seconds": 1376.676930540998
+  },
+  "schema_version": "1.0",
+  "timezone": "Europe/Berlin",
+  "verification": {
+    "checkpoint_or_threshold_selection_used_external_pilot": false,
+    "external20_pilot_pixels_opened": false,
+    "external_pilot_inference_repeated": false,
+    "independent_acquisition_metadata_audit_sha256": "5cffe5557062b95e3111ccc2853337de2b9f6d4642ec72bf71d43a4078257bc3",
+    "native_training_pool_and_proposal_contact_sheets_inspected": true,
+    "new_threshold": false,
+    "original421_test_pixels_opened": false,
+    "original_validation_test_record_dictionaries_unchanged": 699,
+    "packaging": {
+      "build_artifact_sha256": {
+        "spacement_pvextent-0.1.0.dev0-py3-none-any.whl": "670f71db5db87f198aac62aa1d18ab17234ab6973cd77f31654f644cdd176e13",
+        "spacement_pvextent-0.1.0.dev0.tar.gz": "8df2ab9039c1ced1b8059d454bd066f1554698c64af063f97b1692b9fb2eab4f"
+      },
+      "changed_module_bytes_match": true,
+      "current_readme_in_metadata": true,
+      "imagery_masks_reviews_runs_checkpoints_excluded": true,
+      "wheel_and_sdist_built": true
+    },
+    "parent_start_counts_reproduced": true,
+    "retained_artifacts_unchanged": 26,
+    "source_code_sha256": {
+      "src/pvextent/data/segmentation.py": "5a972e95adf10ac9d570e3ed0b67983decc626ba769fa68ae0384b35c4f3d85e",
+      "src/pvextent/models/resnet_unet.py": "877ee1a9626fb0965302d5c80974f6980be55d40258f2219412b1fe0327f8101",
+      "src/pvextent/training/baseline.py": "be872733b4d7a8195e012a3b3ac0f7ecaef71f945650a34cc4411e3686d016a6",
+      "src/pvextent/training/losses.py": "6b2bdc3be21a70a9dea9a4f9e88d9e8864b6be334543f35c4e121a2ee08e2d1e"
+    },
+    "training_implementation_matches_registered_commit": true,
+    "unit_tests_passed": 334
+  }
+}

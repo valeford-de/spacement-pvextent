@@ -147,15 +147,16 @@ confusion counts before a successful run is published. Existing output
 directories are never replaced. Dataset pixels, labels and split assignments
 are unchanged.
 
-To continue after epoch 3, copy the original TOML configuration, change only
-`epochs = 6`, and choose a new output directory:
+To continue after epoch 3, change only the total epoch target and choose a new
+output directory. The registered six-epoch control uses
+[`configs/baseline-resnet18-continued6.toml`](../configs/baseline-resnet18-continued6.toml):
 
 ```sh
 uv run --locked --extra baseline pvextent train baseline \
-  data/pv4ger-seg-geographic-v1 runs/baseline-001-continued \
-  --config configs/baseline-resnet18-extended.toml \
-  --weights-dir artifacts/weights/resnet18-a1-in1k \
-  --device auto --resume runs/baseline-001/last.pt --json
+  data/pvextent-training-v2 runs/baseline-resnet18-continued-001 \
+  --config configs/baseline-resnet18-continued6.toml \
+  --weights-dir data/pretrained/resnet18.a1_in1k \
+  --device mps --resume runs/baseline-resnet18-negatives-001/last.pt --json
 ```
 
 The epoch target includes previously completed epochs, so this performs epochs
@@ -165,6 +166,16 @@ versions. `best.pt` is an inference weights bundle and cannot be used for resume
 The self-contained `last.pt` carries the earlier best weights, so continuation
 does not require the old `best.pt` or original encoder cache. Its `.sha256`
 companion is still required. Parent run files are not rewritten.
+
+This control changes only training duration on the existing snapshot. New NRW
+training-review candidates are acquired separately and are not included in it.
+Best internal-validation IoU may retain an earlier epoch; the fixed final epoch
+is reported as well. The [continuation audit](research/training-extension-audit.md)
+records actual results without claiming that longer training resolves external
+transfer. The known external pilot remains outside checkpoint and threshold
+selection and is not rerun for this control. Adding reviewed positive data later
+requires a new immutable snapshot and a separate experiment; regular resume
+deliberately rejects a changed dataset or split selection.
 
 If a handled failure or keyboard interruption occurs after a complete epoch,
 the requested success directory remains unpublished. Recovery normally retains

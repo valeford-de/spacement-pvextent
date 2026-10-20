@@ -66,6 +66,60 @@ metadata responses, request URLs, byte hashes, retrieval time and sample records
 distances, request counts and validation results. Re-running a live service can
 produce a different snapshot even with the same selection rules.
 
+## Separate training-review pools
+
+`fetch-training-candidates` reuses the bounded native-image acquisition core
+with an explicit training-review namespace and a registered regional protocol:
+
+```sh
+uv run --locked --extra train --extra geo pvextent data fetch-training-candidates \
+  data/nrw-training-schleiden-v1 \
+  --exclude data/pvextent-training-v2 \
+  --exclude data/nrw-negative-holdout-candidates-v1 \
+  --protocol docs/research/nrw-training-acquisition-schleiden-v1.json --json
+```
+
+The registered [Dülmen](research/nrw-training-acquisition-duelmen-v1.json) and
+[Marsberg-area](research/nrw-training-acquisition-marsberg-area-v1.json)
+protocols use their corresponding new output paths. The original combined
+three-region protocol encountered a timeout and a connection reset in two
+explicit attempts; neither published a dataset. The
+[region-batching record](research/nrw-training-region-batching-v1.json) keeps
+the same 24 geometry slots and selection rules, publishing each region
+independently so an interruption elsewhere does not discard completed regions.
+
+Supply both the complete existing training snapshot and the complete reserved
+external pool, including its deferred cases. IDs, image hashes, building IDs and
+spatial groups are excluded against **all** supplied records. Only declarations
+and coordinates are read; exclusion rasters are never resolved or decoded.
+
+For training pools, geographic distance applies to reference splits `val`,
+`test` and `unassigned`. The entire external twenty-case pool is unassigned and
+therefore protected, as are all existing evaluation and deferred records. New
+training images may be near existing `train` records; requiring distance from
+other training examples would needlessly exclude useful training locations.
+The geographic rule for the separate evaluation acquisition remains unchanged:
+it excludes every split, including training.
+
+The training protocol is strict JSON with `schema_version`, `dataset_version`,
+`regions`, `min_reference_distance_m`, `min_candidate_distance_m`, and
+`distance_reference_splits: ["val", "test", "unassigned"]`. It permits one to
+three small NRW boxes, at most eight slots each, at least `5000 + 32 * sqrt(2)`
+metres from protected centres and 200 m between candidate centres. Native
+metadata and exact-response rules are the same as for the separate holdout
+acquisition. Missing support reduces the retained count; no replacement slots
+are added after RGB inspection.
+
+The output dataset ID is `nrw-training-candidates`, with groups
+`nrw-training-REGION`. The report identifies intended use as `training-review`,
+records the full identity and protected-distance reference counts, and sets
+`training_use_allowed` to false. Every mask is still wholly ignored. Acquisition
+does not establish that any image contains PV and does not add samples to a
+training run. Two blind visual reviews, positive-mask curation, an immutable
+training snapshot and a separate registered experiment are subsequent work.
+The existing negative-only augmenter rejects masks containing PV and must not
+be used to bypass those steps.
+
 ## Annotation and use
 
 The first [recorded fetch](research/nrw-candidates-dortmund-v1.json) accepted

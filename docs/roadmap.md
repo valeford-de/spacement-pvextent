@@ -195,6 +195,28 @@ positives with fuller labels, and register the next comparison before training.
 Do not adapt the pilot's labels, probability threshold or model selection to
 improve its reported result.
 
+A registered duration control has now continued the unchanged augmented snapshot
+from three to six total epochs. The best internal-validation checkpoint is
+epoch five: IoU **0.92183825**, Dice **0.95932969**, an IoU increase of
+**0.280326 percentage points** over the parent best. The fixed final epoch six
+has IoU **0.91783037**. No external-pilot inference or threshold selection was
+performed; this small internal gain does not establish a remedy for transfer.
+The [continuation audit](research/training-extension-audit.md) records exact
+counts, hashes, reload checks and unchanged parent/test data.
+
+Separately, a new training-review acquisition contains **22 native NRW crops**
+from Schleiden, Dülmen and the Marsberg area. Identity exclusions cover all
+4,054 supplied records; geographic distance protects 761 validation, test and
+unassigned centres, including every external-pilot case. Two interrupted
+combined attempts were replaced by registered per-region atomic acquisitions
+with the same 24 slots; two unsupported full-crop metadata cases were excluded.
+Two independent blind AI reviews agree on seven positive proposals, supplying
+8,938 proposed PV pixels and 20,899 proposed background pixels. Canonical masks
+remain all-ignore and these images were not used in the continuation. Positive
+curation, an immutable training snapshot, explicit target-source sampling and a
+separate NRW-enriched experiment are the next development work; regular resume
+must continue to reject changed dataset fingerprints.
+
 The following evaluation work remains:
 
 - Evaluate the original reserved test partition under a fixed protocol after

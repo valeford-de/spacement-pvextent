@@ -86,7 +86,7 @@ reviews, source notices and protocol hashes. Imagery remains DL-DE-Zero-2.0;
 new Valeford AI annotations use Apache-2.0.
 
 ```sh
-uv run --locked --extra geo pvextent data freeze-positive-holdout \
+uv run --locked --extra train --extra geo pvextent data freeze-positive-holdout \
   data/nrw-negative-holdout-candidates-v1 \
   data/negative-holdout-frozen-v2 \
   data/positive-holdout-frozen-v1 \

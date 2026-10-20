@@ -55,6 +55,15 @@ general operational detection claim. See the
 [positive audit](docs/research/positive-holdout-audit.md). The next priority is
 separate NRW training positives and investigation of source differences, with
 the pilot retained outside training and tuning.
+A duration-only continuation on the unchanged training snapshot has now reached
+six total epochs. Its best checkpoint is epoch five, with internal validation
+IoU **0.92184** and Dice **0.95933**, a **0.2803 percentage-point IoU gain** over
+the three-epoch candidate. The fixed final epoch has lower IoU **0.91783**.
+The external pilot was not rerun; its earlier scores refer to the original
+fixed checkpoints. Separately, 22 new NRW training-review images were acquired,
+and two blind AI passes prepared partial positive proposals for seven cases.
+Those proposals are not yet canonical training masks and were not used in this
+continuation. See the [continuation audit](docs/research/training-extension-audit.md).
 
 ## Documentation
 
@@ -91,6 +100,8 @@ The [positive holdout guide](docs/positive-holdout.md) documents the separate
 blind positive reviews, consensus masks and recall on confirmed PV pixels;
 its [audit](docs/research/positive-holdout-audit.md) records the observed failure
 and validation control.
+The [continuation audit](docs/research/training-extension-audit.md) records the
+additional-epoch control, separate new inputs and proposed-label limitations.
 
 For private vulnerability reports, see the [security policy](.github/SECURITY.md).
 
