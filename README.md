@@ -1,7 +1,5 @@
 ![Spacement PVExtent](docs/assets/pvextent-banner.png)
 
-# Spacement PVExtent
-
 Photovoltaic array segmentation from orthophotos.
 
 Developed and maintained by **Valeford** under the **Spacement** brand.
