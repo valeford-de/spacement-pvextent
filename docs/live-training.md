@@ -1,15 +1,18 @@
 # Live training monitor
 
-Start the local, read-only monitor from the repository:
+Start the local, read-only monitor from the repository's installed environment:
 
 ```sh
-uv run --locked pvextent monitor --repo-dir . --port 59654
+uv run --locked --no-sync pvextent monitor --repo-dir . --port 59654
 ```
 
 Open the printed `http://127.0.0.1:59654/` address. The page refreshes every
 two seconds and shows the current 1,000-photo mask proposal and independent
 check counts. It also reports when `data/pvextent-training-v3` is prepared.
 Starting the monitor does not start training.
+`--no-sync` also avoids changing optional dependencies while another process
+is training or reviewing data. Prepare the project environment first using
+the [development setup](../README.md#development-setup) or baseline guide.
 
 The default **Live / nächster Lauf** view selects an active baseline run when
 one exists. Otherwise it explicitly reports that no training is active.

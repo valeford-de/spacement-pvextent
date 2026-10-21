@@ -20,10 +20,12 @@ correlated errors possible even after two checks; label coverage remains sparse.
 
 ## Freeze common proposals
 
-With a complete native-image queue and identified schema 1.1 author drafts:
+These commands require the `train` extra because the shared manifest helpers
+live in the training data module; augmentation also requires `geo`. With a
+complete native-image queue and identified schema 1.1 author drafts:
 
 ```sh
-uv run --locked --extra import pvextent data prepare-mask-proposals \
+uv run --locked --extra train pvextent data prepare-mask-proposals \
   data/nrw-training-bulk-v1 artifacts/nrw-training-bulk-review-v1 \
   artifacts/nrw-training-bulk-mask-reviews-v1/lane-a \
   artifacts/nrw-training-bulk-mask-checks-v2 \
@@ -50,7 +52,7 @@ negative cannot approve a PV polygon. Empty proposals do not prove PV absence.
 After both checkers complete every batch:
 
 ```sh
-uv run --locked --extra import pvextent data curate-training-bulk \
+uv run --locked --extra train pvextent data curate-training-bulk \
   data/nrw-training-bulk-v1 artifacts/nrw-training-bulk-review-v1 \
   artifacts/nrw-training-bulk-mask-checks-v2 \
   data/nrw-training-bulk-curated-v2 \
@@ -76,7 +78,7 @@ overwritten.
 ## Prepare the training snapshot
 
 ```sh
-uv run --locked --extra import --extra geo pvextent data augment-training-bulk \
+uv run --locked --extra train --extra geo pvextent data augment-training-bulk \
   data/pvextent-training-v2 data/nrw-training-bulk-curated-v2 \
   data/pvextent-training-v3 \
   --protected data/nrw-negative-holdout-candidates-v1 \
