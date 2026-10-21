@@ -110,6 +110,10 @@ The [continuation audit](docs/research/training-extension-audit.md) records the
 additional-epoch control, separate new inputs and proposed-label limitations.
 The [bulk training imagery guide](docs/bulk-training-data.md) covers resumable
 collection of 1,000 additional NRW photos and two blind annotation queues.
+The [bulk mask curation guide](docs/bulk-mask-curation.md) documents the shared
+proposal method and two independent checks. The
+[local live monitor](docs/live-training.md) shows annotation progress and real
+training metrics, with completed runs explicitly identified.
 
 For private vulnerability reports, see the [security policy](.github/SECURITY.md).
 

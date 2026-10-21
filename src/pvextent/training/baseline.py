@@ -34,6 +34,14 @@ class BaselineTrainingError(ValueError):
     """A baseline run failed; completed epoch checkpoints may be recoverable."""
 
 
+def _telemetry(directory: Path, event: str, **values) -> None:
+    """Append flushed scalar events for a read-only live monitor."""
+    row = {"event": event, "pid": os.getpid(), "unix_time": time.time(), **values}
+    with (directory / "telemetry.jsonl").open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps(row, sort_keys=True, allow_nan=False) + "\n")
+        stream.flush()
+
+
 def _number(value: Any, low: float, high: float, *, inclusive_low: bool = True) -> bool:
     try:
         return (not isinstance(value, bool) and isinstance(value, (float, int)) and math.isfinite(value)
@@ -264,6 +272,10 @@ def run_baseline(
             parameter_names = set(dict(model.named_parameters()))
             before = {name: value.detach().cpu().clone() for name, value in model.named_parameters()}
             notify(f"Baseline on {selected_device}: {len(train)} train, {len(val)} val; epochs {start_epoch + 1}..{config['epochs']}; test pixels excluded")
+            _telemetry(staging, "run_started", device=selected_device, epoch=start_epoch,
+                       total_epochs=config["epochs"], global_step=global_step,
+                       train_samples=len(train), val_samples=len(val),
+                       batches_per_epoch=math.ceil(len(train) / config["batch_size"]))
             evaluated_start = _evaluate(model, val, config, torch, selected_device, normalize_rgb, masked_bce_dice, PixelConfusion)
             initial_val = evaluated_start if document is None else document["initial_val"]
             history = []
@@ -287,9 +299,13 @@ def run_baseline(
                             raise BaselineTrainingError("Non-finite training gradients.")
                         optimizer.step()
                         global_step += 1
-                        total_loss += float(losses["loss"].item()) * losses["valid_pixels"]
+                        batch_loss = float(losses["loss"].item())
+                        total_loss += batch_loss * losses["valid_pixels"]
                         valid_pixels += losses["valid_pixels"]
                         gradient_min, gradient_max = min(gradient_min, norm), max(gradient_max, norm)
+                        _telemetry(staging, "train_batch", epoch=epoch, global_step=global_step,
+                                   batch=batch_index, batches_per_epoch=math.ceil(len(train) / config["batch_size"]),
+                                   loss=batch_loss, learning_rate=config["learning_rate"])
                         if batch_index == 1 or batch_index % 100 == 0:
                             notify(f"Epoch {epoch}/{config['epochs']}, batch {batch_index}/{math.ceil(len(train) / config['batch_size'])}: loss={float(losses['loss'].item()):.5f}")
                     measured_val = _evaluate(model, val, config, torch, selected_device, normalize_rgb, masked_bce_dice, PixelConfusion)
@@ -316,6 +332,8 @@ def run_baseline(
                     history.append(row)
                     log.write(json.dumps(row, sort_keys=True, allow_nan=False) + "\n")
                     log.flush()
+                    _telemetry(staging, "epoch_completed", epoch=epoch, global_step=global_step,
+                               train_loss=row["train_loss"], validation=measured_val)
                     notify(f"Epoch {epoch} complete: val pixel IoU={measured_val['iou']:.5f}, Dice={measured_val['dice']:.5f}; best={best_epoch}")
             best_document, _ = _read_checkpoint(staging / "best.pt", torch, resume=False)
             with torch.device("cpu"):
@@ -351,10 +369,17 @@ def run_baseline(
                                       "This source lacks representative reviewed PV-free roofs; pixel precision is not roof-level false-positive performance.",
                                       "Pretraining data and source annotations have separate provenance and licensing."]}
             _write_json(staging / "baseline-report.json", report)
+            _telemetry(staging, "run_completed", epoch=config["epochs"], global_step=global_step,
+                       device=selected_device, best_epoch=best_epoch, best_validation=best_val)
         _publish(staging, output)
         staging = None
         return report
     except BaseException as error:
+        if staging is not None and staging.is_dir():
+            try:
+                _telemetry(staging, "run_failed", error_type=type(error).__name__)
+            except OSError:
+                pass
         recovered = None
         resume_from = None
         recovery_errors = []

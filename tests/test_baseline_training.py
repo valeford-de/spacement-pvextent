@@ -212,6 +212,12 @@ class BaselineTrainingTests(unittest.TestCase):
         self.assertEqual(checkpoint["model_state_dict"]["normalization.num_batches_tracked"].item(), 4)
         self.assertEqual(self.snapshot(self.dataset), before)
         self.assertTrue((self.output / "best.pt").is_file())
+        telemetry = [json.loads(line) for line in (self.output / "telemetry.jsonl").read_text().splitlines()]
+        self.assertEqual(telemetry[0]["event"], "run_started")
+        self.assertEqual(telemetry[-1]["event"], "run_completed")
+        batches = [event for event in telemetry if event["event"] == "train_batch"]
+        self.assertEqual([event["global_step"] for event in batches], [1, 2, 3, 4])
+        self.assertTrue(all(math.isfinite(event["loss"]) for event in batches))
         for name in ("last.pt", "best.pt"):
             path = self.output / name
             self.assertEqual(path.with_suffix(".pt.sha256").read_text().strip(), hashlib.sha256(path.read_bytes()).hexdigest())

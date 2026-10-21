@@ -15,6 +15,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="pvextent")
     parser.add_argument("--version", action="version", version=f"PVExtent {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
+    monitor = commands.add_parser("monitor", help="Show read-only live training and mask-check progress on localhost")
+    monitor.add_argument("--repo-dir", default=".")
+    monitor.add_argument("--port", type=int, default=0)
     data = commands.add_parser("data", help="Dataset preparation and validation")
     actions = data.add_subparsers(dest="action", required=True)
     validate = actions.add_parser("validate", help="Validate a dataset directory offline")
@@ -68,6 +71,30 @@ def main(argv: list[str] | None = None) -> int:
     queue.add_argument("--batch-size", type=int, default=25)
     queue.add_argument("--seed", type=int, default=20261021)
     queue.add_argument("--json", action="store_true")
+    proposals = actions.add_parser("prepare-mask-proposals", help="Freeze visual draft polygons for two independent mask checks")
+    proposals.add_argument("dataset_dir")
+    proposals.add_argument("queue_dir")
+    proposals.add_argument("draft_dir")
+    proposals.add_argument("output_dir")
+    proposals.add_argument("--protocol", required=True)
+    proposals.add_argument("--json", action="store_true")
+    bulk_curate = actions.add_parser("curate-training-bulk", help="Curate conservative masks from two complete blind bulk reviews")
+    bulk_curate.add_argument("dataset_dir")
+    bulk_curate.add_argument("queue_dir")
+    bulk_curate.add_argument("review_dir")
+    bulk_curate.add_argument("output_dir")
+    bulk_curate.add_argument("--protocol", required=True)
+    bulk_curate.add_argument("--dataset-version", required=True)
+    bulk_curate.add_argument("--allow-ai-review", action="store_true")
+    bulk_curate.add_argument("--json", action="store_true")
+    bulk_augment = actions.add_parser("augment-training-bulk", help="Add curated bulk masks while preserving frozen evaluation records")
+    bulk_augment.add_argument("base_dir")
+    bulk_augment.add_argument("curated_dir")
+    bulk_augment.add_argument("output_dir")
+    bulk_augment.add_argument("--protected", action="append", required=True, dest="protected_dirs")
+    bulk_augment.add_argument("--protocol", required=True)
+    bulk_augment.add_argument("--dataset-version", required=True)
+    bulk_augment.add_argument("--json", action="store_true")
     freeze = actions.add_parser("freeze-negative-holdout", help="Reserve reviewed negatives for evaluation before predictions")
     freeze.add_argument("curated_dir")
     freeze.add_argument("candidate_dir")
@@ -151,6 +178,16 @@ def main(argv: list[str] | None = None) -> int:
     positives.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
     positives.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
+    if args.command == "monitor":
+        from pvextent.monitoring import serve
+        try:
+            serve(args.repo_dir, port=args.port)
+        except KeyboardInterrupt:
+            return 0
+        except (OSError, ValueError) as error:
+            print(f"MONITOR FAILED: {error}", file=sys.stderr)
+            return 1
+        return 0
     if args.command == "evaluate":
         try:
             if args.action == "validation":
@@ -273,6 +310,20 @@ def main(argv: list[str] | None = None) -> int:
                 from pvextent.data.review_queue import export_training_review_queue
                 result = export_training_review_queue(args.dataset_dir, args.output_dir,
                                                       batch_size=args.batch_size, seed=args.seed)
+            elif args.action == "curate-training-bulk":
+                from pvextent.data.bulk_curation import curate_bulk_training
+                result = curate_bulk_training(args.dataset_dir, args.queue_dir, args.review_dir,
+                                              args.output_dir, dataset_version=args.dataset_version,
+                                              protocol_path=args.protocol, allow_ai_review=args.allow_ai_review)
+            elif args.action == "prepare-mask-proposals":
+                from pvextent.data.bulk_curation import export_bulk_mask_proposals
+                result = export_bulk_mask_proposals(args.dataset_dir, args.queue_dir, args.draft_dir,
+                                                    args.output_dir, protocol_path=args.protocol)
+            elif args.action == "augment-training-bulk":
+                from pvextent.data.bulk_curation import augment_bulk_training
+                result = augment_bulk_training(args.base_dir, args.curated_dir, args.protected_dirs,
+                                               args.output_dir, dataset_version=args.dataset_version,
+                                               protocol_path=args.protocol)
             elif args.action == "freeze-negative-holdout":
                 from pvextent.data.negative_freeze import freeze_negative_holdout
                 result = freeze_negative_holdout(args.curated_dir, args.candidate_dir, args.exclude_dirs, args.output_dir,
@@ -293,6 +344,8 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         if args.json:
             print(json.dumps(result, indent=2, allow_nan=False))
+        elif args.action == "prepare-mask-proposals":
+            print(f"MASK PROPOSALS: {result['ready_batches']}/{result['total_batches']} batches to {args.output_dir}.")
         else:
             count = result["sample_count"] if args.action == "review-queue" else result["records"]
             print(f"{args.action.upper()}: {count} records to {args.output_dir}.")

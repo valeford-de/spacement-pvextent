@@ -284,6 +284,14 @@ class ValidationCliTests(unittest.TestCase):
              "--protected", str(self.root / "protected"), "--protocol", str(self.root / "missing.json"),
              "--cache-dir", str(self.root / "cache"), "--json"),
             ("data", "review-queue", str(self.root / "missing"), str(output), "--json"),
+            ("data", "prepare-mask-proposals", str(self.root / "missing"), str(self.root / "queue"),
+             str(self.root / "drafts"), str(output), "--protocol", str(self.root / "missing.json"), "--json"),
+            ("data", "curate-training-bulk", str(self.root / "missing"), str(self.root / "queue"),
+             str(self.root / "reviews"), str(output), "--protocol", str(self.root / "missing.json"),
+             "--dataset-version", "synthetic", "--allow-ai-review", "--json"),
+            ("data", "augment-training-bulk", str(self.root / "missing"), str(self.root / "curated"),
+             str(output), "--protected", str(self.root / "protected"),
+             "--protocol", str(self.root / "missing.json"), "--dataset-version", "synthetic", "--json"),
         ]
         for command in commands:
             with self.subTest(action=command[1]):
