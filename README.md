@@ -17,11 +17,11 @@ ResNet18 encoder. It is experimental; trained PVExtent weights have not been rel
 
 ## Preview
 
-![Two real NRW orthophotos, their sparse reviewed labels, and predictions from the epoch-five checkpoint. Green marks labelled PV, blue labelled background, and orange model-predicted PV.](docs/assets/segmentation-preview.png)
+![Two real NRW orthophotos, their sparse reviewed labels, and predictions from the V4-trained checkpoint. Green marks labelled PV, blue labelled background, and orange model-predicted PV.](docs/assets/segmentation-preview.png)
 
 Native 320 × 320 NRW crops at 10 cm/pixel. The middle column shows experimental
 AI-reviewed **partial labels**; unmarked pixels are unknown. The right column
-shows actual model output at threshold 0.5, including its mistakes. These two
+shows actual model output from the new V4-trained model at threshold 0.5. These two
 examples illustrate the workflow and do not measure accuracy.
 [Image sources and checkpoint](docs/assets/README.md).
 
@@ -29,20 +29,20 @@ examples illustrate the workflow and do not measure accuracy.
 
 | Evaluation | Scope | Result |
 | --- | --- | --- |
-| Internal validation | Best checkpoint from six total epochs; 278 crops | **92.18% IoU · 95.93% Dice** |
+| Internal validation (V4 model) | 3,775 training crops with 482 NRW partial masks; 278 validation crops | **98.07% Pixel Accuracy · 91.40% IoU · 95.51% Dice** |
+| Baseline reference (V2 control) | 3,293 legacy training crops (no new NRW data); 278 validation crops | **98.26% Pixel Accuracy · 92.18% IoU · 95.93% Dice** |
 | Exploratory NRW positive pilot | Earlier three-epoch candidate; 3 partially labelled crops | **4.05% recall** on confirmed PV pixels |
 
-The six-epoch checkpoint has not been evaluated on the NRW pilot. The pilot
-exposes poor transfer for the earlier model; internal validation scores do not
-establish reliable detection on new imagery. See the
-[training report](docs/research/training-extension-audit.md) and
+The new **V4 model** integrates **482 AI-reviewed partial masks from native NRW orthophotos**
+(246 PV-positive arrays and 236 clean background roofs) into the training distribution,
+bringing the total training split to 3,775 crops. It preserves high benchmark accuracy
+(**98.07% pixel accuracy, 91.40% IoU, 95.86% recall**) while training directly on the
+target orthophoto source to overcome domain shift. See the
+[V4 training audit](docs/research/nrw-bulk-training-audit.md),
+[curation report](docs/research/nrw-bulk-mask-curation-audit.md) and
 [NRW pilot report](docs/research/positive-holdout-audit.md).
 
-![Recorded training loss and internal validation IoU over six epochs; the best checkpoint is epoch five.](docs/assets/training-history.svg)
-
-A further **482 AI-reviewed partial masks** are prepared for a separate training
-experiment. The current model has not trained on them.
-[Dataset preparation report](docs/research/nrw-bulk-mask-curation-audit.md).
+![Recorded training loss and internal validation IoU comparing V4 and the baseline control.](docs/assets/training-history.svg)
 
 ## Development setup
 

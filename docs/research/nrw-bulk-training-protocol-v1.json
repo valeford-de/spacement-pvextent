@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "experiment": "baseline-resnet18-bulk-v4-001",
+  "purpose": "Train baseline U-Net/ResNet18 on the audited V4 training dataset combining legacy PV4GER data with 482 newly curated native NRW orthophoto partial masks (246 positive PV arrays and 236 PV-free roofs) to improve real-world generalization and transferability while maintaining benchmark accuracy.",
+  "date": "2026-10-21",
+  "recorded_before_first_epoch_result": true,
+  "config_path": "configs/baseline-resnet18.toml",
+  "config_file_sha256": "1bde83e401ca13a08ec4e3527751de27f179839317bf86bce87c5558525575ec",
+  "dataset_path": "data/pvextent-training-v4",
+  "dataset_fingerprint": "1eb811eb633a476c4c1b87fa43e0fe274e630119ef195a6a8a3f5b2c13fc9788",
+  "train_samples": 3775,
+  "val_samples": 278,
+  "test_samples": 421,
+  "unassigned_samples": 560,
+  "train_selection_fingerprint": "975ccd57261ae2b173cf75195082044fa65384077e7e9c9e3ca180274a7328d8",
+  "val_selection_fingerprint": "18f47f06d8382037f16c0322ff8475b3b9794ad198cf4c81cb171adeaf17e5a2",
+  "fresh_pretrained_initialization": true,
+  "encoder_spec": {
+    "model_id": "timm/resnet18.a1_in1k",
+    "sha256": "80c49dee3da4822c009c5a7fe591e9223c5a2cfcf95a4067ca4dfb5a7b89c612"
+  },
+  "device": "mps",
+  "epochs": 3,
+  "batch_size": 2,
+  "optimizer": "AdamW",
+  "learning_rate": 0.0001,
+  "weight_decay": 0.0001,
+  "seed": 20261020,
+  "threshold": 0.5,
+  "horizontal_flip": 0.5,
+  "vertical_flip": 0.5,
+  "gradient_clip_norm": 1.0,
+  "updates_per_epoch": 1888,
+  "total_optimizer_updates": 5664,
+  "checkpoint_selection": "Highest internal validation pixel IoU on the untouched 278 validation crops. Retain best.pt and last.pt checkpoints with SHA-256 sidecars.",
+  "original_421_test_pixels_opened": false,
+  "limitations": [
+    "Validation uses the internal upstream-annotated holdout; no independent test set pixels are opened.",
+    "The 482 added NRW partial masks have sparse supervision (< 1% coverage of the new tiles) and rely on AI consensus proposals.",
+    "Hardware is an Apple M2 MacBook Air; batch size is kept at 2 to minimize memory pressure and thermal load."
+  ]
+}
