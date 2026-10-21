@@ -4,6 +4,7 @@
 """CAD-grade geospatial vectorization and rectilinear regularization module."""
 
 from .georef import extract_georeference, extract_geotiff_transform, parse_worldfile
+from .packing import fit_module_grid, point_in_polygon
 from .metrics import (
     DEFAULT_GSD_M,
     DEFAULT_MODULE_EFFICIENCY,
@@ -34,6 +35,7 @@ __all__ = [
     "detect_dominant_orientation",
     "extract_georeference",
     "extract_geotiff_transform",
+    "fit_module_grid",
     "marching_squares_contours",
     "minimum_bounding_box",
     "polygon_area_pixels",

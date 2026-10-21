@@ -161,6 +161,7 @@ def vectorize_mask(
     module_efficiency: float = DEFAULT_MODULE_EFFICIENCY,
     probabilities: np.ndarray | None = None,
     uncertainty: np.ndarray | None = None,
+    fit_modules: bool = True,
 ) -> dict[str, Any]:
     """Execute end-to-end CAD-grade geospatial vectorization on a PV segmentation mask.
 
@@ -198,7 +199,7 @@ def vectorize_mask(
         if min_area_m2 > 0.0 and metrics["area_m2"] < min_area_m2:
             continue
 
-        # Compute dominant azimuth
+        # Compute dominant azimuth & OBB
         _, azimuth_deg = detect_dominant_orientation(regularized)
         obb = minimum_bounding_box(regularized)
         obb_len_m = round(obb["length"] * gsd_m, 2)
@@ -214,6 +215,16 @@ def vectorize_mask(
         metrics["obb_width_m"] = obb_wid_m
         metrics["estimated_table_layout"] = f"{table_rows}x{table_cols}"
         metrics["is_regularized"] = regularize
+
+        # 4. Physical PV module grid fitting
+        modules_px = []
+        if fit_modules:
+            from .packing import fit_module_grid
+            packed = fit_module_grid(regularized, azimuth_deg, gsd_m=gsd_m)
+            metrics["fitted_module_count"] = packed["module_count"]
+            metrics["fitted_capacity_kwp"] = packed["total_capacity_kwp"]
+            metrics["module_packing_orientation"] = packed["orientation"]
+            modules_px = packed["modules_px"]
 
         # Array-level Bayesian probability and uncertainty assessment
         if probabilities is not None:
@@ -270,6 +281,7 @@ def vectorize_mask(
             "properties": {
                 "feature_id": f"pv-array-{idx:03d}",
                 "pixel_polygon": regularized,
+                "fitted_modules_px": modules_px,
                 **metrics,
             },
         }
@@ -278,6 +290,7 @@ def vectorize_mask(
     high_conf = sum(1 for f in features if f["properties"].get("confidence_tier") == "high")
     review_rec = sum(1 for f in features if f["properties"].get("confidence_tier") == "review_recommended")
     mean_scene_conf = float(np.mean([f["properties"].get("mean_detection_probability", 1.0) for f in features])) if features else 1.0
+    total_fitted_mods = sum(f["properties"].get("fitted_module_count", 0) for f in features)
 
     geojson = {
         "type": "FeatureCollection",
@@ -292,6 +305,7 @@ def vectorize_mask(
             "total_pv_area_m2": round(sum(f["properties"]["area_m2"] for f in features), 2),
             "total_capacity_kwp": round(sum(f["properties"]["estimated_capacity_kwp"] for f in features), 3),
             "total_estimated_modules": sum(f["properties"]["estimated_module_count"] for f in features),
+            "total_fitted_modules": total_fitted_mods,
             "mean_scene_confidence": round(mean_scene_conf, 4),
             "regularized": regularize,
             "gsd_m": gsd_m,
@@ -306,7 +320,7 @@ def render_cad_overlay(
     geojson: dict,
     output_path: Path | str,
 ) -> None:
-    """Render high-contrast CAD vector overlay with rectilinear polygon outlines and kWp callout badges."""
+    """Render high-contrast CAD vector overlay with rectilinear polygon outlines, module grids and kWp callout badges."""
     img = image.convert("RGBA")
     overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
@@ -314,6 +328,7 @@ def render_cad_overlay(
     # Color palette
     FILL_COLOR = (0, 220, 140, 90)       # High-visibility neon emerald transparent fill
     BORDER_COLOR = (0, 255, 170, 240)    # Crisp CAD cyan-green border
+    MODULE_COLOR = (0, 255, 230, 160)    # Fine cyan-blue module line
     CALLOUT_BG = (10, 25, 20, 210)       # Dark slate callout badge
     TEXT_COLOR = (240, 255, 250, 255)    # Pristine white text
 
@@ -326,6 +341,10 @@ def render_cad_overlay(
         poly_pts = [(p[0], p[1]) for p in pts]
         # Draw translucent filled polygon
         draw.polygon(poly_pts, fill=FILL_COLOR)
+        # Draw individual physical PV module grid outlines
+        for mod in props.get("fitted_modules_px", []):
+            mod_pts = [(p[0], p[1]) for p in mod]
+            draw.line(mod_pts + [mod_pts[0]], fill=MODULE_COLOR, width=1)
         # Draw sharp rectilinear boundary line
         draw.line(poly_pts + [poly_pts[0]], fill=BORDER_COLOR, width=2)
 
