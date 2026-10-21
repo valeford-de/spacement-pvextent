@@ -334,6 +334,27 @@ class BaselineTrainingTests(unittest.TestCase):
                 self.write_config(**changes)
                 self.assert_failure()
 
+    def test_schema_1_1_supports_domain_balance_and_photometric_jitter(self) -> None:
+        self.write_config(
+            schema_version="1.1", epochs=1,
+            domain_balance=0.5, brightness_jitter=0.2, contrast_jitter=0.2,
+        )
+        report = self.train()
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["epochs_completed"], 1)
+
+    def test_schema_1_1_rejects_invalid_values(self) -> None:
+        for changes in (
+            {"schema_version": "1.1", "domain_balance": 1.5},
+            {"schema_version": "1.1", "domain_balance": -0.1},
+            {"schema_version": "1.1", "brightness_jitter": 2.0},
+            {"schema_version": "1.1", "contrast_jitter": -0.5},
+            {"schema_version": "1.1", "unexpected_extra": 123},
+        ):
+            with self.subTest(changes=changes):
+                self.write_config(**changes)
+                self.assert_failure()
+
     def test_32_pixel_crops_reject_singleton_batches_before_weights_or_optimizer(self) -> None:
         self.set_native_dimensions(32, 32)
         before = self.snapshot(self.dataset)

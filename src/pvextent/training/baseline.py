@@ -25,9 +25,12 @@ from pvextent.data.pv4ger import _publish, _sha256, _write_json
 from .smoke import _cpu_tree, _device, _finite_tree, _restore_rng, _rng_state, _runtime
 
 MAX_CHECKPOINT_BYTES = 256 * 1024 * 1024
-CONFIG_FIELDS = frozenset(("schema_version", "model", "epochs", "batch_size", "learning_rate",
-                           "weight_decay", "seed", "threshold", "horizontal_flip", "vertical_flip",
-                           "max_train_samples", "max_val_samples"))
+REQUIRED_CONFIG_FIELDS = frozenset(("schema_version", "model", "epochs", "batch_size", "learning_rate",
+                                    "weight_decay", "seed", "threshold", "horizontal_flip", "vertical_flip",
+                                    "max_train_samples", "max_val_samples"))
+OPTIONAL_CONFIG_FIELDS = frozenset(("brightness_jitter", "contrast_jitter", "domain_balance"))
+ALL_CONFIG_FIELDS = REQUIRED_CONFIG_FIELDS | OPTIONAL_CONFIG_FIELDS
+CONFIG_FIELDS = REQUIRED_CONFIG_FIELDS
 
 
 class BaselineTrainingError(ValueError):
@@ -58,13 +61,26 @@ def load_config(path: Path | str) -> dict:
         config = tomllib.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError, RuntimeError) as error:
         raise BaselineTrainingError(f"Cannot read baseline TOML configuration: {error}") from error
-    if set(config) != CONFIG_FIELDS or config["schema_version"] != "1.0" or config["model"] != "unet-resnet18-v1":
-        raise BaselineTrainingError("Expected the complete baseline schema 1.0 configuration and unet-resnet18-v1 model.")
+    schema = config.get("schema_version")
+    if schema == "1.0":
+        if set(config) != REQUIRED_CONFIG_FIELDS or config["model"] != "unet-resnet18-v1":
+            raise BaselineTrainingError("Expected the complete baseline schema 1.0 configuration and unet-resnet18-v1 model.")
+        config["brightness_jitter"] = 0.0
+        config["contrast_jitter"] = 0.0
+        config["domain_balance"] = 0.0
+    elif schema == "1.1":
+        if not REQUIRED_CONFIG_FIELDS.issubset(set(config)) or not set(config).issubset(ALL_CONFIG_FIELDS) or config["model"] != "unet-resnet18-v1":
+            raise BaselineTrainingError("Expected baseline schema 1.1 with valid fields and unet-resnet18-v1 model.")
+        for opt in OPTIONAL_CONFIG_FIELDS:
+            config.setdefault(opt, 0.0)
+    else:
+        raise BaselineTrainingError("Expected baseline schema_version 1.0 or 1.1 and unet-resnet18-v1 model.")
     for key, lower, upper in (("epochs", 1, 100), ("batch_size", 1, 16), ("seed", 0, 2 ** 32 - 1),
                               ("max_train_samples", 0, 100000), ("max_val_samples", 0, 100000)):
         if type(config[key]) is not int or not lower <= config[key] <= upper:
             raise BaselineTrainingError(f"{key} must be an integer between {lower} and {upper}.")
-    for key in ("learning_rate", "weight_decay", "threshold", "horizontal_flip", "vertical_flip"):
+    for key in ("learning_rate", "weight_decay", "threshold", "horizontal_flip", "vertical_flip",
+                "brightness_jitter", "contrast_jitter", "domain_balance"):
         if not _number(config[key], 0, 1, inclusive_low=key not in ("learning_rate", "threshold")):
             raise BaselineTrainingError(f"Invalid finite {key} configuration in the range 0..1.")
         config[key] = float(config[key])
@@ -169,6 +185,18 @@ def _augment(batch: dict, generator: Any, config: dict, torch: Any) -> None:
         if axes:
             for key in ("image", "target", "valid"):
                 batch[key][index] = batch[key][index].flip(axes)
+    b_jitter = config.get("brightness_jitter", 0.0)
+    c_jitter = config.get("contrast_jitter", 0.0)
+    if b_jitter > 0.0 or c_jitter > 0.0:
+        b_size = len(batch["ids"])
+        images = batch["image"]
+        if b_jitter > 0.0:
+            b_factor = 1.0 + (torch.rand((b_size, 1, 1, 1), generator=generator, device="cpu").to(images.device) * 2 - 1) * b_jitter
+            images = (images * b_factor).clamp(0.0, 1.0)
+        if c_jitter > 0.0:
+            c_factor = 1.0 + (torch.rand((b_size, 1, 1, 1), generator=generator, device="cpu").to(images.device) * 2 - 1) * c_jitter
+            images = ((images - 0.5) * c_factor + 0.5).clamp(0.0, 1.0)
+        batch["image"] = images
 
 
 def _evaluate(model: Any, dataset: Any, config: dict, torch: Any, device: str, normalize: Any, loss: Any, metric_type: Any) -> dict:
@@ -285,7 +313,29 @@ def run_baseline(
                 for epoch in range(start_epoch + 1, config["epochs"] + 1):
                     epoch_start = time.perf_counter()
                     generator = torch.Generator(device="cpu").manual_seed(config["seed"] + epoch)
-                    order = torch.randperm(len(train), generator=generator).tolist()
+                    domain_balance = config.get("domain_balance", 0.0)
+                    if domain_balance > 0.0:
+                        target_indices = [i for i, r in enumerate(train.records) if r["source_id"].startswith("ai-bulk-")]
+                        base_indices = [i for i, r in enumerate(train.records) if not r["source_id"].startswith("ai-bulk-")]
+                        if target_indices and base_indices:
+                            n_total = len(train)
+                            n_target = round(n_total * domain_balance)
+                            n_base = n_total - n_target
+                            perm_target = torch.randperm(len(target_indices), generator=generator).tolist()
+                            while len(perm_target) < n_target:
+                                perm_target.extend(torch.randperm(len(target_indices), generator=generator).tolist())
+                            chosen_target = [target_indices[i] for i in perm_target[:n_target]]
+                            perm_base = torch.randperm(len(base_indices), generator=generator).tolist()
+                            while len(perm_base) < n_base:
+                                perm_base.extend(torch.randperm(len(base_indices), generator=generator).tolist())
+                            chosen_base = [base_indices[i] for i in perm_base[:n_base]]
+                            combined = chosen_target + chosen_base
+                            shuffle_perm = torch.randperm(len(combined), generator=generator).tolist()
+                            order = [combined[i] for i in shuffle_perm]
+                        else:
+                            order = torch.randperm(len(train), generator=generator).tolist()
+                    else:
+                        order = torch.randperm(len(train), generator=generator).tolist()
                     model.train()
                     total_loss, valid_pixels, gradient_min, gradient_max = 0.0, 0, math.inf, 0.0
                     for batch_index, start in enumerate(range(0, len(order), config["batch_size"]), 1):
