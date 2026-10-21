@@ -28,7 +28,7 @@ MAX_CHECKPOINT_BYTES = 512 * 1024 * 1024
 REQUIRED_CONFIG_FIELDS = frozenset(("schema_version", "model", "epochs", "batch_size", "learning_rate",
                                     "weight_decay", "seed", "threshold", "horizontal_flip", "vertical_flip",
                                     "max_train_samples", "max_val_samples"))
-OPTIONAL_CONFIG_FIELDS = frozenset(("brightness_jitter", "contrast_jitter", "domain_balance", "loss_type"))
+OPTIONAL_CONFIG_FIELDS = frozenset(("brightness_jitter", "contrast_jitter", "domain_balance", "loss_type", "glare_jitter", "shadow_jitter"))
 ALL_CONFIG_FIELDS = REQUIRED_CONFIG_FIELDS | OPTIONAL_CONFIG_FIELDS
 CONFIG_FIELDS = REQUIRED_CONFIG_FIELDS
 SUPPORTED_MODELS = frozenset(("unet-resnet18-v1", "segformer-mit-b2-v1", "deeplabv3plus-resnet50-v1"))
@@ -71,10 +71,12 @@ def load_config(path: Path | str) -> dict:
         config["contrast_jitter"] = 0.0
         config["domain_balance"] = 0.0
         config["loss_type"] = "bce_dice"
+        config["glare_jitter"] = 0.0
+        config["shadow_jitter"] = 0.0
     elif schema == "1.1":
         if not REQUIRED_CONFIG_FIELDS.issubset(set(config)) or not set(config).issubset(ALL_CONFIG_FIELDS) or config["model"] not in SUPPORTED_MODELS:
             raise BaselineTrainingError(f"Expected baseline schema 1.1 with valid fields and model in {sorted(SUPPORTED_MODELS)}.")
-        for opt in ("brightness_jitter", "contrast_jitter", "domain_balance"):
+        for opt in ("brightness_jitter", "contrast_jitter", "domain_balance", "glare_jitter", "shadow_jitter"):
             config.setdefault(opt, 0.0)
         config.setdefault("loss_type", "bce_dice")
         if config["loss_type"] not in SUPPORTED_LOSS_TYPES:
@@ -86,7 +88,7 @@ def load_config(path: Path | str) -> dict:
         if type(config[key]) is not int or not lower <= config[key] <= upper:
             raise BaselineTrainingError(f"{key} must be an integer between {lower} and {upper}.")
     for key in ("learning_rate", "weight_decay", "threshold", "horizontal_flip", "vertical_flip",
-                "brightness_jitter", "contrast_jitter", "domain_balance"):
+                "brightness_jitter", "contrast_jitter", "domain_balance", "glare_jitter", "shadow_jitter"):
         if not _number(config[key], 0, 1, inclusive_low=key not in ("learning_rate", "threshold")):
             raise BaselineTrainingError(f"Invalid finite {key} configuration in the range 0..1.")
         config[key] = float(config[key])
@@ -193,7 +195,9 @@ def _augment(batch: dict, generator: Any, config: dict, torch: Any) -> None:
                 batch[key][index] = batch[key][index].flip(axes)
     b_jitter = config.get("brightness_jitter", 0.0)
     c_jitter = config.get("contrast_jitter", 0.0)
-    if b_jitter > 0.0 or c_jitter > 0.0:
+    g_jitter = config.get("glare_jitter", 0.0)
+    s_jitter = config.get("shadow_jitter", 0.0)
+    if b_jitter > 0.0 or c_jitter > 0.0 or g_jitter > 0.0 or s_jitter > 0.0:
         b_size = len(batch["ids"])
         images = batch["image"]
         if b_jitter > 0.0:
@@ -202,6 +206,31 @@ def _augment(batch: dict, generator: Any, config: dict, torch: Any) -> None:
         if c_jitter > 0.0:
             c_factor = 1.0 + (torch.rand((b_size, 1, 1, 1), generator=generator, device="cpu").to(images.device) * 2 - 1) * c_jitter
             images = ((images - 0.5) * c_factor + 0.5).clamp(0.0, 1.0)
+        if g_jitter > 0.0:
+            h, w = images.shape[-2:]
+            for b_idx in range(b_size):
+                if float(torch.rand((1,), generator=generator).item()) < g_jitter:
+                    cx = float(torch.rand((1,), generator=generator).item()) * w
+                    cy = float(torch.rand((1,), generator=generator).item()) * h
+                    radius = 30.0 + float(torch.rand((1,), generator=generator).item()) * 60.0
+                    intensity = 0.20 + float(torch.rand((1,), generator=generator).item()) * 0.25
+                    yy, xx = torch.meshgrid(torch.arange(h, device=images.device, dtype=torch.float32),
+                                            torch.arange(w, device=images.device, dtype=torch.float32), indexing="ij")
+                    dist_sq = (xx - cx) ** 2 + (yy - cy) ** 2
+                    glare = torch.exp(-dist_sq / (2.0 * radius * radius)).unsqueeze(0) * intensity
+                    images[b_idx] = (images[b_idx] + glare).clamp(0.0, 1.0)
+        if s_jitter > 0.0:
+            h, w = images.shape[-2:]
+            for b_idx in range(b_size):
+                if float(torch.rand((1,), generator=generator).item()) < s_jitter:
+                    angle = float(torch.rand((1,), generator=generator).item()) * math.pi
+                    offset = (float(torch.rand((1,), generator=generator).item()) - 0.5) * max(h, w)
+                    dim_factor = 0.65 + float(torch.rand((1,), generator=generator).item()) * 0.15
+                    yy, xx = torch.meshgrid(torch.arange(h, device=images.device, dtype=torch.float32),
+                                            torch.arange(w, device=images.device, dtype=torch.float32), indexing="ij")
+                    line_proj = (xx - w / 2) * math.cos(angle) + (yy - h / 2) * math.sin(angle)
+                    shadow_mask = torch.sigmoid((line_proj - offset) / 4.0).unsqueeze(0)
+                    images[b_idx] = (images[b_idx] * (1.0 - shadow_mask * (1.0 - dim_factor))).clamp(0.0, 1.0)
         batch["image"] = images
 
 
