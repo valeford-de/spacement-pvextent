@@ -1,0 +1,19 @@
+{
+  "base_dataset_fingerprint": "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14",
+  "dataset_version": "2026-10-21.training-v4",
+  "evidence_sha256": "4fa73bbaf090f049ed873b53c266d7662f1cd5cd6e0123c030aeb1e19290dc9e",
+  "exclusions": [
+    {
+      "id": "nrw-bulk-77de82962f1b252603232bc0",
+      "reason": "Proposed PV interiors may cross panel frames and inter-row substrate. Entire sample is excluded pending adjudication; no pixels are relabelled as background."
+    }
+  ],
+  "human_review_claimed": false,
+  "model_predictions_used": false,
+  "purpose": "experimental-ai-training-quality-quarantine",
+  "reviewer": "PVExtent additional AI visual quality review / bulk_visual_spot_qc_v2 / 2026-10-21",
+  "reviewer_type": "ai",
+  "schema_version": "1.0",
+  "source_dataset_fingerprint": "e3279df66c913bdf502b5cae12d29ef27a673f13f1b485287dd2a453916bc5bd",
+  "training_run_allowed": false
+}
