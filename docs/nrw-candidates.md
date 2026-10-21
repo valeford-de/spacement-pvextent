@@ -1,5 +1,9 @@
 # Unreviewed NRW roof candidates
 
+For the larger 1,000-photo training collection, use the separate
+[resumable bulk collector](bulk-training-data.md). The small samplers below
+retain their original bounds and acquisition protocols.
+
 The candidate fetcher prepares a small separate roof collection for annotation.
 It uses official [Geobasis NRW building features](https://ogc-api.nrw.de/lika/v1/collections/gebaeude_bauwerk)
 and [current orthophotos](https://www.wms.nrw.de/geobasis/wms_nw_dop).

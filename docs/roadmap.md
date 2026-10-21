@@ -217,6 +217,17 @@ curation, an immutable training snapshot, explicit target-source sampling and a
 separate NRW-enriched experiment are the next development work; regular resume
 must continue to reject changed dataset fingerprints.
 
+The [bulk collection](bulk-training-data.md) has now added **1,000 distinct
+native NRW photos**: 600 current-source crops at original TRAIN locations and
+400 distinct ALKIS roofs. Independent source, RGB/hash and spatial checks pass;
+all 761 reserved centres stay separated by at least 5,047.008 m. The photos span
+2022–2026 and retain acquisition/parent provenance. Two reviewer lanes each have
+forty pending batches, with zero new canonical labels or training examples.
+The earlier 22-image review pool remains separate. Complete consensus curation
+and prepare a new immutable training snapshot before a registered target-domain
+experiment; the current model has not changed. See the
+[collection audit](research/nrw-training-bulk-audit.md).
+
 The following evaluation work remains:
 
 - Evaluate the original reserved test partition under a fixed protocol after

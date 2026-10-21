@@ -64,6 +64,12 @@ fixed checkpoints. Separately, 22 new NRW training-review images were acquired,
 and two blind AI passes prepared partial positive proposals for seven cases.
 Those proposals are not yet canonical training masks and were not used in this
 continuation. See the [continuation audit](docs/research/training-extension-audit.md).
+A separate collection now contains **1,000 additional native NRW photos**:
+600 current-source crops at known training locations and 400 distinct ALKIS
+roof crops. Independent checks verified image uniqueness, source metadata and
+reserved-data separation. Two pending review lanes contain forty batches each;
+all masks remain ignore, and the model has not used these photos. See the
+[collection audit](docs/research/nrw-training-bulk-audit.md).
 
 ## Documentation
 
@@ -102,6 +108,8 @@ its [audit](docs/research/positive-holdout-audit.md) records the observed failur
 and validation control.
 The [continuation audit](docs/research/training-extension-audit.md) records the
 additional-epoch control, separate new inputs and proposed-label limitations.
+The [bulk training imagery guide](docs/bulk-training-data.md) covers resumable
+collection of 1,000 additional NRW photos and two blind annotation queues.
 
 For private vulnerability reports, see the [security policy](.github/SECURITY.md).
 

@@ -7,6 +7,11 @@ locations and 400 ALKIS geometry crops separated from original training centres.
 The [selection record](research/nrw-training-bulk-selection-v1.json) binds the
 reference metadata and coordinates before the first new RGB request.
 
+The collection is now complete: **1,000 photos**, independently verified, with
+forty pending review batches per lane. Capture dates span 2022–2026; current
+source availability does not mean every crop is newly flown. No labels or new
+model were created. See the [measured audit](research/nrw-training-bulk-audit.md).
+
 Current captures at known training locations may show changed roofs or arrays.
 They are additional photos of existing training locations, not independent new
 roofs. No old mask is read or transferred. Geometry crops use the existing

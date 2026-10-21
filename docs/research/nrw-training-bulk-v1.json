@@ -1,0 +1,143 @@
+{
+  "accepted_geometry_regions": {
+    "bulk-01": 46,
+    "bulk-02": 21,
+    "bulk-03": 38,
+    "bulk-04": 37,
+    "bulk-05": 35,
+    "bulk-06": 24,
+    "bulk-07": 42,
+    "bulk-08": 24,
+    "bulk-09": 55,
+    "bulk-10": 22,
+    "bulk-11": 13,
+    "bulk-12": 35,
+    "bulk-13": 8
+  },
+  "background_pixels": 0,
+  "dataset": "nrw-training-bulk-v1",
+  "dataset_fingerprint": "2b4409c46d14fb9c7cc4cefc13112bcdf53e2868fc805f3f542c75311672bb55",
+  "identity_reference_records": 4076,
+  "ignored_pixels": 102400000,
+  "independent_audit": {
+    "audit_sha256": "dd0db89047d264a05f9c7b87c9fe1c1f7c11f4144c8adeac4e0a9798f5aca29b",
+    "checks_passed": 39969,
+    "ok": true,
+    "reference_rasters_opened_by_auditor": 0,
+    "script_sha256": "6054fb2ac97164f6f34c69799c014dee3a39d9851f1663d491ac4038b7093eb0"
+  },
+  "known_location_10km_cells": 289,
+  "limitations": [
+    "Collection and pending templates do not supply reviewed labels or a newly trained model.",
+    "Known-location crops remain correlated with their original training parents. They are not independent new roofs.",
+    "Original capture dates are unknown; decoded RGB uniqueness does not prove a different flight. Three current-source crops report 2022 capture dates.",
+    "Current-source availability spans 2022\u20132026; no claim that all images were captured in 2025\u20132026.",
+    "Geometry selection favors small roofs and stops after the registered quota. The collection is not a representative benchmark.",
+    "WMS renderings preserve received bytes and native grid evidence but need not equal original orthophoto-file pixels."
+  ],
+  "model_changed": false,
+  "native_pixels": {
+    "encoded_image_bytes": 237290335,
+    "gsd_m": 0.1,
+    "height": 320,
+    "resizing_applied": false,
+    "unique_decoded_rgb_images": 1000,
+    "unique_encoded_images": 1000,
+    "width": 320
+  },
+  "network": {
+    "assembled_at_utc": "2026-10-21T00:01:47.235453+00:00",
+    "bulk_attempt_reservations_including_restart": 2354,
+    "cache_hits_during_final_assembly": 692,
+    "elapsed_ledger_to_assembly_seconds": 1486.123182,
+    "maximum_protocol_requests": 5000,
+    "preflight_official_requests": 30,
+    "run_ledger_created_at_utc": "2026-10-20T23:37:01.112271+00:00",
+    "unique_retained_responses": 1721
+  },
+  "operational_change": {
+    "initial_source_commit": "add5b648b76c043b575bc7a3a77d6d01f31f3892",
+    "known_images_at_controlled_interruption": 130,
+    "reason": "Replace batch barrier with bounded continuous four-worker dispatch; source selection, frozen candidate plan, quotas and budgets unchanged.",
+    "resumed_source_commit": "35bf5ad8c51d37ff5a2f52aae700fa5e727f2c11",
+    "same_cache_and_attempt_ledger_reused": true
+  },
+  "original_train_images_decoded_for_rgb_dedup": 3293,
+  "protected_reference_centres": 761,
+  "protocol_sha256": "060d08e052ae3061647e738b8157d627f99c363f77b6c8293f211af6eb7cf5a7",
+  "pv_pixels": 0,
+  "quota_counts": {
+    "current_source_crops_at_known_train_locations": 600,
+    "distinct_alkis_roof_crops": 400
+  },
+  "records": 1000,
+  "reference_masks_opened": false,
+  "reference_metadata_and_coordinate_hashes_unchanged": true,
+  "rejections": {
+    "geometry_candidate_spacing": 5821,
+    "geometry_near_protected_reference": 16,
+    "geometry_outside_region": 112,
+    "geometry_unsuitable": 4890,
+    "known_near_existing_training_pool": 1,
+    "known_near_protected_reference": 668,
+    "known_seed_spacing": 141,
+    "native_gsd_date_or_full_crop_coverage_unverified": 61,
+    "request_failed": 117
+  },
+  "review_queue": {
+    "batch_size": 25,
+    "batches_per_lane": 40,
+    "canonical_labels_created": 0,
+    "completed_reviews": 0,
+    "pending_templates": 80,
+    "queue_sha256": "6b3c65fe222867847eadb582a8cd8b3a1b7a217797c1ccfc1d2d27b5bacdce14",
+    "reviewer_lanes": 2,
+    "samples": 1000
+  },
+  "schema_version": "1.0",
+  "selection_plan_sha256": "e5e880231cb4bb89ffe854cd48a7ccfc992cb0b14f06957fd15f65a2bf8280a3",
+  "source_capture_date_range": [
+    "2022-06-15",
+    "2026-05-01"
+  ],
+  "source_capture_year_counts": {
+    "2022": 3,
+    "2024": 331,
+    "2025": 481,
+    "2026": 185
+  },
+  "spatial_distance_minima_m": {
+    "all_new_pairwise_m": 80.06897026939515,
+    "all_new_to_existing22_m": 664.4122442513087,
+    "all_new_to_reserved761_m": 5047.007866522097,
+    "geometry_to_original_train_m": 83.59139464073809,
+    "known_pairwise_m": 258.5684628872441
+  },
+  "status": "complete-unlabelled-photo-collection",
+  "training_uses_collection": false,
+  "val_test_or_external_pilot_rasters_opened": false,
+  "validation": {
+    "expected_warning_reasons": [
+      "unreviewed_labels",
+      "all_ignored"
+    ],
+    "ok": true,
+    "warning_count": 2000
+  },
+  "verification": {
+    "package_artifacts": [
+      {
+        "bytes": 159598,
+        "file": "spacement_pvextent-0.1.0.dev0-py3-none-any.whl",
+        "sha256": "aa843a46f217659eae0b2c4614ea34a9465a787b7f9e730431438d41089fe3c5"
+      },
+      {
+        "bytes": 215092,
+        "file": "spacement_pvextent-0.1.0.dev0.tar.gz",
+        "sha256": "e19cb7563e378f990142ebc1015d4b647bf77d0c048fbda0d0fd025177065cf8"
+      }
+    ],
+    "package_build": "wheel and sdist passed; source/README match and raw artifacts excluded",
+    "synthetic_tests_passed": 389
+  }
+}
