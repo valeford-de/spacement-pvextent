@@ -28,10 +28,11 @@ MAX_CHECKPOINT_BYTES = 512 * 1024 * 1024
 REQUIRED_CONFIG_FIELDS = frozenset(("schema_version", "model", "epochs", "batch_size", "learning_rate",
                                     "weight_decay", "seed", "threshold", "horizontal_flip", "vertical_flip",
                                     "max_train_samples", "max_val_samples"))
-OPTIONAL_CONFIG_FIELDS = frozenset(("brightness_jitter", "contrast_jitter", "domain_balance"))
+OPTIONAL_CONFIG_FIELDS = frozenset(("brightness_jitter", "contrast_jitter", "domain_balance", "loss_type"))
 ALL_CONFIG_FIELDS = REQUIRED_CONFIG_FIELDS | OPTIONAL_CONFIG_FIELDS
 CONFIG_FIELDS = REQUIRED_CONFIG_FIELDS
 SUPPORTED_MODELS = frozenset(("unet-resnet18-v1", "segformer-mit-b2-v1", "deeplabv3plus-resnet50-v1"))
+SUPPORTED_LOSS_TYPES = frozenset(("bce_dice", "focal_lovasz"))
 
 
 class BaselineTrainingError(ValueError):
@@ -69,11 +70,15 @@ def load_config(path: Path | str) -> dict:
         config["brightness_jitter"] = 0.0
         config["contrast_jitter"] = 0.0
         config["domain_balance"] = 0.0
+        config["loss_type"] = "bce_dice"
     elif schema == "1.1":
         if not REQUIRED_CONFIG_FIELDS.issubset(set(config)) or not set(config).issubset(ALL_CONFIG_FIELDS) or config["model"] not in SUPPORTED_MODELS:
             raise BaselineTrainingError(f"Expected baseline schema 1.1 with valid fields and model in {sorted(SUPPORTED_MODELS)}.")
-        for opt in OPTIONAL_CONFIG_FIELDS:
+        for opt in ("brightness_jitter", "contrast_jitter", "domain_balance"):
             config.setdefault(opt, 0.0)
+        config.setdefault("loss_type", "bce_dice")
+        if config["loss_type"] not in SUPPORTED_LOSS_TYPES:
+            raise BaselineTrainingError(f"loss_type must be one of {sorted(SUPPORTED_LOSS_TYPES)}.")
     else:
         raise BaselineTrainingError("Expected baseline schema_version 1.0 or 1.1.")
     for key, lower, upper in (("epochs", 1, 100), ("batch_size", 1, 16), ("seed", 0, 2 ** 32 - 1),
@@ -256,7 +261,10 @@ def run_baseline(
             )
         else:
             raise BaselineTrainingError(f"Unsupported model: {config['model']}")
-        from pvextent.training.losses import masked_bce_dice
+        if config.get("loss_type") == "focal_lovasz":
+            from pvextent.training.losses import masked_focal_lovasz as loss_fn
+        else:
+            from pvextent.training.losses import masked_bce_dice as loss_fn
     except ImportError as error:
         raise BaselineTrainingError("Baseline dependencies missing. Run: uv sync --locked --extra baseline") from error
     source, output = Path(dataset_dir).resolve(), Path(output_dir).absolute()
@@ -325,7 +333,7 @@ def run_baseline(
                        total_epochs=config["epochs"], global_step=global_step,
                        train_samples=len(train), val_samples=len(val),
                        batches_per_epoch=math.ceil(len(train) / config["batch_size"]))
-            evaluated_start = _evaluate(model, val, config, torch, selected_device, normalize_rgb, masked_bce_dice, PixelConfusion)
+            evaluated_start = _evaluate(model, val, config, torch, selected_device, normalize_rgb, loss_fn, PixelConfusion)
             initial_val = evaluated_start if document is None else document["initial_val"]
             history = []
             with (staging / "history.jsonl").open("w", encoding="utf-8") as log:
@@ -363,7 +371,7 @@ def run_baseline(
                         batch = _batch(train, order[start:start + config["batch_size"]], torch, selected_device)
                         _augment(batch, generator, config, torch)
                         optimizer.zero_grad(set_to_none=True)
-                        losses = masked_bce_dice(model(normalize_rgb(batch["image"])), batch["target"], batch["valid"])
+                        losses = loss_fn(model(normalize_rgb(batch["image"])), batch["target"], batch["valid"])
                         losses["loss"].backward()
                         norm = float(torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0, error_if_nonfinite=True).item())
                         if not math.isfinite(norm):
@@ -379,7 +387,7 @@ def run_baseline(
                                    loss=batch_loss, learning_rate=config["learning_rate"])
                         if batch_index == 1 or batch_index % 100 == 0:
                             notify(f"Epoch {epoch}/{config['epochs']}, batch {batch_index}/{math.ceil(len(train) / config['batch_size'])}: loss={float(losses['loss'].item()):.5f}")
-                    measured_val = _evaluate(model, val, config, torch, selected_device, normalize_rgb, masked_bce_dice, PixelConfusion)
+                    measured_val = _evaluate(model, val, config, torch, selected_device, normalize_rgb, loss_fn, PixelConfusion)
                     state = _cpu_tree(model.state_dict(), torch)
                     if not _finite_tree(state, torch):
                         raise BaselineTrainingError("Non-finite model parameters or buffers.")
@@ -410,7 +418,7 @@ def run_baseline(
             with torch.device("cpu"):
                 restored = build_model(None).to(device=selected_device, dtype=torch.float32)
             restored.load_state_dict(best_document["model_state_dict"], strict=True)
-            reloaded_val = _evaluate(restored, val, config, torch, selected_device, normalize_rgb, masked_bce_dice, PixelConfusion)
+            reloaded_val = _evaluate(restored, val, config, torch, selected_device, normalize_rgb, loss_fn, PixelConfusion)
             if any(reloaded_val[key] != best_val[key] for key in ("tp", "fp", "fn", "tn")):
                 raise BaselineTrainingError("Best checkpoint reload changed validation pixel counts.")
             update = math.sqrt(sum(float((value.double() - before[name].double()).square().sum())

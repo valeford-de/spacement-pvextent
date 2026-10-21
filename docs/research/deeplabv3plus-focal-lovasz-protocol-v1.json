@@ -1,0 +1,21 @@
+{
+  "protocol_version": "1.0",
+  "task": "DeepLabV3+ ResNet50 Focal Loss + Lovasz Hinge surrogate aerial segmentation",
+  "purpose": "Loss engineering to optimize sharp rectilinear boundaries, suppress hard negative false positives, and directly maximize Jaccard/IoU metric through convex Lovasz surrogate",
+  "dataset": "data/pvextent-training-v4",
+  "config": "configs/deeplabv3plus-resnet50-focal-lovasz-v1.toml",
+  "run_id": "deeplabv3plus-resnet50-focal-lovasz-v4-001",
+  "output_dir": "runs/deeplabv3plus-resnet50-focal-lovasz-v4-001",
+  "weights_dir": "data/pretrained/resnet50.imagenet",
+  "device": "mps",
+  "target_metrics": {
+    "validation_accuracy": ">=0.90",
+    "validation_iou": ">=0.90",
+    "validation_dice": ">=0.95"
+  },
+  "constraints": {
+    "test_split": "strict_unopened",
+    "remote_execution": "mini-remote",
+    "active_fan_cooling": true
+  }
+}
