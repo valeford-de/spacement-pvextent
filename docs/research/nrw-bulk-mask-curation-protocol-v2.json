@@ -1,0 +1,25 @@
+{
+  "base_dataset_fingerprint": "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14",
+  "base_supervised_train_records": 3293,
+  "curated_dataset_version": "2026-10-21.bulk-curated-v2",
+  "dataset_version": "2026-10-21.training-v3",
+  "human_review_claimed": false,
+  "min_candidate_distance_m": 80.0,
+  "min_reference_distance_m": 5045.254833995939,
+  "minimum_negative_background_pixels": 1024,
+  "minimum_positive_background_pixels": 256,
+  "minimum_positive_pixels": 100,
+  "model_predictions_used": false,
+  "proposal_author": "PVExtent independent AI reviewer A / bulk_mask_review_a / 2026-10-21",
+  "proposal_schema_version": "1.0",
+  "protected_dataset_fingerprints": [
+    "7a3ec2dfdc495de62778803e35435bf9a6fbe1884dda798b61574a28a2467218"
+  ],
+  "purpose": "experimental-ai-bulk-training",
+  "queue_sha256": "6b3c65fe222867847eadb582a8cd8b3a1b7a217797c1ccfc1d2d27b5bacdce14",
+  "review_method": "two-independent-checks-of-shared-ai-visual-proposals",
+  "review_schema_version": "1.2",
+  "schema_version": "2.0",
+  "source_dataset_fingerprint": "2b4409c46d14fb9c7cc4cefc13112bcdf53e2868fc805f3f542c75311672bb55",
+  "training_run_allowed": false
+}
