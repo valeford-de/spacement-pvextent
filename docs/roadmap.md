@@ -221,12 +221,27 @@ The [bulk collection](bulk-training-data.md) has now added **1,000 distinct
 native NRW photos**: 600 current-source crops at original TRAIN locations and
 400 distinct ALKIS roofs. Independent source, RGB/hash and spatial checks pass;
 all 761 reserved centres stay separated by at least 5,047.008 m. The photos span
-2022–2026 and retain acquisition/parent provenance. Two reviewer lanes each have
-forty pending batches, with zero new canonical labels or training examples.
-The earlier 22-image review pool remains separate. Complete consensus curation
-and prepare a new immutable training snapshot before a registered target-domain
-experiment; the current model has not changed. See the
+2022–2026 and retain acquisition/parent provenance. The earlier 22-image review
+pool remains separate. Two independent checks of shared frozen visual proposals
+have now completed all forty batches per lane. The initial consensus admitted
+485 partial masks. Additional native quality checks withdrew one uncertain PV
+case and two contradictory whole-image negatives in a separate immutable stage.
+The final V4 snapshot adds **482 partial masks: 246 positive and 236 background
+only**; 518 new records remain entirely ignored. It contains **3,775 training,
+278 validation, 421 test and 560 unassigned records**. Independent audits
+reproduced all new masks, the three all-ignore vetoes, inherited records,
+coordinates and protected storage without opening original test or pilot pixels.
+See the [final mask audit](research/nrw-bulk-mask-curation-audit.md),
+[quality amendment](research/nrw-bulk-mask-quality-amendment.md) and
 [collection audit](research/nrw-training-bulk-audit.md).
+
+These sparse AI labels supply less than 1% coverage over the new photos, not
+full array boundaries or a representative evaluation set. The next step is a
+registered target-source training experiment with explicit sampling and loss
+handling, followed by fixed validation. Regular resume must reject changed
+dataset fingerprints. The current model and earlier pilot scores remain
+unchanged. The [live monitor](live-training.md) is implemented for actual
+batch loss and epoch validation; opening it does not launch training.
 
 The following evaluation work remains:
 

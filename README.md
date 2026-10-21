@@ -67,9 +67,16 @@ continuation. See the [continuation audit](docs/research/training-extension-audi
 A separate collection now contains **1,000 additional native NRW photos**:
 600 current-source crops at known training locations and 400 distinct ALKIS
 roof crops. Independent checks verified image uniqueness, source metadata and
-reserved-data separation. Two pending review lanes contain forty batches each;
-all masks remain ignore, and the model has not used these photos. See the
-[collection audit](docs/research/nrw-training-bulk-audit.md).
+reserved-data separation. Two independent checks of common frozen visual
+proposals are now complete for all 1,000 photos. After additional quality
+exclusions, **246 positive and 236 background-only partial masks** qualify for
+experimental training; **518 photos remain entirely ignored**. The final V4
+snapshot contains **3,775 training, 278 validation, 421 test and 560 unassigned
+records**. These are sparse AI-reviewed interiors, not complete array masks or
+human ground truth. All original base records and protected pixels remain
+preserved, and no new training has used the photos. See the
+[collection audit](docs/research/nrw-training-bulk-audit.md) and
+[final mask audit](docs/research/nrw-bulk-mask-curation-audit.md).
 
 ## Documentation
 
@@ -114,6 +121,8 @@ The [bulk mask curation guide](docs/bulk-mask-curation.md) documents the shared
 proposal method and two independent checks. The
 [local live monitor](docs/live-training.md) shows annotation progress and real
 training metrics, with completed runs explicitly identified.
+The [quality quarantine guide](docs/training-quality-quarantine.md) describes
+the separate immutable exclusion of disputed new labels.
 
 For private vulnerability reports, see the [security policy](.github/SECURITY.md).
 
@@ -205,6 +214,14 @@ The [augmentation workflow](docs/negative-curation.md) has prepared
 42 unassigned records. The original holdout declarations and pixel files are
 preserved. A separate fresh baseline run has now used this snapshot; the
 original baseline still describes its original 3,282 training examples.
+
+The current experimental input is `data/pvextent-training-v4`, with 482
+additional partial masks and 3,775 training records. The original two-check V3
+snapshot remains historical evidence; an additional quality stage withdraws
+three disputed cases without changing raw reviews or earlier snapshots.
+See the [final audit](docs/research/nrw-bulk-mask-curation-audit.md) before
+registering the next experiment. A changed dataset requires a separate run;
+ordinary checkpoint resume continues to reject fingerprint changes.
 
 ## Run the training smoke test
 

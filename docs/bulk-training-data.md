@@ -8,9 +8,13 @@ The [selection record](research/nrw-training-bulk-selection-v1.json) binds the
 reference metadata and coordinates before the first new RGB request.
 
 The collection is now complete: **1,000 photos**, independently verified, with
-forty pending review batches per lane. Capture dates span 2022–2026; current
-source availability does not mean every crop is newly flown. No labels or new
-model were created. See the [measured audit](research/nrw-training-bulk-audit.md).
+forty review batches per lane. Capture dates span 2022–2026; current
+source availability does not mean every crop is newly flown. The raw collection
+retains all-ignore placeholders. Subsequent [mask curation](bulk-mask-curation.md)
+and [quality exclusions](training-quality-quarantine.md) created a separate V4
+training snapshot with 482 additional partial masks; the model is unchanged.
+See the [collection audit](research/nrw-training-bulk-audit.md) and
+[final mask audit](research/nrw-bulk-mask-curation-audit.md).
 
 Current captures at known training locations may show changed roofs or arrays.
 They are additional photos of existing training locations, not independent new
@@ -85,7 +89,8 @@ absence. Two completed reviews, consensus curation and a new immutable training
 snapshot are required before a separate training experiment. AI review is
 explicitly experimental, not human-confirmed benchmark truth.
 
-All canonical masks initially contain only `255`; all samples remain unreviewed
-and unassigned. A collection of 1,000 photos therefore supplies **zero additional
-labelled examples** until curation. Regular checkpoint resume continues to reject
-changed dataset fingerprints.
+All raw collection masks contain only `255`; its samples remain unreviewed
+and unassigned. The separate final V4 snapshot now contains 482 qualifying
+partial masks (246 positive and 236 background-only), with 518 new cases still
+entirely ignored. Raw source and review evidence remain unchanged. Regular
+checkpoint resume continues to reject changed dataset fingerprints.

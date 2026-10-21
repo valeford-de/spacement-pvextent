@@ -1,0 +1,287 @@
+{
+  "schema_version": "1.0",
+  "project": "Spacement PVExtent",
+  "report": "nrw-bulk-mask-curation-v4",
+  "recorded_on": "2026-10-21",
+  "status": "final-quality-quarantined-snapshot-independently-audited",
+  "result": {
+    "dataset_path": "data/pvextent-training-v4",
+    "dataset_version": "2026-10-21.training-v4",
+    "dataset_fingerprint": "1eb811eb633a476c4c1b87fa43e0fe274e630119ef195a6a8a3f5b2c13fc9788",
+    "records": 5034,
+    "splits": {
+      "test": 421,
+      "train": 3775,
+      "unassigned": 560,
+      "val": 278
+    },
+    "effective_supervised_train_records": 3775,
+    "new_photo_records": 1000,
+    "new_qualified_train_records": 482,
+    "new_positive_records": 246,
+    "new_explicit_negative_records": 236,
+    "new_complete_ignore_unassigned_records": 518,
+    "new_pixels": {
+      "background_pixels": 947484,
+      "ignored_pixels": 101420273,
+      "positive_pixels": 32243,
+      "supervised_pixels": 979727,
+      "total_pixels": 102400000
+    },
+    "new_supervised_pixel_fraction": 0.009567646484375,
+    "mask_scope": "Sparse partial supervision; no complete array-boundary annotation.",
+    "current_report": "data/pvextent-training-v4/quality-quarantine-report.json"
+  },
+  "historical_two_check_result": {
+    "curated_dataset_fingerprint": "1ad9205e76bb4075bcd800c6066d8197622aafc9d66bf062eb5b2e4467d710d6",
+    "positive_records": 247,
+    "negative_records": 238,
+    "qualified_records": 485,
+    "complete_ignore_records": 515,
+    "new_pixels": {
+      "positive_pixels": 32369,
+      "background_pixels": 953250,
+      "ignored_pixels": 101414381
+    },
+    "combined_dataset_path": "data/pvextent-training-v3",
+    "combined_dataset_fingerprint": "e3279df66c913bdf502b5cae12d29ef27a673f13f1b485287dd2a453916bc5bd",
+    "combined_records": 5034,
+    "splits": {
+      "test": 421,
+      "train": 3778,
+      "unassigned": 557,
+      "val": 278
+    },
+    "superseded_as_final_input_by": "data/pvextent-training-v4",
+    "original_reports_and_snapshots_preserved": true
+  },
+  "method": {
+    "review_method": "two-independent-checks-of-shared-ai-visual-proposals",
+    "proposal_author": "PVExtent independent AI reviewer A / bulk_mask_review_a / 2026-10-21",
+    "proposal_photo_coverage": 1000,
+    "proposal_batches": 40,
+    "photos_per_batch": 25,
+    "checkers": [
+      {
+        "role": "C",
+        "reviewer": "PVExtent independent mask checker C / bulk_mask_check_c / 2026-10-21",
+        "completed_batches": 40,
+        "native_rgb_and_exact_proposal_cases": 1000
+      },
+      {
+        "role": "D",
+        "reviewer": "PVExtent independent mask checker D / bulk_mask_check_d / 2026-10-21",
+        "completed_batches": 40,
+        "native_rgb_and_exact_proposal_cases": 1000
+      }
+    ],
+    "blinding": "Each new checker saw the full native RGB and same exact proposal, without author approval decisions/notes or the other checker decisions.",
+    "per_batch_source_and_proposal_frozen_before_checks": true,
+    "combined_index_finalized_after_author_completion": true,
+    "consensus": "Intersect approved polygon index sets for each class; rasterize those same complete polygons from the frozen proposal.",
+    "positive_gate": {
+      "required_image_decisions": "approve-positive from both checkers",
+      "minimum_pv_pixels": 100,
+      "minimum_background_pixels": 256
+    },
+    "negative_gate": {
+      "required_image_decisions": "explicit whole-image PV absence from both checkers",
+      "pv_pixels": 0,
+      "minimum_background_pixels": 1024
+    },
+    "other_pixels_and_ineligible_cases": "ignore",
+    "mask_values": {
+      "background": 0,
+      "pv": 1,
+      "ignore": 255
+    },
+    "native_width": 320,
+    "native_height": 320,
+    "segmentation_model_predictions_used": false,
+    "human_review_claimed": false
+  },
+  "v1_method_checkpoint": {
+    "author_a_drafts": 250,
+    "reviewer_b_drawings": 200,
+    "paired_cases": 200,
+    "paired_positive_decisions": 110,
+    "median_positive_intersection_pixels": 4,
+    "zero_positive_intersection_cases": 49,
+    "positive_cases_meeting_pv_gate": 1,
+    "positive_cases_meeting_both_gates": 0,
+    "paired_negative_decisions": 40,
+    "negative_cases_meeting_background_gate": 6,
+    "additional_paired_positive_cases_visually_checked": 6,
+    "interpretation": "Sparse drawings selected different module interiors and background locations; no systematic coordinate-transform error was found in the selected checks.",
+    "canonical_bulk_masks_created_under_v1": false,
+    "training_started_under_v1": false,
+    "original_drawings_and_diagnostics_preserved": true
+  },
+  "quality_amendment": {
+    "selected_spot_check_cases": 24,
+    "selected_positive_cases": 12,
+    "selected_negative_cases": 12,
+    "selection": "First 12 eligible cases per class ordered lexicographically by SHA256(UTF-8 sample ID).",
+    "initial_positive_region_uncertainties": 1,
+    "whole_image_negative_metadata_contradictions": 2,
+    "selected_negative_photos_fully_reinspected_natively": 12,
+    "quality_vetoes": {
+      "positive_records": 1,
+      "negative_records": 2,
+      "total_records": 3
+    },
+    "veto_reasons": {
+      "uncertain_pv_interiors": 1,
+      "whole_image_absence_unresolved": 1,
+      "visible_pv_contradicts_negative_decision": 1
+    },
+    "quarantine_action": "Retain each photo; withdraw all supervision and make its full mask ignore/unassigned.",
+    "supervision_removed": {
+      "positive_pixels": 126,
+      "background_pixels": 5766,
+      "total_pixels": 5892
+    },
+    "nonexcluded_new_masks_preserved": 997,
+    "original_reviews_or_prior_snapshot_bytes_changed": false,
+    "historical_one_veto_quality_protocol_executed": false,
+    "pixel_gates_changed": false,
+    "sample_is_annotation_accuracy_estimate": false
+  },
+  "provenance": {
+    "source_collection_fingerprint": "2b4409c46d14fb9c7cc4cefc13112bcdf53e2868fc805f3f542c75311672bb55",
+    "frozen_base_dataset_fingerprint": "1e78b1ce00d826e22d60c50f4c2f7c1b337bc3eeb9f36303b51e53daf0e54f14",
+    "protected_pilot_fingerprint": "7a3ec2dfdc495de62778803e35435bf9a6fbe1884dda798b61574a28a2467218",
+    "initial_curation_and_augmentation_source_commit": "3c8924ebb9f60874bb0f91678fda7a7006d0a35b",
+    "quality_quarantine_source_commit": "69e096b56a775fa28c15708efa2fc4770889e613",
+    "source_queue_sha256": "6b3c65fe222867847eadb582a8cd8b3a1b7a217797c1ccfc1d2d27b5bacdce14",
+    "proposal_index_sha256": "371537520f9bcd470c551ccf30b728f8c84772af7f2eb321a2224a01cfe10e07",
+    "curation_protocol_sha256": "b322e3ef25c23745f8f2228522fdf376810f88722ded3ae3a8eefbba7f467545",
+    "quality_protocol_sha256": "4f5fc0550e5a708697a7831b4d735d509edbfe1552f5d36cb5cb0a7345bb728b",
+    "quality_evidence_sha256": "77d305014687438623a69923b4a9ccf18c702850454ae649fbefae940f285a67",
+    "previous_22_photo_collection_is_separate": true
+  },
+  "source_collection": {
+    "current_source_crops_at_known_train_locations": 600,
+    "geometry_selected_roof_crops": 400,
+    "independent_new_roofs_claimed": false,
+    "capture_date_range": [
+      "2022-06-15",
+      "2026-05-01"
+    ],
+    "capture_year_counts": {
+      "2022": 3,
+      "2024": 331,
+      "2025": 481,
+      "2026": 185
+    },
+    "minimum_new_center_spacing_m": 80.06897026939515,
+    "minimum_protected_center_distance_m": 5047.007866522097,
+    "required_minimum_protected_center_distance_m": 5045.254833995939
+  },
+  "technical_audits": {
+    "initial_v2": {
+      "ok": true,
+      "completed_at": "2026-10-21T10:08:25.625199+00:00",
+      "artifact": "artifacts/nrw-bulk-mask-final-independent-audit-v2/audit.json",
+      "distinct_check_types": 96,
+      "checker_sample_coverage": {
+        "C": 1000,
+        "D": 1000
+      },
+      "mask_equality_scope": "All 1000 new masks in curated and V3 snapshots equal independently rasterized shared approved polygon indices.",
+      "harness_correction": "Removed an auditor-only requirement that TRAIN spatial tile groups be unique; complete corrected rerun passed without source or dataset edits; first attempt retained."
+    },
+    "final_v4": {
+      "ok": true,
+      "completed_at": "2026-10-21T10:27:04.433896+00:00",
+      "artifact": "artifacts/nrw-bulk-mask-final-independent-audit-v4/audit.json",
+      "distinct_check_types": 64,
+      "mask_equality_scope": "All 1000 V3 and all 1000 V4 new masks checked against a fresh independent V2 rasterization plus exactly three complete-ignore V4 vetoes.",
+      "nonexcluded_new_masks_preserved": 997,
+      "all_5034_coordinate_rows_byte_identical": true,
+      "old_raw_review_queue_and_parent_provenance_metadata_hashes_reverified": 2474,
+      "original_v2_audit_preserved": true
+    },
+    "interpretation": "Deterministic construction, metadata, lineage and evidence binding; no annotation accuracy or model quality estimate."
+  },
+  "protection_invariants": {
+    "base_record_dictionaries_unchanged": 4034,
+    "inherited_raster_inodes_unchanged": 8068,
+    "all_source_image_inodes_unchanged": 5034,
+    "validation_records_unchanged": 278,
+    "original_test_records_unchanged": 421,
+    "old_unassigned_records_unchanged": 42,
+    "external_pilot_cases_protected": 20,
+    "external_pilot_rasters_stat_checked": 40,
+    "v4_audit_protected_raster_paths_stat_checked": 8108,
+    "v4_audit_protected_open_hash_decode_resolve_attempts": 0,
+    "generic_combined_pixel_validator_or_gallery_run": false,
+    "quarantine_wrapper_guarded_paths": 18173,
+    "quarantine_wrapper_guarded_inodes": 10105,
+    "quarantine_wrapper_guards_hardlink_aliases": true,
+    "quarantine_wrapper_authorized_source_mask_reads": 3,
+    "quarantine_wrapper_scope": "All base/pilot rasters, all V3 images and all nonexcluded V3 masks blocked by path and inode.",
+    "quarantine_images_or_unselected_masks_read": false,
+    "quarantine_blocked_raster_access_attempts": 0
+  },
+  "verification_and_runtime": {
+    "full_test_suite": {
+      "passed": 433,
+      "artifact": "artifacts/bulk-mask-quality-full-tests.log"
+    },
+    "new_training_run_started": false,
+    "new_pilot_inference_run": false,
+    "model_changed": false,
+    "protocol_training_run_allowed": false,
+    "live_monitor_implemented": true,
+    "monitor_poll_seconds": 2,
+    "batch_telemetry": "Actual future baseline optimization batches and epoch events; completed history separately labelled.",
+    "guides": [
+      "docs/live-training.md",
+      "docs/training-quality-quarantine.md"
+    ]
+  },
+  "limitations": [
+    "The checker roles are independent AI checks of shared proposals, not two independently drawn masks; common omissions and correlated AI errors remain possible.",
+    "The selected 24-case quality check and subsequent negative reinspection do not estimate annotation error rates or certify remaining annotations.",
+    "Only 979727 of 102400000 new pixels are supervised; these partial interior/background labels do not describe complete PV array boundaries.",
+    "600 photos come from known TRAIN locations; the collection is not 1000 independent new roofs and is not a representative held-out benchmark.",
+    "Capture dates span 2022–2026; current-source RGB uniqueness does not prove a different flight from original imagery.",
+    "No human ground truth, model improvement, new training or new pilot inference is claimed."
+  ],
+  "evidence_storage": {
+    "selected_hash_algorithm": "SHA-256 of exact retained file bytes",
+    "documentation_preparation_scope": "Read and hash JSON, Markdown and source-code metadata only; no raster or checkpoint access.",
+    "raw_labels_reviews_pixels_checkpoints_and_complete_file_hash_ledgers": "Retained outside Git; not embedded in this summary.",
+    "per_sample_pixel_decisions_embedded": false,
+    "complete_audit_file_hash_ledger_embedded": false
+  },
+  "evidence_sha256": {
+    "docs/research/nrw-training-bulk-v1.json": "50ca26899960025d503f1a73c2082e84d36e70f1dcb55bb5ad8c005148c4d438",
+    "docs/research/nrw-bulk-mask-curation-protocol-v1.json": "d1955f4f66f48a25810999bd1c18ed4cdbd878d4f0e88530c1ce2eaf2fb24fc6",
+    "docs/research/nrw-bulk-mask-curation-protocol-v2.json": "b322e3ef25c23745f8f2228522fdf376810f88722ded3ae3a8eefbba7f467545",
+    "docs/research/nrw-bulk-mask-method-amendment-v2.md": "7d0229536dc63806248dedee370569b9d049cd1529d7166a5cd41c2fc7e43332",
+    "docs/research/nrw-bulk-mask-quality-amendment.md": "87c3f4b5ad0d59019fb0afd0c02637d90a715b29bb08f95176b8af692e20ed52",
+    "docs/research/nrw-bulk-mask-quality-quarantine-protocol-v1.json": "8b549c63466b8e7c85e373f0aa3fb4bdc82d4c15a57b96fc19066234768af7ae",
+    "docs/research/nrw-bulk-mask-quality-quarantine-protocol-v2.json": "4f5fc0550e5a708697a7831b4d735d509edbfe1552f5d36cb5cb0a7345bb728b",
+    "artifacts/nrw-training-bulk-review-v1/queue.json": "6b3c65fe222867847eadb582a8cd8b3a1b7a217797c1ccfc1d2d27b5bacdce14",
+    "artifacts/nrw-training-bulk-mask-checks-v2/proposals/index.json": "371537520f9bcd470c551ccf30b728f8c84772af7f2eb321a2224a01cfe10e07",
+    "data/nrw-training-bulk-curated-v2/curation-report.json": "af7d48b59bd1bc69d4ae35a1949a7df5f5c9bef29ccb81bbcdccf4759cd88e5d",
+    "data/pvextent-training-v3/augmentation-report.json": "e9c34f4d552d16b4a6171e65dd55b5dc68cb026910ee92a56f433051b7102104",
+    "data/pvextent-training-v4/quality-quarantine-report.json": "0d395111f6cd66dedfb216b2b281a08abed2e0f072043bc26d1e7756d0ebabb4",
+    "artifacts/nrw-bulk-mask-final-visual-spot-qc-v2/selection.json": "da69d42d57906516b050370a1557e6a315d8e86dfa0507c05aba9f7c57e83c4a",
+    "artifacts/nrw-bulk-mask-final-visual-spot-qc-v2/findings.json": "4fa73bbaf090f049ed873b53c266d7662f1cd5cd6e0123c030aeb1e19290dc9e",
+    "artifacts/nrw-bulk-mask-quality-quarantine-v2/quality-evidence.json": "77d305014687438623a69923b4a9ccf18c702850454ae649fbefae940f285a67",
+    "artifacts/nrw-bulk-mask-curate-execution-v2.json": "20407c984533c358dea276c01453b353ce999a432e366112ff6affc54fa12bd1",
+    "artifacts/nrw-bulk-mask-augment-execution-v2.json": "f1a161feb7377d5da71556d62e8874699d17c094977537f85782a554083c95cf",
+    "artifacts/nrw-bulk-mask-quality-quarantine-execution-v2.json": "9ff719ba2b3656ceae390dbc2f7e3d1edf385ff9b37ea5ac1f463c99e3bfc2f3",
+    "artifacts/run-bulk-curation-v2.py": "f7bffacbd6123d6e9787a90cb093fc486528866619ef253c7faa5534380a714a",
+    "artifacts/run-bulk-quality-quarantine-v2.py": "49ab4d5e0d4b5ecdd19aa501b2b19ed91b9056c8cedd10cc424e9e56b1f29fee",
+    "artifacts/nrw-bulk-mask-final-independent-audit-v2/source-audit.json": "048e5e9ba02aae9f4e3462c54631f4c935c918abae5b0820d0942f53b0dc00cf",
+    "artifacts/nrw-bulk-mask-final-independent-audit-v2/audit.json": "6309cc264d0b20b1caaaaef4a31f9036309635da2e5d34a6fd12998a0a6c6f31",
+    "artifacts/nrw-bulk-mask-final-independent-audit-v2/audit.md": "405eaf9f277f39b5ffd9bb18691172953768892812ec0f7ef38a0ac11050ea94",
+    "artifacts/nrw-bulk-mask-final-independent-audit-v4/source-audit.json": "08d56e64ebc9a65db9c01289ddd7f6032c4e97372680ba140630253aaf1f6cd1",
+    "artifacts/nrw-bulk-mask-final-independent-audit-v4/audit.json": "a4f3b3d61f60117d697fc61f9a9a5a3a22468644debbda8aa8373321391e9887",
+    "artifacts/nrw-bulk-mask-final-independent-audit-v4/audit.md": "ccf26ffafcb1c3a4727f366f93bd66999d28708aa1931374ec0d101ce3e33b46"
+  }
+}
