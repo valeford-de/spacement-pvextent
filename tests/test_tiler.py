@@ -102,6 +102,22 @@ class TestTiler(unittest.TestCase):
         self.assertEqual(res["probabilities"].shape, (120, 140))
         self.assertEqual(res["tiles_processed"], 1)
 
+    def test_predict_tiled_multiscale(self):
+        model = DummyModel()
+        img = np.random.uniform(0.0, 1.0, (200, 200, 3)).astype(np.float32)
+
+        res = predict_tiled(
+            model=model,
+            image=img,
+            tile_size=400,
+            tta_mode="flips",
+            scales=(0.9, 1.0),
+            device="cpu",
+        )
+        self.assertEqual(res["probabilities"].shape, (200, 200))
+        self.assertEqual(res["uncertainty"].shape, (200, 200))
+        self.assertTrue(np.all(res["probabilities"] >= 0.0) and np.all(res["probabilities"] <= 1.0))
+
 
 if __name__ == "__main__":
     unittest.main()

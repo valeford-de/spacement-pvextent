@@ -196,7 +196,9 @@ def main(argv: list[str] | None = None) -> int:
     vectorize = commands.add_parser("vectorize", help="CAD-grade geospatial polygon vectorization and physical metrics")
     vectorize.add_argument("mask_or_image", help="Input binary mask PNG or RGB image")
     vectorize.add_argument("output_dir", help="Output directory for GeoJSON and CAD overlay")
-    vectorize.add_argument("--checkpoint", help="Optional model checkpoint for RGB inference")
+    vectorize.add_argument("--checkpoint", nargs="+", help="One or more model checkpoints to ensemble")
+    vectorize.add_argument("--ensemble-weights", nargs="+", type=float, help="Weights for ensemble models (default: equal)")
+    vectorize.add_argument("--scales", nargs="+", type=float, default=[1.0], help="Scale factors for multi-scale pyramid TTA (default: 1.0)")
     vectorize.add_argument("--threshold", type=float, default=0.25, help="Probability threshold (default: 0.25)")
     vectorize.add_argument("--calibrate", action="store_true", help="Apply temperature scaling and calibrated Bayes-optimal threshold")
     vectorize.add_argument("--temperature", type=float, default=1.0, help="Temperature scalar T for logit calibration (default: 1.0)")
@@ -227,59 +229,92 @@ def main(argv: list[str] | None = None) -> int:
         output.mkdir(parents=True, exist_ok=True)
         input_path = Path(args.mask_or_image).resolve()
 
+        final_probs = None
+        final_uncert = None
+
         if args.checkpoint:
             import torch
             from pvextent.models.deeplabv3plus import build_deeplabv3plus_resnet50
             from pvextent.models.resnet_unet import build_resnet_unet, normalize_rgb
             from pvextent.training.smoke import _device
+            from pvextent.inference.tiler import predict_tiled
+
             img = Image.open(input_path).convert("RGB")
             arr = np.array(img, dtype=np.float32) / 255.0
             dev = _device(torch, args.device)
 
-            doc = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
-            sd = doc["model_state_dict"]
-            is_deeplab = any("aspp" in k for k in sd)
-            model = build_deeplabv3plus_resnet50(None) if is_deeplab else build_resnet_unet(None)
-            model.load_state_dict(sd)
-            model.to(dev)
-            model.eval()
+            ckpts = args.checkpoint
+            n_models = len(ckpts)
+            if args.ensemble_weights:
+                weights = [w / sum(args.ensemble_weights) for w in args.ensemble_weights]
+            else:
+                weights = [1.0 / n_models] * n_models
 
-            # Calibration handling
-            temperature = args.temperature
+            probs_list = []
+            uncert_list = []
             threshold = args.threshold
-            if args.calibrate:
-                ckpt_path = Path(args.checkpoint).resolve()
-                calib_cand = [
-                    ckpt_path.parent / "calibration_report.json",
-                    Path("runs/calibration_report.json"),
-                ]
-                calib_data = None
-                for c_path in calib_cand:
-                    if c_path.exists():
-                        try:
-                            with open(c_path, "r", encoding="utf-8") as cf:
-                                calib_data = json.load(cf)
-                            break
-                        except Exception:
-                            pass
-                if calib_data:
-                    temperature = calib_data.get("temperature_scaling", {}).get("temperature", 1.0)
-                    if args.threshold == 0.25:
-                        threshold = calib_data.get("temperature_scaling", {}).get("optimal_threshold_iou", 0.25)
 
-            from pvextent.inference.tiler import predict_tiled
-            tiled_res = predict_tiled(
-                model=model,
-                image=arr,
-                tile_size=args.tile_size,
-                overlap=args.overlap,
-                tta_mode=args.tta,
-                temperature=temperature,
-                device=dev,
-                normalize_fn=normalize_rgb,
-            )
-            probs = tiled_res["probabilities"]
-            binary_mask = (probs >= threshold).astype(np.uint8)
+            for ckpt_path_str in ckpts:
+                ckpt_p = Path(ckpt_path_str).resolve()
+                doc = torch.load(ckpt_p, map_location="cpu", weights_only=True)
+                sd = doc["model_state_dict"]
+                is_deeplab = any("aspp" in k for k in sd)
+                model = build_deeplabv3plus_resnet50(None) if is_deeplab else build_resnet_unet(None)
+                model.load_state_dict(sd)
+                model.to(dev)
+                model.eval()
+
+                # Calibration handling
+                temp = args.temperature
+                if args.calibrate:
+                    calib_cand = [
+                        ckpt_p.parent / "calibration_report.json",
+                        Path("runs/calibration_report.json"),
+                    ]
+                    calib_data = None
+                    for c_path in calib_cand:
+                        if c_path.exists():
+                            try:
+                                with open(c_path, "r", encoding="utf-8") as cf:
+                                    calib_data = json.load(cf)
+                                break
+                            except Exception:
+                                pass
+                    if calib_data:
+                        temp = calib_data.get("temperature_scaling", {}).get("temperature", 1.0)
+                        if args.threshold == 0.25:
+                            threshold = calib_data.get("temperature_scaling", {}).get("optimal_threshold_iou", 0.25)
+
+                tiled_res = predict_tiled(
+                    model=model,
+                    image=arr,
+                    tile_size=args.tile_size,
+                    overlap=args.overlap,
+                    tta_mode=args.tta,
+                    temperature=temp,
+                    scales=args.scales,
+                    device=dev,
+                    normalize_fn=normalize_rgb,
+                )
+                probs_list.append(tiled_res["probabilities"])
+                uncert_list.append(tiled_res["uncertainty"])
+
+            # Weighted ensemble combination
+            final_probs = np.zeros_like(probs_list[0], dtype=np.float64)
+            for w, p in zip(weights, probs_list):
+                final_probs += w * p
+            final_probs = np.clip(final_probs, 0.0, 1.0).astype(np.float32)
+
+            # Combined Bayesian predictive uncertainty: epistemic (cross-model disagreement) + aleatoric (TTA variance)
+            if len(probs_list) > 1:
+                stacked_probs = np.stack(probs_list, axis=0)
+                epistemic_var = np.var(stacked_probs, axis=0)
+                mean_aleatoric = np.mean(np.stack(uncert_list, axis=0), axis=0)
+                final_uncert = (epistemic_var + mean_aleatoric).astype(np.float32)
+            else:
+                final_uncert = uncert_list[0]
+
+            binary_mask = (final_probs >= threshold).astype(np.uint8)
         else:
             img = Image.open(input_path).convert("RGB")
             raw_mask = Image.open(input_path)
@@ -289,6 +324,8 @@ def main(argv: list[str] | None = None) -> int:
             binary_mask,
             gsd_m=args.gsd,
             regularize=not args.no_regularize,
+            probabilities=final_probs,
+            uncertainty=final_uncert,
         )
         geojson_path = output / "vectorized.geojson"
         with open(geojson_path, "w", encoding="utf-8") as f:
@@ -300,9 +337,12 @@ def main(argv: list[str] | None = None) -> int:
         if args.json:
             print(json.dumps(geojson["summary"], indent=2))
         else:
-            print(f"VECTORIZE OK: {geojson['summary']['detected_pv_arrays']} arrays, "
-                  f"{geojson['summary']['total_pv_area_m2']} m², "
-                  f"{geojson['summary']['total_capacity_kwp']} kWp. Output: {output}")
+            summary = geojson["summary"]
+            print(f"VECTORIZE OK: {summary['detected_pv_arrays']} arrays "
+                  f"({summary.get('high_confidence_arrays', 0)} high-confidence, "
+                  f"{summary.get('review_recommended_arrays', 0)} review-flagged), "
+                  f"{summary['total_pv_area_m2']} m², "
+                  f"{summary['total_capacity_kwp']} kWp. Output: {output}")
         return 0
     if args.command == "evaluate":
         try:

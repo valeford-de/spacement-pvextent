@@ -60,6 +60,18 @@ class TestTTA(unittest.TestCase):
         self.assertTrue(torch.all(res["probabilities"] <= 1.0))
         self.assertTrue(torch.all(res["uncertainty"] >= 0.0))
 
+    def test_predict_with_multiscale_tta(self):
+        model = DummyModel()
+        x = torch.randn((3, 32, 32))
+
+        # 2 scales with flips (4 transforms each) = 8 total transforms
+        res = predict_with_tta(model, x, mode="flips", scales=(0.8, 1.0))
+        self.assertEqual(res["transforms_used"], 8)
+        self.assertEqual(res["probabilities"].shape, (32, 32))
+        self.assertEqual(res["uncertainty"].shape, (32, 32))
+        self.assertTrue(torch.all(res["probabilities"] >= 0.0))
+        self.assertTrue(torch.all(res["probabilities"] <= 1.0))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -158,6 +158,8 @@ def vectorize_mask(
     regularize: bool = True,
     tolerance_deg: float = 20.0,
     module_efficiency: float = DEFAULT_MODULE_EFFICIENCY,
+    probabilities: np.ndarray | None = None,
+    uncertainty: np.ndarray | None = None,
 ) -> dict[str, Any]:
     """Execute end-to-end CAD-grade geospatial vectorization on a PV segmentation mask.
 
@@ -202,6 +204,43 @@ def vectorize_mask(
         metrics["obb_width_m"] = round(obb["width"] * gsd_m, 2)
         metrics["is_regularized"] = regularize
 
+        # Array-level Bayesian probability and uncertainty assessment
+        if probabilities is not None:
+            xs = [p[0] for p in regularized]
+            ys = [p[1] for p in regularized]
+            min_x, max_x = max(0, int(min(xs))), min(mask.shape[1] - 1, int(max(xs)))
+            min_y, max_y = max(0, int(min(ys))), min(mask.shape[0] - 1, int(max(ys)))
+            sub_mask = mask[min_y : max_y + 1, min_x : max_x + 1]
+            sub_p = probabilities[min_y : max_y + 1, min_x : max_x + 1]
+            arr_p = sub_p[sub_mask > 0] if np.any(sub_mask > 0) else sub_p.ravel()
+            mean_p = float(np.mean(arr_p)) if arr_p.size > 0 else 0.5
+            p90_p = float(np.percentile(arr_p, 90)) if arr_p.size > 0 else mean_p
+            metrics["mean_detection_probability"] = round(mean_p, 4)
+            metrics["p90_detection_probability"] = round(p90_p, 4)
+        else:
+            mean_p = 1.0
+
+        if uncertainty is not None:
+            xs = [p[0] for p in regularized]
+            ys = [p[1] for p in regularized]
+            min_x, max_x = max(0, int(min(xs))), min(mask.shape[1] - 1, int(max(xs)))
+            min_y, max_y = max(0, int(min(ys))), min(mask.shape[0] - 1, int(max(ys)))
+            sub_mask = mask[min_y : max_y + 1, min_x : max_x + 1]
+            sub_u = uncertainty[min_y : max_y + 1, min_x : max_x + 1]
+            arr_u = sub_u[sub_mask > 0] if np.any(sub_mask > 0) else sub_u.ravel()
+            mean_u = float(np.mean(arr_u)) if arr_u.size > 0 else 0.0
+            metrics["mean_uncertainty"] = round(mean_u, 5)
+        else:
+            mean_u = 0.0
+
+        if mean_p >= 0.80 and mean_u <= 0.025:
+            conf_tier = "high"
+        elif mean_p >= 0.50 and mean_u <= 0.060:
+            conf_tier = "medium"
+        else:
+            conf_tier = "review_recommended"
+        metrics["confidence_tier"] = conf_tier
+
         # 4. Geospatial projection
         if transform:
             geo_ring = transform_pixel_to_geo(regularized, transform)
@@ -225,6 +264,10 @@ def vectorize_mask(
         }
         features.append(feature)
 
+    high_conf = sum(1 for f in features if f["properties"].get("confidence_tier") == "high")
+    review_rec = sum(1 for f in features if f["properties"].get("confidence_tier") == "review_recommended")
+    mean_scene_conf = float(np.mean([f["properties"].get("mean_detection_probability", 1.0) for f in features])) if features else 1.0
+
     geojson = {
         "type": "FeatureCollection",
         "crs": {
@@ -233,9 +276,12 @@ def vectorize_mask(
         },
         "summary": {
             "detected_pv_arrays": len(features),
+            "high_confidence_arrays": high_conf,
+            "review_recommended_arrays": review_rec,
             "total_pv_area_m2": round(sum(f["properties"]["area_m2"] for f in features), 2),
             "total_capacity_kwp": round(sum(f["properties"]["estimated_capacity_kwp"] for f in features), 3),
             "total_estimated_modules": sum(f["properties"]["estimated_module_count"] for f in features),
+            "mean_scene_confidence": round(mean_scene_conf, 4),
             "regularized": regularize,
             "gsd_m": gsd_m,
         },

@@ -77,8 +77,9 @@ def predict_with_tta(
     mode: TTAMode = "d4",
     batch_size: int = 8,
     temperature: float = 1.0,
+    scales: Sequence[float] = (1.0,),
 ) -> dict[str, torch.Tensor]:
-    """Run model inference with Test-Time Augmentation (TTA).
+    """Run model inference with Test-Time Augmentation (TTA) across dihedral symmetries and multi-scale pyramids.
 
     Args:
         model: PyTorch segmentation model expecting (B, C, H, W) input.
@@ -86,49 +87,72 @@ def predict_with_tta(
         mode: TTA mode ('none', 'flips', 'rot4', 'd4').
         batch_size: Batch size for batched forward passes.
         temperature: Temperature scaling factor for logits (default: 1.0).
+        scales: Scale factors for multi-scale pyramid TTA (default: (1.0,)).
 
     Returns:
         dict: {
             'probabilities': torch.Tensor of shape (H, W) in range [0, 1],
             'uncertainty': torch.Tensor of shape (H, W) variance across TTA passes,
-            'transforms_used': int (e.g. 8 for 'd4'),
+            'transforms_used': int (total scale x rotation passes),
             'mode': mode,
             'temperature': temperature,
+            'scales': list(scales),
         }
     """
-    batch, names = apply_tta_transforms(image_tensor, mode=mode)
-    k = len(names)
+    if image_tensor.ndim == 3:
+        image_tensor = image_tensor.unsqueeze(0)
 
+    orig_h, orig_w = image_tensor.shape[-2:]
     preds: list[torch.Tensor] = []
+    total_transforms = 0
     model.eval()
 
     with torch.no_grad():
-        for start in range(0, k, batch_size):
-            chunk = batch[start:start + batch_size]
-            logits = model(chunk)
-            # Squeeze channel dimension: (B, 1, H, W) -> (B, H, W)
-            if logits.ndim == 4:
-                logits = logits.squeeze(1)
-            if temperature != 1.0:
-                logits = logits / max(1e-4, temperature)
-            probs = torch.sigmoid(logits)
-            for i in range(probs.shape[0]):
-                t_name = names[start + i]
-                single_prob = probs[i:i + 1]
-                inv_prob = invert_tta_prediction(single_prob, t_name)
-                preds.append(inv_prob.squeeze(0))
+        for s in scales:
+            if abs(s - 1.0) < 1e-3:
+                scaled_tensor = image_tensor
+            else:
+                sh = max(32, int(round(orig_h * s / 32)) * 32)
+                sw = max(32, int(round(orig_w * s / 32)) * 32)
+                scaled_tensor = torch.nn.functional.interpolate(
+                    image_tensor, size=(sh, sw), mode="bilinear", align_corners=False
+                )
 
-    # Stack all inverted predictions: (K, H, W)
+            batch, names = apply_tta_transforms(scaled_tensor, mode=mode)
+            k = len(names)
+            total_transforms += k
+
+            for start in range(0, k, batch_size):
+                chunk = batch[start : start + batch_size]
+                logits = model(chunk)
+                if logits.ndim == 4:
+                    logits = logits.squeeze(1)
+                if temperature != 1.0:
+                    logits = logits / max(1e-4, temperature)
+                probs = torch.sigmoid(logits)
+
+                for i in range(probs.shape[0]):
+                    t_name = names[start + i]
+                    single_prob = probs[i : i + 1]
+                    inv_prob = invert_tta_prediction(single_prob, t_name)
+                    if abs(s - 1.0) >= 1e-3:
+                        inv_prob = torch.nn.functional.interpolate(
+                            inv_prob.unsqueeze(0), size=(orig_h, orig_w), mode="bilinear", align_corners=False
+                        ).squeeze(0)
+                    preds.append(inv_prob.squeeze(0))
+
+    # Stack all inverted predictions: (Total_K, H, W)
     stacked = torch.stack(preds, dim=0)
 
     # Calculate ensemble mean probability and variance
     mean_prob = torch.mean(stacked, dim=0)
-    variance = torch.var(stacked, dim=0, unbiased=False) if k > 1 else torch.zeros_like(mean_prob)
+    variance = torch.var(stacked, dim=0, unbiased=False) if total_transforms > 1 else torch.zeros_like(mean_prob)
 
     return {
         "probabilities": mean_prob,
         "uncertainty": variance,
-        "transforms_used": k,
+        "transforms_used": total_transforms,
         "mode": mode,
         "temperature": temperature,
+        "scales": list(scales),
     }

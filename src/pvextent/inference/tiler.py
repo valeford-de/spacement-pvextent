@@ -120,6 +120,7 @@ def predict_tiled(
     overlap: float = 0.50,
     tta_mode: str = "d4",
     temperature: float = 1.0,
+    scales: Sequence[float] = (1.0,),
     device: str = "cpu",
     normalize_fn: Callable[[torch.Tensor], torch.Tensor] | None = None,
     batch_size: int = 4,
@@ -182,6 +183,7 @@ def predict_tiled(
             image_tensor=norm_padded,
             mode=tta_mode,
             temperature=temperature,
+            scales=scales,
         )
         p_tensor = tta_res["probabilities"]
         u_tensor = tta_res["uncertainty"]
@@ -237,6 +239,7 @@ def predict_tiled(
                 image_tensor=norm_tile,
                 mode=tta_mode,
                 temperature=temperature,
+                scales=scales,
             )
 
             p_tile = unpad(tta_res["probabilities"], pad_spec).cpu().numpy().astype(np.float64)
