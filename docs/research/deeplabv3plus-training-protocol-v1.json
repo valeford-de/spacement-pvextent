@@ -1,0 +1,21 @@
+{
+  "protocol_version": "1.0",
+  "task": "DeepLabV3+ ResNet50 Atrous Spatial Pyramid Pooling (ASPP) aerial segmentation",
+  "purpose": "Upgrade baseline CNN to industry-grade multi-scale ASPP architecture for survey-grade edge precision and contextual roof comprehension",
+  "dataset": "data/pvextent-training-v4",
+  "config": "configs/deeplabv3plus-resnet50-v1.toml",
+  "run_id": "deeplabv3plus-resnet50-v4-001",
+  "output_dir": "runs/deeplabv3plus-resnet50-v4-001",
+  "weights_dir": "data/pretrained/resnet50.imagenet",
+  "device": "mps",
+  "target_metrics": {
+    "validation_accuracy": ">=0.90",
+    "validation_iou": ">=0.90",
+    "validation_dice": ">=0.95"
+  },
+  "constraints": {
+    "test_split": "strict_unopened",
+    "remote_execution": "mini-remote",
+    "active_fan_cooling": true
+  }
+}

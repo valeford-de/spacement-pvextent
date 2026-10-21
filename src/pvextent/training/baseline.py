@@ -24,13 +24,14 @@ from typing import Any, Callable
 from pvextent.data.pv4ger import _publish, _sha256, _write_json
 from .smoke import _cpu_tree, _device, _finite_tree, _restore_rng, _rng_state, _runtime
 
-MAX_CHECKPOINT_BYTES = 256 * 1024 * 1024
+MAX_CHECKPOINT_BYTES = 512 * 1024 * 1024
 REQUIRED_CONFIG_FIELDS = frozenset(("schema_version", "model", "epochs", "batch_size", "learning_rate",
                                     "weight_decay", "seed", "threshold", "horizontal_flip", "vertical_flip",
                                     "max_train_samples", "max_val_samples"))
 OPTIONAL_CONFIG_FIELDS = frozenset(("brightness_jitter", "contrast_jitter", "domain_balance"))
 ALL_CONFIG_FIELDS = REQUIRED_CONFIG_FIELDS | OPTIONAL_CONFIG_FIELDS
 CONFIG_FIELDS = REQUIRED_CONFIG_FIELDS
+SUPPORTED_MODELS = frozenset(("unet-resnet18-v1", "segformer-mit-b2-v1", "deeplabv3plus-resnet50-v1"))
 
 
 class BaselineTrainingError(ValueError):
@@ -69,12 +70,12 @@ def load_config(path: Path | str) -> dict:
         config["contrast_jitter"] = 0.0
         config["domain_balance"] = 0.0
     elif schema == "1.1":
-        if not REQUIRED_CONFIG_FIELDS.issubset(set(config)) or not set(config).issubset(ALL_CONFIG_FIELDS) or config["model"] != "unet-resnet18-v1":
-            raise BaselineTrainingError("Expected baseline schema 1.1 with valid fields and unet-resnet18-v1 model.")
+        if not REQUIRED_CONFIG_FIELDS.issubset(set(config)) or not set(config).issubset(ALL_CONFIG_FIELDS) or config["model"] not in SUPPORTED_MODELS:
+            raise BaselineTrainingError(f"Expected baseline schema 1.1 with valid fields and model in {sorted(SUPPORTED_MODELS)}.")
         for opt in OPTIONAL_CONFIG_FIELDS:
             config.setdefault(opt, 0.0)
     else:
-        raise BaselineTrainingError("Expected baseline schema_version 1.0 or 1.1 and unet-resnet18-v1 model.")
+        raise BaselineTrainingError("Expected baseline schema_version 1.0 or 1.1.")
     for key, lower, upper in (("epochs", 1, 100), ("batch_size", 1, 16), ("seed", 0, 2 ** 32 - 1),
                               ("max_train_samples", 0, 100000), ("max_val_samples", 0, 100000)):
         if type(config[key]) is not int or not lower <= config[key] <= upper:
@@ -104,7 +105,7 @@ def _write_checkpoint(path: Path, document: dict, torch: Any) -> str:
     try:
         torch.save(document, temporary)
         if temporary.stat().st_size > MAX_CHECKPOINT_BYTES:
-            raise BaselineTrainingError("Baseline checkpoint exceeds the 256 MiB bound.")
+            raise BaselineTrainingError(f"Baseline checkpoint exceeds the {MAX_CHECKPOINT_BYTES // (1024 * 1024)} MiB bound.")
         digest = _sha256(temporary)
         companion_tmp.write_text(digest + "\n", encoding="ascii")
         old_payload, old_companion = os.path.lexists(path), os.path.lexists(companion)
@@ -234,7 +235,27 @@ def run_baseline(
         import torch
         from pvextent.data.segmentation import SegmentationDataset
         from pvextent.evaluation.pixels import PixelConfusion
-        from pvextent.models.resnet_unet import WEIGHT_SPEC, build_resnet_unet, normalize_rgb, prepare_encoder_weights
+        from pvextent.models.resnet_unet import normalize_rgb
+        if config["model"] == "unet-resnet18-v1":
+            from pvextent.models.resnet_unet import (
+                WEIGHT_SPEC,
+                build_resnet_unet as build_model,
+                prepare_encoder_weights as prepare_weights,
+            )
+        elif config["model"] == "segformer-mit-b2-v1":
+            from pvextent.models.segformer import (
+                WEIGHT_SPEC,
+                build_segformer_mit_b2 as build_model,
+                prepare_segformer_encoder_weights as prepare_weights,
+            )
+        elif config["model"] == "deeplabv3plus-resnet50-v1":
+            from pvextent.models.deeplabv3plus import (
+                WEIGHT_SPEC,
+                build_deeplabv3plus_resnet50 as build_model,
+                prepare_deeplabv3plus_encoder_weights as prepare_weights,
+            )
+        else:
+            raise BaselineTrainingError(f"Unsupported model: {config['model']}")
         from pvextent.training.losses import masked_bce_dice
     except ImportError as error:
         raise BaselineTrainingError("Baseline dependencies missing. Run: uv sync --locked --extra baseline") from error
@@ -280,13 +301,13 @@ def run_baseline(
                 raise BaselineTrainingError("Target epochs must exceed the checkpoint's completed epoch.")
             weights = None  # The full checkpoint contains the fine-tuned encoder.
         else:
-            weights = prepare_encoder_weights(weights_dir, download=download_weights)
+            weights = prepare_weights(weights_dir, download=download_weights)
         output.parent.mkdir(parents=True, exist_ok=True)
         staging = Path(tempfile.mkdtemp(prefix=f".{output.name}-baseline-", dir=output.parent))
         _write_json(staging / "config.json", {**contract, "epochs": config["epochs"], "resume_checkpoint_sha256": parent_hash})
         with _runtime(torch, selected_device, config["seed"]):
             with torch.device("cpu"):
-                model = build_resnet_unet(None if weights is None else weights["path"]).to(device=selected_device, dtype=torch.float32)
+                model = build_model(None if weights is None else weights["path"]).to(device=selected_device, dtype=torch.float32)
             optimizer = torch.optim.AdamW(model.parameters(), lr=config["learning_rate"], weight_decay=config["weight_decay"])
             start_epoch, global_step = 0, 0
             best_iou, best_epoch, best_val, best_state = -1.0, 0, None, None
@@ -387,7 +408,7 @@ def run_baseline(
                     notify(f"Epoch {epoch} complete: val pixel IoU={measured_val['iou']:.5f}, Dice={measured_val['dice']:.5f}; best={best_epoch}")
             best_document, _ = _read_checkpoint(staging / "best.pt", torch, resume=False)
             with torch.device("cpu"):
-                restored = build_resnet_unet(None).to(device=selected_device, dtype=torch.float32)
+                restored = build_model(None).to(device=selected_device, dtype=torch.float32)
             restored.load_state_dict(best_document["model_state_dict"], strict=True)
             reloaded_val = _evaluate(restored, val, config, torch, selected_device, normalize_rgb, masked_bce_dice, PixelConfusion)
             if any(reloaded_val[key] != best_val[key] for key in ("tp", "fp", "fn", "tn")):

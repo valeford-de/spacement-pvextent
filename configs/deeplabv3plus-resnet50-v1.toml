@@ -1,0 +1,19 @@
+# Copyright 2026 Valeford
+# SPDX-License-Identifier: Apache-2.0
+
+schema_version = "1.1"
+model = "deeplabv3plus-resnet50-v1"
+epochs = 3
+batch_size = 2
+learning_rate = 0.0001
+weight_decay = 0.0001
+seed = 20261020
+threshold = 0.5
+horizontal_flip = 0.5
+vertical_flip = 0.5
+brightness_jitter = 0.0
+contrast_jitter = 0.0
+domain_balance = 0.0
+# Zero selects the complete declared split; positive values create bounded runs.
+max_train_samples = 0
+max_val_samples = 0
