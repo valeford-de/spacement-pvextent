@@ -5,6 +5,7 @@
 
 import argparse
 import json
+from pathlib import Path
 import sys
 
 from pvextent import __version__
@@ -185,6 +186,15 @@ def main(argv: list[str] | None = None) -> int:
     positives.add_argument("output_dir")
     positives.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
     positives.add_argument("--json", action="store_true")
+    vectorize = commands.add_parser("vectorize", help="CAD-grade geospatial polygon vectorization and physical metrics")
+    vectorize.add_argument("mask_or_image", help="Input binary mask PNG or RGB image")
+    vectorize.add_argument("output_dir", help="Output directory for GeoJSON and CAD overlay")
+    vectorize.add_argument("--checkpoint", help="Optional model checkpoint for RGB inference")
+    vectorize.add_argument("--threshold", type=float, default=0.25, help="Probability threshold (default: 0.25)")
+    vectorize.add_argument("--gsd", type=float, default=0.10, help="Ground sampling distance in meters (default: 0.10)")
+    vectorize.add_argument("--no-regularize", action="store_true", help="Disable 90-degree rectilinear Manhattan regularization")
+    vectorize.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
+    vectorize.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     if args.command == "monitor":
         from pvextent.monitoring import serve
@@ -195,6 +205,62 @@ def main(argv: list[str] | None = None) -> int:
         except (OSError, ValueError) as error:
             print(f"MONITOR FAILED: {error}", file=sys.stderr)
             return 1
+        return 0
+    if args.command == "vectorize":
+        from pvextent.cad.vectorize import vectorize_mask, render_cad_overlay
+        import numpy as np
+        from PIL import Image
+        output = Path(args.output_dir).resolve()
+        output.mkdir(parents=True, exist_ok=True)
+        input_path = Path(args.mask_or_image).resolve()
+
+        if args.checkpoint:
+            import torch
+            from pvextent.models.deeplabv3plus import build_deeplabv3plus_resnet50
+            from pvextent.models.resnet_unet import build_resnet_unet, normalize_rgb
+            from pvextent.training.smoke import _device
+            img = Image.open(input_path).convert("RGB")
+            arr = np.array(img, dtype=np.float32) / 255.0
+            img_t = torch.from_numpy(arr).permute(2, 0, 1).unsqueeze(0)
+            norm_t = normalize_rgb(img_t)
+            dev = _device(torch, args.device)
+            norm_t = norm_t.to(dev)
+
+            doc = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
+            sd = doc["model_state_dict"]
+            is_deeplab = any("aspp" in k for k in sd)
+            model = build_deeplabv3plus_resnet50(None) if is_deeplab else build_resnet_unet(None)
+            model.load_state_dict(sd)
+            model.to(dev)
+            model.eval()
+
+            with torch.no_grad():
+                logits = model(norm_t).squeeze()
+                probs = torch.sigmoid(logits).cpu().numpy()
+            binary_mask = (probs >= args.threshold).astype(np.uint8)
+        else:
+            img = Image.open(input_path).convert("RGB")
+            raw_mask = Image.open(input_path)
+            binary_mask = (np.array(raw_mask) > 0).astype(np.uint8)
+
+        geojson = vectorize_mask(
+            binary_mask,
+            gsd_m=args.gsd,
+            regularize=not args.no_regularize,
+        )
+        geojson_path = output / "vectorized.geojson"
+        with open(geojson_path, "w", encoding="utf-8") as f:
+            json.dump(geojson, f, indent=2)
+
+        overlay_path = output / "cad_overlay.png"
+        render_cad_overlay(img, geojson, overlay_path)
+
+        if args.json:
+            print(json.dumps(geojson["summary"], indent=2))
+        else:
+            print(f"VECTORIZE OK: {geojson['summary']['detected_pv_arrays']} arrays, "
+                  f"{geojson['summary']['total_pv_area_m2']} m², "
+                  f"{geojson['summary']['total_capacity_kwp']} kWp. Output: {output}")
         return 0
     if args.command == "evaluate":
         try:
