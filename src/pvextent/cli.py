@@ -262,7 +262,14 @@ def main(argv: list[str] | None = None) -> int:
                 doc = torch.load(ckpt_p, map_location="cpu", weights_only=True)
                 sd = doc["model_state_dict"]
                 is_deeplab = any("aspp" in k for k in sd)
-                model = build_deeplabv3plus_resnet50(None) if is_deeplab else build_resnet_unet(None)
+                is_segformer = any("patch_embed" in k or "decode_head" in k for k in sd)
+                if is_deeplab:
+                    model = build_deeplabv3plus_resnet50(None)
+                elif is_segformer:
+                    from pvextent.models.segformer import build_segformer_mit_b2
+                    model = build_segformer_mit_b2(None)
+                else:
+                    model = build_resnet_unet(None)
                 model.load_state_dict(sd)
                 model.to(dev)
                 model.eval()
@@ -403,7 +410,14 @@ def main(argv: list[str] | None = None) -> int:
                 doc = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
                 sd = doc["model_state_dict"]
                 is_deeplab = any("aspp" in k for k in sd)
-                model = build_deeplabv3plus_resnet50(None) if is_deeplab else build_resnet_unet(None)
+                is_segformer = any("patch_embed" in k or "decode_head" in k for k in sd)
+                if is_deeplab:
+                    model = build_deeplabv3plus_resnet50(None)
+                elif is_segformer:
+                    from pvextent.models.segformer import build_segformer_mit_b2
+                    model = build_segformer_mit_b2(None)
+                else:
+                    model = build_resnet_unet(None)
                 model.load_state_dict(sd)
                 model.to(dev)
 
