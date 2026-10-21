@@ -200,6 +200,8 @@ def main(argv: list[str] | None = None) -> int:
     vectorize.add_argument("--threshold", type=float, default=0.25, help="Probability threshold (default: 0.25)")
     vectorize.add_argument("--calibrate", action="store_true", help="Apply temperature scaling and calibrated Bayes-optimal threshold")
     vectorize.add_argument("--temperature", type=float, default=1.0, help="Temperature scalar T for logit calibration (default: 1.0)")
+    vectorize.add_argument("--tile-size", type=int, default=400, help="Tile size for sliding-window inference (default: 400)")
+    vectorize.add_argument("--overlap", type=float, default=0.50, help="Tile overlap fraction in [0.0, 0.75] (default: 0.50)")
     vectorize.add_argument("--tta", choices=("none", "flips", "rot4", "d4"), default="d4",
                            help="Test-Time Augmentation mode (default: d4, 8-fold dihedral symmetry)")
     vectorize.add_argument("--gsd", type=float, default=0.10, help="Ground sampling distance in meters (default: 0.10)")
@@ -232,10 +234,7 @@ def main(argv: list[str] | None = None) -> int:
             from pvextent.training.smoke import _device
             img = Image.open(input_path).convert("RGB")
             arr = np.array(img, dtype=np.float32) / 255.0
-            img_t = torch.from_numpy(arr).permute(2, 0, 1).unsqueeze(0)
-            norm_t = normalize_rgb(img_t)
             dev = _device(torch, args.device)
-            norm_t = norm_t.to(dev)
 
             doc = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
             sd = doc["model_state_dict"]
@@ -268,9 +267,18 @@ def main(argv: list[str] | None = None) -> int:
                     if args.threshold == 0.25:
                         threshold = calib_data.get("temperature_scaling", {}).get("optimal_threshold_iou", 0.25)
 
-            from pvextent.inference.tta import predict_with_tta
-            tta_result = predict_with_tta(model, norm_t, mode=args.tta, temperature=temperature)
-            probs = tta_result["probabilities"].cpu().numpy()
+            from pvextent.inference.tiler import predict_tiled
+            tiled_res = predict_tiled(
+                model=model,
+                image=arr,
+                tile_size=args.tile_size,
+                overlap=args.overlap,
+                tta_mode=args.tta,
+                temperature=temperature,
+                device=dev,
+                normalize_fn=normalize_rgb,
+            )
+            probs = tiled_res["probabilities"]
             binary_mask = (probs >= threshold).astype(np.uint8)
         else:
             img = Image.open(input_path).convert("RGB")
