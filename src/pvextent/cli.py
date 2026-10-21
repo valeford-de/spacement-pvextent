@@ -191,6 +191,8 @@ def main(argv: list[str] | None = None) -> int:
     vectorize.add_argument("output_dir", help="Output directory for GeoJSON and CAD overlay")
     vectorize.add_argument("--checkpoint", help="Optional model checkpoint for RGB inference")
     vectorize.add_argument("--threshold", type=float, default=0.25, help="Probability threshold (default: 0.25)")
+    vectorize.add_argument("--tta", choices=("none", "flips", "rot4", "d4"), default="d4",
+                           help="Test-Time Augmentation mode (default: d4, 8-fold dihedral symmetry)")
     vectorize.add_argument("--gsd", type=float, default=0.10, help="Ground sampling distance in meters (default: 0.10)")
     vectorize.add_argument("--no-regularize", action="store_true", help="Disable 90-degree rectilinear Manhattan regularization")
     vectorize.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
@@ -234,9 +236,9 @@ def main(argv: list[str] | None = None) -> int:
             model.to(dev)
             model.eval()
 
-            with torch.no_grad():
-                logits = model(norm_t).squeeze()
-                probs = torch.sigmoid(logits).cpu().numpy()
+            from pvextent.inference.tta import predict_with_tta
+            tta_result = predict_with_tta(model, norm_t, mode=args.tta)
+            probs = tta_result["probabilities"].cpu().numpy()
             binary_mask = (probs >= args.threshold).astype(np.uint8)
         else:
             img = Image.open(input_path).convert("RGB")
