@@ -58,6 +58,16 @@ max_val_samples = 0
             self.assertEqual(config["model"], "deeplabv3plus-resnet50-v1")
             self.assertEqual(config["schema_version"], "1.1")
 
+    def test_singleton_batch_training_mode(self) -> None:
+        model = build_deeplabv3plus_resnet50(None)
+        model.train()
+        x = torch.randn(1, 3, 64, 64)
+        out = model(x)
+        self.assertEqual(out.shape, (1, 1, 64, 64))
+        loss = out.sum()
+        loss.backward()
+        self.assertTrue(torch.isfinite(loss))
+
 
 if __name__ == "__main__":
     unittest.main()

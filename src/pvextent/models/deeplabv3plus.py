@@ -125,14 +125,25 @@ def prepare_deeplabv3plus_encoder_weights(cache_dir: Path | str, *, download: bo
         raise EncoderWeightsError(f"Cannot prepare DeepLabV3+ encoder cache: {error}") from error
 
 
-def build_deeplabv3plus_resnet50(weights_path: Path | str | None = None) -> nn.Module:
+def build_deeplabv3plus_resnet50(weights_path: Path | str | None = None) -> Any:
     """Build the DeepLabV3+ (ResNet50 ASPP) architecture offline, loading verified encoder tensors."""
     try:
         import torch
+        import torch.nn as nn
+        from torch.nn import functional as F
         import segmentation_models_pytorch as smp
         from safetensors.torch import load
     except ImportError as error:
         raise EncoderWeightsError("Baseline dependencies missing. Run: uv sync --locked --extra baseline") from error
+
+    class SafeBatchNorm2d(nn.BatchNorm2d):
+        """BatchNorm2d that safely falls back to running statistics if spatial size is 1x1 and batch is 1."""
+
+        def forward(self, x: torch.Tensor) -> torch.Tensor:
+            if self.training and x.shape[0] == 1 and x.shape[2:] == (1, 1):
+                return F.batch_norm(x, self.running_mean, self.running_var, self.weight, self.bias, False, self.momentum, self.eps)
+            return super().forward(x)
+
     try:
         model = smp.create_model(
             "deeplabv3plus",
@@ -141,6 +152,15 @@ def build_deeplabv3plus_resnet50(weights_path: Path | str | None = None) -> nn.M
             in_channels=3,
             classes=1,
         ).to(dtype=torch.float32)
+        try:
+            pool = model.decoder.aspp[0].convs[4]
+            child = pool[2]
+            if isinstance(child, nn.BatchNorm2d):
+                safe_bn = SafeBatchNorm2d(child.num_features, child.eps, child.momentum, child.affine, child.track_running_stats)
+                safe_bn.load_state_dict(child.state_dict())
+                pool[2] = safe_bn
+        except (AttributeError, IndexError, KeyError):
+            pass
         if weights_path is not None:
             payload = _verified_bytes(Path(weights_path), WEIGHT_SPEC)
             state = load(payload)
