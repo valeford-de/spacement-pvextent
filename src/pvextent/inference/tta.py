@@ -76,6 +76,7 @@ def predict_with_tta(
     image_tensor: torch.Tensor,
     mode: TTAMode = "d4",
     batch_size: int = 8,
+    temperature: float = 1.0,
 ) -> dict[str, torch.Tensor]:
     """Run model inference with Test-Time Augmentation (TTA).
 
@@ -84,12 +85,15 @@ def predict_with_tta(
         image_tensor: Single input image tensor (C, H, W) or (1, C, H, W).
         mode: TTA mode ('none', 'flips', 'rot4', 'd4').
         batch_size: Batch size for batched forward passes.
+        temperature: Temperature scaling factor for logits (default: 1.0).
 
     Returns:
         dict: {
             'probabilities': torch.Tensor of shape (H, W) in range [0, 1],
             'uncertainty': torch.Tensor of shape (H, W) variance across TTA passes,
             'transforms_used': int (e.g. 8 for 'd4'),
+            'mode': mode,
+            'temperature': temperature,
         }
     """
     batch, names = apply_tta_transforms(image_tensor, mode=mode)
@@ -105,6 +109,8 @@ def predict_with_tta(
             # Squeeze channel dimension: (B, 1, H, W) -> (B, H, W)
             if logits.ndim == 4:
                 logits = logits.squeeze(1)
+            if temperature != 1.0:
+                logits = logits / max(1e-4, temperature)
             probs = torch.sigmoid(logits)
             for i in range(probs.shape[0]):
                 t_name = names[start + i]
@@ -124,4 +130,5 @@ def predict_with_tta(
         "uncertainty": variance,
         "transforms_used": k,
         "mode": mode,
+        "temperature": temperature,
     }

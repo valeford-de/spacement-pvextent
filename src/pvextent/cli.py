@@ -186,11 +186,20 @@ def main(argv: list[str] | None = None) -> int:
     positives.add_argument("output_dir")
     positives.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
     positives.add_argument("--json", action="store_true")
+    calibrate_p = evaluations.add_parser("calibrate", help="Calibrate model probabilities (Temperature & Platt scaling) on validation data")
+    calibrate_p.add_argument("dataset_dir")
+    calibrate_p.add_argument("checkpoint", help="Local best.pt checkpoint")
+    calibrate_p.add_argument("output_dir", help="Output directory for calibration report")
+    calibrate_p.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
+    calibrate_p.add_argument("--subsample-pixels", type=int, default=0, help="Max pixels per crop to evaluate (0 for all)")
+    calibrate_p.add_argument("--json", action="store_true")
     vectorize = commands.add_parser("vectorize", help="CAD-grade geospatial polygon vectorization and physical metrics")
     vectorize.add_argument("mask_or_image", help="Input binary mask PNG or RGB image")
     vectorize.add_argument("output_dir", help="Output directory for GeoJSON and CAD overlay")
     vectorize.add_argument("--checkpoint", help="Optional model checkpoint for RGB inference")
     vectorize.add_argument("--threshold", type=float, default=0.25, help="Probability threshold (default: 0.25)")
+    vectorize.add_argument("--calibrate", action="store_true", help="Apply temperature scaling and calibrated Bayes-optimal threshold")
+    vectorize.add_argument("--temperature", type=float, default=1.0, help="Temperature scalar T for logit calibration (default: 1.0)")
     vectorize.add_argument("--tta", choices=("none", "flips", "rot4", "d4"), default="d4",
                            help="Test-Time Augmentation mode (default: d4, 8-fold dihedral symmetry)")
     vectorize.add_argument("--gsd", type=float, default=0.10, help="Ground sampling distance in meters (default: 0.10)")
@@ -236,10 +245,33 @@ def main(argv: list[str] | None = None) -> int:
             model.to(dev)
             model.eval()
 
+            # Calibration handling
+            temperature = args.temperature
+            threshold = args.threshold
+            if args.calibrate:
+                ckpt_path = Path(args.checkpoint).resolve()
+                calib_cand = [
+                    ckpt_path.parent / "calibration_report.json",
+                    Path("runs/calibration_report.json"),
+                ]
+                calib_data = None
+                for c_path in calib_cand:
+                    if c_path.exists():
+                        try:
+                            with open(c_path, "r", encoding="utf-8") as cf:
+                                calib_data = json.load(cf)
+                            break
+                        except Exception:
+                            pass
+                if calib_data:
+                    temperature = calib_data.get("temperature_scaling", {}).get("temperature", 1.0)
+                    if args.threshold == 0.25:
+                        threshold = calib_data.get("temperature_scaling", {}).get("optimal_threshold_iou", 0.25)
+
             from pvextent.inference.tta import predict_with_tta
-            tta_result = predict_with_tta(model, norm_t, mode=args.tta)
+            tta_result = predict_with_tta(model, norm_t, mode=args.tta, temperature=temperature)
             probs = tta_result["probabilities"].cpu().numpy()
-            binary_mask = (probs >= args.threshold).astype(np.uint8)
+            binary_mask = (probs >= threshold).astype(np.uint8)
         else:
             img = Image.open(input_path).convert("RGB")
             raw_mask = Image.open(input_path)
@@ -286,6 +318,37 @@ def main(argv: list[str] | None = None) -> int:
                                                    args.candidate_checkpoint, args.output_dir,
                                                    device=args.device,
                                                    progress=lambda message: print(message, file=sys.stderr))
+            elif args.action == "calibrate":
+                from pvextent.data.segmentation import SegmentationDataset
+                from pvextent.models.deeplabv3plus import build_deeplabv3plus_resnet50
+                from pvextent.models.resnet_unet import build_resnet_unet, normalize_rgb
+                from pvextent.training.smoke import _device
+                from pvextent.inference.calibration import calibrate_validation_split
+                import torch
+
+                dev = _device(torch, args.device)
+                out_dir = Path(args.output_dir).resolve()
+                out_dir.mkdir(parents=True, exist_ok=True)
+
+                val_dataset = SegmentationDataset(args.dataset_dir, split="val")
+                doc = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
+                sd = doc["model_state_dict"]
+                is_deeplab = any("aspp" in k for k in sd)
+                model = build_deeplabv3plus_resnet50(None) if is_deeplab else build_resnet_unet(None)
+                model.load_state_dict(sd)
+                model.to(dev)
+
+                result = calibrate_validation_split(
+                    model=model,
+                    dataset=val_dataset,
+                    device=dev,
+                    normalize_fn=normalize_rgb,
+                    max_samples=0,
+                    subsample_pixels=args.subsample_pixels,
+                )
+                report_path = out_dir / "calibration_report.json"
+                with open(report_path, "w", encoding="utf-8") as f:
+                    json.dump(result, f, indent=2)
             else:
                 from pvextent.inference.candidates import export_candidate_predictions
                 result = export_candidate_predictions(args.dataset_dir, args.checkpoint, args.output_dir,
@@ -299,6 +362,13 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         if args.json:
             print(json.dumps(result, indent=2, allow_nan=False))
+        elif args.action == "calibrate":
+            raw = result["raw_metrics"]
+            t_scal = result["temperature_scaling"]
+            print(f"CALIBRATE OK: Evaluated {result['samples_evaluated']} validation samples ({result['total_pixels_evaluated']} px).")
+            print(f"  Raw: ECE={raw['ece']:.4f}, NLL={raw['nll']:.4f}, Bayes-opt IoU threshold={raw['optimal_threshold_iou']:.3f} (Max IoU={raw['max_iou']:.4f})")
+            print(f"  Temperature Scaled (T={t_scal['temperature']:.3f}): ECE={t_scal['ece']:.4f} (-{t_scal['ece_reduction_pct']}%), NLL={t_scal['nll']:.4f}, Bayes-opt IoU threshold={t_scal['optimal_threshold_iou']:.3f} (Max IoU={t_scal['max_iou']:.4f})")
+            print(f"  Report written to: {args.output_dir}/calibration_report.json")
         else:
             print(f"{args.action.upper()} OK. Output: {args.output_dir}")
         return 0
