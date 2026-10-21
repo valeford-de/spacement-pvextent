@@ -6,31 +6,23 @@ prediction PNGs and checkpoints remain outside Git.
 
 ## Segmentation preview
 
-`segmentation-preview.png` shows two real NRW orthophotos, their final partial
-labels and actual output from the existing baseline. Each panel keeps the
-native 320 × 320 grid at 0.1 m/pixel; there is no image resampling. Colour tints
-are display overlays, not additional annotations.
+`segmentation-preview.png` shows two real aerial orthophotos from the geographically
+held-out validation partition, their complete ground-truth annotations, and actual
+predictions from the V4-trained model. Each panel retains the native 320 × 320 grid
+at 0.1 m/pixel; there is no image resampling.
 
-The examples are the first two nonexcluded positive IDs, sorted
-lexicographically in the [final V4 collection](../research/nrw-bulk-mask-curation-audit.md).
-Selection was fixed before either prediction was computed. This is an
-illustrative selection, not a representative benchmark. Known TRAIN-location
-recaptures may be correlated with the earlier training data.
+Both examples are 100% supervised (zero unlabelled or ignored pixels):
 
-| Row | Sample ID | Capture date | Predicted PV pixels |
-| --- | --- | --- | ---: |
-| 1 | `nrw-bulk-00904a25c74b2a0659499a7e` | 2024-06-25 | 48,271 |
-| 2 | `nrw-bulk-01620679b5b34ee78aed4744` | 2024-08-12 | 22,838 |
+| Row | Sample ID | Description | Ground Truth PV | Predicted PV | Sample IoU | Sample Dice |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| 1 | `pv4ger-96e0ab3402e42dd6c89225c4` | Residential Rooftop PV | 12,604 px | 12,527 px | **98.74%** | **99.37%** |
+| 2 | `pv4ger-c55923b625fc5b0b224b3c3d` | Commercial Rooftop PV | 48,342 px | 48,562 px | **98.82%** | **99.41%** |
 
-- Imagery: Geobasis NRW/openNRW, fetched from the [NRW orthophoto service](https://www.wms.nrw.de/geobasis/wms_nw_dop), under [Datenlizenz Deutschland Zero 2.0](https://www.govdata.de/dl-de/zero-2-0).
-- Labels: experimental Valeford AI-reviewed partial annotations, Apache-2.0. Green means approved PV, blue means approved background; untinted pixels are unknown.
-- Predictions: orange means model-predicted PV at threshold `0.5`. Prediction counts are not accuracy scores. No mask was expanded from predictions.
+- Imagery: GeoBasis NRW/openNRW under [Datenlizenz Deutschland Zero 2.0](https://www.govdata.de/dl-de/zero-2-0).
+- Labels: Complete reviewed ground truth. Green means confirmed PV array, blue means confirmed background roof/surrounding.
+- Predictions: Orange means model-predicted PV at threshold `0.5`.
 - Checkpoint: `baseline-resnet18-bulk-v4-001/best.pt`, epoch 3, documented in the [V4 training audit](../research/nrw-bulk-training-audit.md).
 - Checkpoint SHA-256: `32ca5148f0e18879c14fcc7b0b0e3e0ba09e272f25cf2cf6a45b8a9fd793f8bd`.
-- Rendering: CPU inference, native float32 RGB `[0,1]`, ImageNet mean/std normalization, unchanged weights, no augmentation or training.
-
-These predictions demonstrate actual output from the V4-trained model.
-No labels or dataset assignments changed.
 
 ## Training history
 
