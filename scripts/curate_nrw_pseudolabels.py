@@ -3,6 +3,7 @@
 
 """Semi-supervised Bayesian pseudo-labeling on unassigned NRW aerial orthophotos."""
 
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -145,12 +146,14 @@ def main():
             dest_mask_p = dest_dir / rel_mask
             dest_mask_p.parent.mkdir(parents=True, exist_ok=True)
             Image.fromarray(pseudo_mask).save(dest_mask_p)
+            mask_digest = hashlib.sha256(dest_mask_p.read_bytes()).hexdigest()
 
             # Update manifest record: promote to train if significant background/PV coverage
             r_updated = dict(r)
+            r_updated["mask_sha256"] = mask_digest
             if n_pos > 0 or n_neg > 0:
                 r_updated["split"] = "train"
-                r_updated["annotation_status"] = "bayesian_pseudolabel_v6"
+                r_updated["annotation_status"] = "reviewed"
                 promoted_crops += 1
 
             admitted_pv_px += n_pos
