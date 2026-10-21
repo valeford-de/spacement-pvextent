@@ -207,6 +207,9 @@ def main(argv: list[str] | None = None) -> int:
     vectorize.add_argument("--tta", choices=("none", "flips", "rot4", "d4"), default="d4",
                            help="Test-Time Augmentation mode (default: d4, 8-fold dihedral symmetry)")
     vectorize.add_argument("--gsd", type=float, default=0.10, help="Ground sampling distance in meters (default: 0.10)")
+    vectorize.add_argument("--transform", nargs=6, type=float, help="GDAL 6-parameter affine transform [a, b, c, d, e, f]")
+    vectorize.add_argument("--crs", default="EPSG:25832", help="Coordinate Reference System (default: EPSG:25832)")
+    vectorize.add_argument("--min-area-m2", type=float, default=1.5, help="Minimum PV array surface area in m² (default: 1.5, filter out sub-module noise)")
     vectorize.add_argument("--no-regularize", action="store_true", help="Disable 90-degree rectilinear Manhattan regularization")
     vectorize.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
     vectorize.add_argument("--json", action="store_true")
@@ -320,9 +323,18 @@ def main(argv: list[str] | None = None) -> int:
             raw_mask = Image.open(input_path)
             binary_mask = (np.array(raw_mask) > 0).astype(np.uint8)
 
+        # Georeference resolution: CLI explicit override -> auto-extract GeoTIFF/Worldfile
+        from pvextent.cad.georef import extract_georeference
+        if args.transform:
+            georef = {"crs": args.crs, "transform": args.transform}
+        else:
+            georef = extract_georeference(input_path, default_crs=args.crs)
+
         geojson = vectorize_mask(
             binary_mask,
+            georeference=georef,
             gsd_m=args.gsd,
+            min_area_m2=args.min_area_m2,
             regularize=not args.no_regularize,
             probabilities=final_probs,
             uncertainty=final_uncert,
@@ -333,6 +345,15 @@ def main(argv: list[str] | None = None) -> int:
 
         overlay_path = output / "cad_overlay.png"
         render_cad_overlay(img, geojson, overlay_path)
+
+        # Export raw masks and probability heatmaps
+        Image.fromarray((binary_mask * 255).astype(np.uint8)).save(output / "binary_mask.png")
+        if final_probs is not None:
+            Image.fromarray((np.clip(final_probs, 0.0, 1.0) * 255).astype(np.uint8)).save(output / "probabilities.png")
+        if final_uncert is not None:
+            u_max = max(1e-4, float(np.max(final_uncert)))
+            uncert_scaled = (np.clip(final_uncert / u_max, 0.0, 1.0) * 255).astype(np.uint8)
+            Image.fromarray(uncert_scaled).save(output / "uncertainty.png")
 
         if args.json:
             print(json.dumps(geojson["summary"], indent=2))

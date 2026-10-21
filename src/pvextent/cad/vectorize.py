@@ -155,6 +155,7 @@ def vectorize_mask(
     georeference: dict | None = None,
     gsd_m: float = DEFAULT_GSD_M,
     min_area_px: float = 30.0,
+    min_area_m2: float = 0.0,
     regularize: bool = True,
     tolerance_deg: float = 20.0,
     module_efficiency: float = DEFAULT_MODULE_EFFICIENCY,
@@ -166,7 +167,8 @@ def vectorize_mask(
     Returns:
         dict: GeoJSON FeatureCollection with CAD-regularized polygon geometries and physical metrics.
     """
-    raw_rings = marching_squares_contours(mask, min_area_px=min_area_px)
+    effective_min_area_px = max(min_area_px, (min_area_m2 / (gsd_m ** 2))) if min_area_m2 > 0 else min_area_px
+    raw_rings = marching_squares_contours(mask, min_area_px=effective_min_area_px)
     features = []
 
     transform = georeference.get("transform") if georeference else None
@@ -193,15 +195,24 @@ def vectorize_mask(
             gsd_m=gsd_m,
             module_efficiency=module_efficiency,
         )
+        if min_area_m2 > 0.0 and metrics["area_m2"] < min_area_m2:
+            continue
 
         # Compute dominant azimuth
         _, azimuth_deg = detect_dominant_orientation(regularized)
         obb = minimum_bounding_box(regularized)
+        obb_len_m = round(obb["length"] * gsd_m, 2)
+        obb_wid_m = round(obb["width"] * gsd_m, 2)
+
+        # Estimate standard module table grid layout (standard module 1.76m x 1.04m)
+        table_rows = max(1, round(obb_wid_m / 1.04)) if obb_wid_m >= 0.8 else 1
+        table_cols = max(1, round(obb_len_m / 1.76)) if obb_len_m >= 1.2 else 1
 
         metrics["dominant_azimuth_deg"] = round(azimuth_deg, 1)
         metrics["aspect_ratio"] = round(obb["aspect_ratio"], 2)
-        metrics["obb_length_m"] = round(obb["length"] * gsd_m, 2)
-        metrics["obb_width_m"] = round(obb["width"] * gsd_m, 2)
+        metrics["obb_length_m"] = obb_len_m
+        metrics["obb_width_m"] = obb_wid_m
+        metrics["estimated_table_layout"] = f"{table_rows}x{table_cols}"
         metrics["is_regularized"] = regularize
 
         # Array-level Bayesian probability and uncertainty assessment
