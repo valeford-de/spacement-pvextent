@@ -106,3 +106,10 @@ augmentation reports determine how many of the additional 1,000 qualify as
 supervision. Preparing this snapshot does not launch training, modify the
 existing checkpoints, or evaluate reserved pixels. The
 [live monitor](live-training.md) displays progress from actual completed files.
+
+An [additional quality check](research/nrw-bulk-mask-quality-amendment.md)
+subsequently withdrew three disputed cases in a
+[separate immutable quarantine stage](training-quality-quarantine.md).
+Use the final V4 snapshot for the next registered experiment; retain V3 as
+evidence of the original two-check outcome. Regular checkpoint resume continues
+to reject changed dataset fingerprints.

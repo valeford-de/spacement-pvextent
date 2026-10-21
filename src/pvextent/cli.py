@@ -95,6 +95,14 @@ def main(argv: list[str] | None = None) -> int:
     bulk_augment.add_argument("--protocol", required=True)
     bulk_augment.add_argument("--dataset-version", required=True)
     bulk_augment.add_argument("--json", action="store_true")
+    quarantine = actions.add_parser("quarantine-training-quality", help="Exclude disputed new bulk TRAIN masks under a frozen quality protocol")
+    quarantine.add_argument("source_dir")
+    quarantine.add_argument("base_dir")
+    quarantine.add_argument("output_dir")
+    quarantine.add_argument("--protocol", required=True)
+    quarantine.add_argument("--evidence", required=True)
+    quarantine.add_argument("--dataset-version", required=True)
+    quarantine.add_argument("--json", action="store_true")
     freeze = actions.add_parser("freeze-negative-holdout", help="Reserve reviewed negatives for evaluation before predictions")
     freeze.add_argument("curated_dir")
     freeze.add_argument("candidate_dir")
@@ -324,6 +332,11 @@ def main(argv: list[str] | None = None) -> int:
                 result = augment_bulk_training(args.base_dir, args.curated_dir, args.protected_dirs,
                                                args.output_dir, dataset_version=args.dataset_version,
                                                protocol_path=args.protocol)
+            elif args.action == "quarantine-training-quality":
+                from pvextent.data.quality_quarantine import quarantine_training_quality
+                result = quarantine_training_quality(args.source_dir, args.base_dir, args.output_dir,
+                                                      protocol_path=args.protocol, evidence_path=args.evidence,
+                                                      dataset_version=args.dataset_version)
             elif args.action == "freeze-negative-holdout":
                 from pvextent.data.negative_freeze import freeze_negative_holdout
                 result = freeze_negative_holdout(args.curated_dir, args.candidate_dir, args.exclude_dirs, args.output_dir,

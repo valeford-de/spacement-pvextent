@@ -8,7 +8,8 @@ uv run --locked --no-sync pvextent monitor --repo-dir . --port 59654
 
 Open the printed `http://127.0.0.1:59654/` address. The page refreshes every
 two seconds and shows the current 1,000-photo mask proposal and independent
-check counts. It also reports when `data/pvextent-training-v3` is prepared.
+check counts. It prefers the current V4 quality-quarantine report and otherwise
+reports the initial `data/pvextent-training-v3` preparation.
 Starting the monitor does not start training.
 `--no-sync` also avoids changing optional dependencies while another process
 is training or reviewing data. Prepare the project environment first using

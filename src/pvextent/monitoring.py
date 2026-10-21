@@ -81,7 +81,8 @@ def snapshot(repo_dir: Path | str, selected_run: str = '') -> dict:
     package = artifacts / 'nrw-training-bulk-mask-checks-v2'
     drafts = _review_count(artifacts / 'nrw-training-bulk-mask-reviews-v1/lane-a', '1.1')
     first, second = [_review_count(package / f'lane-{lane}', '1.2') for lane in ('a', 'b')]
-    dataset = _json(repo / 'data/pvextent-training-v3/augmentation-report.json')
+    dataset = (_json(repo / 'data/pvextent-training-v4/quality-quarantine-report.json')
+               or _json(repo / 'data/pvextent-training-v3/augmentation-report.json'))
     runs = []
     run_root = repo / 'runs'
     if run_root.is_dir() and not run_root.is_symlink():

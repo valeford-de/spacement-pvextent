@@ -49,6 +49,14 @@ class MonitoringTests(unittest.TestCase):
         self.assertEqual([state[k]['images'] for k in ('drafts','check_c','check_d')],[25,25,0])
         self.assertFalse(state['new_training_running'])
         self.assertIsNone(state['selected_run'])
+        self.write('data/pvextent-training-v3/augmentation-report.json',
+                   {'ok':True,'effective_supervised_train_records':3778,'qualified_records_added_to_train':485})
+        self.write('data/pvextent-training-v4/quality-quarantine-report.json',
+                   {'ok':True,'effective_supervised_train_records':3777,'qualified_records_added_to_train':484})
+        state = snapshot(self.root)
+        self.assertEqual(state['phase'], 'dataset_ready')
+        self.assertEqual(state['dataset']['train_samples'], 3777)
+        self.assertEqual(state['dataset']['added_samples'], 484)
 
     def test_live_log_is_detected_without_a_checkpoint_or_any_model_import(self):
         self.log('.new-baseline-test', [{'event':'run_started','pid':os.getpid(),'device':'cpu'},
