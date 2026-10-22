@@ -24,7 +24,7 @@ from PIL import Image, ImageDraw
 # Radiometric and Biophysical Thresholds
 NDVI_VEGETATION_THRESHOLD = 0.35      # Polygons with mean NDVI > 0.35 are living vegetation (Dachbegrünung/trees)
 WATER_PUDDLE_NIR_MAX = 0.04           # Extreme NIR absorption (< 0.04) marks standing water / wet puddles
-SILICON_PV_NDVI_MAX = 0.20            # Crystalline silicon PV panels exhibit low NDVI (-0.25 to +0.20)
+SILICON_PV_NDVI_MAX = 0.25            # Crystalline silicon PV panels exhibit low NDVI (-0.25 to +0.25)
 SILICON_PV_NIR_RED_RATIO_MIN = 0.70   # Silicon anti-reflective coatings reflect more in NIR than visible red
 
 

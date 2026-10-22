@@ -71,9 +71,9 @@ class TestMultispectralAnalysis(unittest.TestCase):
 
     def test_extract_polygon_spectral_stats_silicon_pv(self):
         # Create synthetic 100x100 scene with a silicon solar panel array
-        # Silicon panel: dark visible (R=0.08, G=0.09, B=0.12), moderate NIR (0.16)
-        rgb = np.full((100, 100, 3), [20, 23, 30], dtype=np.uint8)
-        nir = np.full((100, 100), 40, dtype=np.uint8)
+        # Silicon panel: dark visible (R=22, G=24, B=30), moderate NIR (26)
+        rgb = np.full((100, 100, 3), [22, 24, 30], dtype=np.uint8)
+        nir = np.full((100, 100), 26, dtype=np.uint8)
 
         poly = [(20.0, 20.0), (80.0, 20.0), (80.0, 80.0), (20.0, 80.0)]
         stats = extract_polygon_spectral_stats(poly, rgb, nir)
@@ -119,7 +119,7 @@ class TestMultispectralAnalysis(unittest.TestCase):
 
         # Set spectral properties for Array 1 (Silicon)
         rgb[10:40, 10:40] = [20, 20, 25]
-        nir[10:40, 10:40] = 35
+        nir[10:40, 10:40] = 24
 
         # Set spectral properties for Array 2 (Vegetation / Dachbegrünung)
         rgb[60:90, 60:90] = [25, 60, 20]
