@@ -54,8 +54,7 @@ spectral_water_veto = true         # Suppression of puddle ponding (NIR < 0.04)
 test_pixel_iou = 0.8915
 test_dice_f1 = 0.9426
 test_pixel_accuracy = 0.9774
-test_pixel_recall = 0.9632
-negative_holdout_specificity = 0.99955  # 0.045% false positive rate
+test_pixel_recall = 0.9493
 calibration_error_ece = 0.0047          # 0.47% Expected Calibration Error
 recommended_hardware = "Apple Silicon MPS (M1/M2/M3 Pro/Max/Ultra) or NVIDIA CUDA (>=8GB VRAM)"
 target_use_case = "Cadastre extraction, utility solar accounting, state-wide aerial surveys, official energy network planning."

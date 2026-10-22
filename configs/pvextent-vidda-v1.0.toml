@@ -39,7 +39,5 @@ ghi_kwh_m2 = 1050.0
 test_iou = 0.8816
 test_dice = 0.9371
 test_pixel_accuracy = 0.9754
-negative_holdout_specificity = 0.9902
-latency_per_tile_ms = 18.5
 recommended_hardware = "Apple Silicon MPS (M1/M2/M3), NVIDIA CUDA (>=4GB VRAM), or Modern Multi-Core CPU"
 target_use_case = "High-throughput municipality screening, rapid regional roof scans, real-time web viewers, edge devices."
