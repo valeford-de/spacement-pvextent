@@ -3,11 +3,9 @@
 # Spacement PVExtent
 
 <p align="center">
-  <img src="docs/assets/pvextent-tinden-banner.png" alt="Spacement PVExtent Tinden Banner" width="100%" />
-</p>
-
-<p align="center">
-  <img src="docs/assets/pvextent-vidda-banner.png" alt="Spacement PVExtent Vidda Banner" width="100%" />
+  <img src="docs/assets/pvextent-vidda-banner.png" alt="Spacement PVExtent Vidda Banner" width="48%" />
+  &nbsp;
+  <img src="docs/assets/pvextent-tinden-banner.png" alt="Spacement PVExtent Tinden Banner" width="48%" />
 </p>
 
 [![Release](https://img.shields.io/badge/Release-v1.0.0-00E6FF.svg?style=for-the-badge)](https://github.com/valeford-de/spacement-pvextent/releases)
@@ -17,13 +15,13 @@
 [![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg?style=for-the-badge)](LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-509%20Passed%20(100%25)-success.svg?style=for-the-badge)](#verification)
 
-**Spacement PVExtent** is a geospatial computer vision pipeline for automated rooftop photovoltaic (PV) asset detection, 3D roof plane fitting, BIM module packing, annual solar yield forecasting, and 4D longitudinal change tracking from high-resolution aerial orthophotos.
+**Spacement PVExtent** ist eine hochpräzise geospatial Computer-Vision-Pipeline für die automatisierte Erkennung von Photovoltaik-Dachanlagen, 3D-Dachebenenfitting, BIM-Modulbelegung, jährliche Solarertragsprognosen und 4D-Veränderungserkennung aus amtlichen Luftbildern und Orthophotos.
 
-[Documentation](https://github.com/valeford-de/spacement-pvextent/wiki) ·
-[Model Releases](#model-lineup) ·
+[Dokumentation](https://github.com/valeford-de/spacement-pvextent/wiki) ·
+[Modell-Releases](#model-lineup) ·
 [Benchmark](#benchmark) ·
 [Quickstart](#quickstart) ·
-[Disclaimer](#-liability-disclaimer--haftungsausschluss)
+[Haftungsausschluss](#-liability-disclaimer--haftungsausschluss)
 
 ---
 
@@ -31,26 +29,26 @@
 
 ## 🌟 Model Lineup (v1.0 Releases)
 
-PVExtent v1.0 is engineered in two specialized tiers tailored for distinct operational profiles:
+PVExtent v1.0 ist in zwei spezialisierten Profilen für unterschiedliche Einsatzzwecke verfügbar:
 
-| Specification | **PVExtent Vidda (v1.0 Standard)** | **PVExtent Tinden (v1.0 High-End Flagship)** |
+| Spezifikation | **PVExtent Vidda (v1.0 Standard)** | **PVExtent Tinden (v1.0 High-End Flagship)** |
 | :--- | :--- | :--- |
-| **Operational Tier** | **Standard / High-Throughput** | **High-End / Maximum Precision** |
-| **Primary Use Case** | Nationwide/regional screening, fast web viewers, edge/laptop evaluation | Cadastre extraction, grid planning, detailed energy audits |
-| **Architecture** | Single-Model DeepLabV3+ ResNet50 ASPP | **Heterogeneous Ensemble** (Photometric V5 + Self-Trained V6) |
-| **Test Pixel IoU** | **88.16%** | **89.15%** |
-| **Test Pixel Recall** | 93.53% | **96.32%** (-59.5% fewer missed PV panels vs. baseline) |
-| **Background Specificity** | 99.02% | **99.955%** (Only 0.045% false positive rate on complex negative holdout) |
-| **Calibration Error (ECE)** | 0.47% ($T^* = 0.4068$) | **0.47%** ($T^* = 0.4068$, Bayes-optimal threshold $\tau^* = 0.25$) |
-| **Test-Time Augmentation** | None (Single pass for maximum velocity) | **Dihedral $D_4$ (8-fold symmetry)** + **Multi-Scale Pyramid ($0.9\times, 1.0\times, 1.1\times$)** |
-| **Window Blending** | 2D Hann Apodization ($W = \sin^2 \otimes \sin^2$) | **Seamless 2D Separable Hann Apodization** (Zero mosaic edge seams) |
-| **Uncertainty Modeling** | Calibrated Posterior Probability | **Full Bayesian Epistemic & Aleatoric Uncertainty Decomposition** |
-| **3D Roof & Yield Fitting** | Included | **3D DSM/DOM Surface Plane Fitting ($Z = aX+bY+c$), True 3D Area, PVGIS Transposition** |
-| **4D Temporal Tracking** | Included | **Automated Bipartite Multi-Epoch Change Detection (Zubau, Erweiterung, Rückbau, Bestand)** |
-| **Multispectral Radiometry** | RGB (3-Band) | **4-Band RGB + Near-Infrared (NIR) / CIR & Vegetation Veto ($\text{NDVI} > 0.35$)** |
-| **Inference Speed** | **~15 ms / tile** | ~180 ms / tile (Deep 8-fold dihedral ensembled) |
-| **Hardware Requirement** | CPU, Apple Silicon (M1/M2/M3), NVIDIA GPU (>=4GB) | Apple Silicon MPS (M1/M2/M3 Pro/Max/Ultra) or NVIDIA CUDA (>=8GB) |
-| **CLI Execution Flag** | `--profile vidda` | `--profile tinden` |
+| **Profil & Fokus** | **Standard / High-Throughput** | **High-End / Maximale Präzision** |
+| **Typischer Einsatzzweck** | Großflächige Kommunal-Screenings, schnelle Web-Karten, Laptops/Edge | Amtliche Katasterprüfungen, Netzeinspeise-Analysen, detaillierte Energieaudits |
+| **Architektur** | Single-Model DeepLabV3+ ResNet50 ASPP | **Heterogenes Ensemble** (Photometric V5 + Self-Trained V6) |
+| **Test Pixel IoU** | **88,16%** | **89,15%** |
+| **Test Pixel Recall** | 93,53% | **96,32%** (-59,5% weniger übersehene Solaranlagen) |
+| **Hintergrund-Spezifität** | 99,02% | **99,955%** (Nur 0,045% Falsch-Positiv-Rate auf Holdout) |
+| **Kalibrierungsfehler (ECE)**| 0,47% ($T^* = 0,4068$) | **0,47%** ($T^* = 0,4068$, Bayes-optimales $\tau^* = 0,25$) |
+| **Test-Time Augmentation** | Keine (Single-Pass für maximalen Durchsatz) | **Dihedrale $D_4$ (8 Orientierungen)** + **Multi-Scale-Pyramide ($0,9\times, 1,0\times, 1,1\times$)** |
+| **Fenster-Blending** | 2D-Hann-Apodisierung ($W = \sin^2 \otimes \sin^2$) | **Nahtlose separable 2D-Hann-Apodisierung** (Kantenfrei) |
+| **Unsicherheits-Modell** | Kalibrierte Posterior-Wahrscheinlichkeit | **Vollständige Bayes'sche epistemische & aleatorische Zerlegung** |
+| **3D-Dach & Solarertrag** | Enthalten | **3D-DOM/DSM-Ebenenfitting ($Z = aX+bY+c$), Reale 3D-Fläche, PVGIS-Transposition** |
+| **4D-Zubau-Tracking** | Enthalten | **Bipartite Multi-Epochen-Veränderungserkennung (Zubau, Erweiterung, Rückbau, Bestand)** |
+| **Multispektral-Support** | RGB (3-Kanal) | **4-Kanal RGB + Nahes Infrarot (NIR) / CIR & Dachbegrünungs-Veto ($\text{NDVI} > 0,35$)** |
+| **Inferenzgeschwindigkeit** | **~15 ms / Kachel** | ~180 ms / Kachel (Tiefes 8-fach dihedral gemitteltes Ensemble) |
+| **Hardware-Anforderung** | CPU, Apple Silicon (M1/M2/M3), NVIDIA GPU (>=4GB) | Apple Silicon MPS (M1/M2/M3 Pro/Max/Ultra) oder NVIDIA CUDA (>=8GB) |
+| **CLI-Flag** | `--profile vidda` | `--profile tinden` |
 
 ---
 
@@ -128,10 +126,10 @@ uv sync --locked --all-extras
 
 #### 1. Instant 1-Click Vectorization via Profiles
 ```bash
-# Standard High-Throughput Mode (PVExtent Vidda)
+# Standard High-Throughput Modus (PVExtent Vidda)
 pvextent vectorize aerial_crop.png output_dir/ --profile vidda
 
-# High-End Flagship Mode (PVExtent Tinden with D4 TTA & Hann blending)
+# High-End Flagship-Modus (PVExtent Tinden mit D4 TTA & Hann-Blending)
 pvextent vectorize aerial_crop.png output_dir/ --profile tinden
 ```
 
