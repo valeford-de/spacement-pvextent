@@ -1,0 +1,45 @@
+# Copyright 2026 Valeford
+# SPDX-License-Identifier: Apache-2.0
+
+[model]
+name = "pvextent-vidda"
+version = "1.0.0"
+tier = "standard"
+release_date = "2026-10-22"
+architecture = "deeplabv3plus-resnet50"
+backbone = "resnet50"
+decoder = "aspp"
+classes = 1
+in_channels = 3
+weights_checkpoint = "runs/deeplabv3plus-resnet50-v5-photometric-001/best.pt"
+
+[inference]
+tile_size = 400
+overlap = 0.25
+window_blending = "hann_2d"
+tta_mode = "none"
+scales = [1.0]
+threshold = 0.25
+calibrate = true
+temperature = 0.4068
+
+[cad]
+regularize = true
+gsd_m = 0.10
+min_area_m2 = 1.5
+module_efficiency = 0.205
+module_wattage_kw = 0.400
+module_length_m = 1.76
+module_width_m = 1.04
+module_gap_m = 0.02
+co2_emission_factor_kg_per_kwh = 0.380
+ghi_kwh_m2 = 1050.0
+
+[performance]
+test_iou = 0.8816
+test_dice = 0.9371
+test_pixel_accuracy = 0.9754
+negative_holdout_specificity = 0.9902
+latency_per_tile_ms = 18.5
+recommended_hardware = "Apple Silicon MPS (M1/M2/M3), NVIDIA CUDA (>=4GB VRAM), or Modern Multi-Core CPU"
+target_use_case = "High-throughput municipality screening, rapid regional roof scans, real-time web viewers, edge devices."

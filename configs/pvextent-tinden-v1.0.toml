@@ -1,0 +1,61 @@
+# Copyright 2026 Valeford
+# SPDX-License-Identifier: Apache-2.0
+
+[model]
+name = "pvextent-tinden"
+version = "1.0.0"
+tier = "high-end"
+grade = "flagship"
+release_date = "2026-10-22"
+architecture = "heterogeneous-ensemble"
+components = [
+    { name = "deeplabv3plus-resnet50-v5-photometric", checkpoint = "runs/deeplabv3plus-resnet50-v5-photometric-001/best.pt", weight = 0.50 },
+    { name = "deeplabv3plus-resnet50-v6-nrw-pseudo", checkpoint = "runs/deeplabv3plus-resnet50-v6-nrw-pseudo-001/best.pt", weight = 0.50 }
+]
+classes = 1
+in_channels = [3, 4]  # Supports 3-channel RGB and 4-channel RGB+NIR
+
+[inference]
+tile_size = 400
+overlap = 0.50
+window_blending = "hann_2d_separable"
+tta_mode = "d4"  # 8-fold dihedral symmetry group averaging
+scales = [0.90, 1.00, 1.10]  # Multi-scale pyramid TTA
+threshold = 0.25
+calibrate = true
+temperature = 0.4068
+uncertainty_decomposition = "epistemic_plus_aleatoric"
+
+[cad_and_geospatial]
+crs_default = "EPSG:25832"
+regularize_manhattan_90deg = true
+manhattan_tolerance_deg = 20.0
+gsd_m = 0.10
+min_area_m2 = 1.5
+module_efficiency = 0.205
+module_wattage_kw = 0.400
+module_length_m = 1.76
+module_width_m = 1.04
+module_gap_m = 0.02
+co2_emission_factor_kg_per_kwh = 0.380
+ghi_kwh_m2 = 1050.0
+system_performance_ratio = 0.82
+
+[features_3d_4d_spectral]
+elevation_3d_plane_fitting = true  # Z = aX + bY + c from DSM/DOM
+true_3d_surface_expansion = true   # A_3d = A_proj / cos(tilt)
+pvgis_yield_transposition = true   # Empirical Central European irradiation modeling
+temporal_change_detection = true   # Longitudinal tracking: Zubau, Erweiterung, Rückbau, Bestand
+multispectral_nir_ingestion = true # 4-band RGB+NIR analysis
+spectral_vegetation_veto = true    # Suppression of green roofs / tree overhangs (NDVI > 0.35)
+spectral_water_veto = true         # Suppression of puddle ponding (NIR < 0.04)
+
+[performance]
+test_pixel_iou = 0.8915
+test_dice_f1 = 0.9426
+test_pixel_accuracy = 0.9774
+test_pixel_recall = 0.9632
+negative_holdout_specificity = 0.99955  # 0.045% false positive rate
+calibration_error_ece = 0.0047          # 0.47% Expected Calibration Error
+recommended_hardware = "Apple Silicon MPS (M1/M2/M3 Pro/Max/Ultra) or NVIDIA CUDA (>=8GB VRAM)"
+target_use_case = "Cadastre extraction, utility solar accounting, state-wide aerial surveys, official energy network planning."

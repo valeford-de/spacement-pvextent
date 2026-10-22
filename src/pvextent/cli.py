@@ -196,6 +196,7 @@ def main(argv: list[str] | None = None) -> int:
     vectorize = commands.add_parser("vectorize", help="CAD-grade geospatial polygon vectorization and physical metrics")
     vectorize.add_argument("mask_or_image", help="Input binary mask PNG or RGB image")
     vectorize.add_argument("output_dir", help="Output directory for GeoJSON and CAD overlay")
+    vectorize.add_argument("--profile", choices=("vidda", "tinden"), help="Model profile: 'vidda' (Standard) or 'tinden' (High-End Flagship)")
     vectorize.add_argument("--checkpoint", nargs="+", help="One or more model checkpoints to ensemble")
     vectorize.add_argument("--ensemble-weights", nargs="+", type=float, help="Weights for ensemble models (default: equal)")
     vectorize.add_argument("--scales", nargs="+", type=float, default=[1.0], help="Scale factors for multi-scale pyramid TTA (default: 1.0)")
@@ -258,6 +259,35 @@ def main(argv: list[str] | None = None) -> int:
         output = Path(args.output_dir).resolve()
         output.mkdir(parents=True, exist_ok=True)
         input_path = Path(args.mask_or_image).resolve()
+
+        if getattr(args, "profile", None) == "vidda":
+            if not args.checkpoint:
+                cand = [
+                    Path("runs/deeplabv3plus-resnet50-v5-photometric-001/best.pt"),
+                    Path("runs/baseline-resnet18-balanced-v4-001/best.pt"),
+                ]
+                for c in cand:
+                    if c.exists():
+                        args.checkpoint = [str(c)]
+                        break
+            args.tta = "none"
+            args.scales = [1.0]
+            args.overlap = 0.25
+        elif getattr(args, "profile", None) == "tinden":
+            if not args.checkpoint:
+                cand1 = Path("runs/deeplabv3plus-resnet50-v5-photometric-001/best.pt")
+                cand2 = Path("runs/deeplabv3plus-resnet50-v6-nrw-pseudo-001/best.pt")
+                if cand1.exists() and cand2.exists():
+                    args.checkpoint = [str(cand1), str(cand2)]
+                    args.ensemble_weights = [0.5, 0.5]
+                elif cand1.exists():
+                    args.checkpoint = [str(cand1)]
+            args.tta = "d4"
+            args.scales = [0.9, 1.0, 1.1]
+            args.overlap = 0.50
+            args.calibrate = True
+            args.temperature = 0.4068
+            args.veto_vegetation = True
 
         final_probs = None
         final_uncert = None
