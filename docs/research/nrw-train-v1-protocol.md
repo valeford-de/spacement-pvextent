@@ -71,3 +71,23 @@ pixel IoU of the constructed PV labels against the human polygons.
   on the PV4GER labels.
 - The reviewer of the candidates is an AI system; the audit, not the review,
   carries the accuracy claim.
+
+## Amendment 1: label rules v2 and V8 (2026-10-22, after the V7 evaluation)
+
+The audit showed that the v1 rules label about half of the true PV area in the
+sample as background, and V7 lost NRW recall. Almost all of those pixels have a
+weak Vidda response (≥ 0.1) while Tinden stays below 0.1. This amendment was
+designed on the audit sample, so the audit no longer measures v2 labels
+independently.
+
+- Label rules v2: every pixel within 3 px of Tinden > 0.1 or Vidda ≥ 0.15 is
+  ignore; reviewed `not_pv` components stay background, `pv` and `unsure`
+  components are built as in v1. On the audit sample this lowers human PV pixels
+  labelled background from 47 % to 7 %, and background falls from 99 % to 63 %
+  of pixels.
+- The 80 audit crops use the human labels (PV 1, ignore 255, rest background),
+  including the two crops the reviewer had excluded as `missed`.
+- V8 repeats the V7 run with
+  [its own config](../../configs/deeplabv3plus-resnet50-v8-nrw-hardneg-v2.toml)
+  (identical to V7's) on `pvextent-training-v8`. The NRW test set v1 and the
+  sealed PV4GER test set are evaluated once with the final checkpoint.

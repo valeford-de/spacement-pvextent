@@ -9,24 +9,31 @@ triage.json (candidate components) and review.json (one verdict per component:
 writes a new dataset directory: the parent dataset's records plus the pool
 crops, hard-linked, with the pool declared as an extra source.
 
+Label rules "v2" (protocol amendment 1) also ignore pixels near weak Vidda
+responses, and --audit replaces constructed masks with the human audit labels.
+
     python scripts/assemble_nrw_train_v1.py data/nrw-train-pool-v1 data/pvextent-training-v4 data/pvextent-training-v7
+    python scripts/assemble_nrw_train_v1.py data/nrw-train-pool-v1 data/pvextent-training-v4 data/pvextent-training-v8 \\
+        --rules v2 --audit data/nrw-train-pool-v1/audit-labels.json
 """
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import shutil
-import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from triage_nrw_pool import LOW_THRESHOLD, MIN_COMPONENT_PX, components
 
 PV_THRESHOLD = 0.505
 IGNORE_ABOVE = 0.1
+VIDDA_IGNORE_AT = 0.15  # rules v2: weak Vidda responses, grown by VIDDA_IGNORE_GROW px
+VIDDA_IGNORE_GROW = 3
 SOURCE = """
 [sources."nrw-train-pool-v1"]
 name = "Geobasis NRW current digital orthophotos"
@@ -49,8 +56,11 @@ def dilate(mask: np.ndarray, steps: int) -> np.ndarray:
     return mask
 
 
-def build_mask(p_tinden: np.ndarray, p_vidda: np.ndarray, verdicts: list[str]) -> np.ndarray:
-    mask = np.where(p_tinden > IGNORE_ABOVE, 255, 0).astype(np.uint8)
+def build_mask(p_tinden: np.ndarray, p_vidda: np.ndarray, verdicts: list[str], rules: str = "v1") -> np.ndarray:
+    uncertain = p_tinden > IGNORE_ABOVE
+    if rules == "v2":
+        uncertain = dilate(uncertain | (p_vidda >= VIDDA_IGNORE_AT), VIDDA_IGNORE_GROW)
+    mask = np.where(uncertain, 255, 0).astype(np.uint8)
     found = [c for c in components((p_tinden >= LOW_THRESHOLD) | (p_vidda >= 0.5)) if len(c) >= MIN_COMPONENT_PX]
     found.sort(key=len, reverse=True)  # Same order as triage.json
     if len(found) != len(verdicts):
@@ -73,7 +83,18 @@ def build_mask(p_tinden: np.ndarray, p_vidda: np.ndarray, verdicts: list[str]) -
     return mask
 
 
-def main(pool: Path, parent: Path, output: Path) -> None:
+def audit_mask(label: dict) -> np.ndarray:
+    """Rasterize human polygons: PV 1, ignore 255, everything else background."""
+    canvas = Image.new("L", (320, 320), 0)
+    draw = ImageDraw.Draw(canvas)
+    for cls, value in (("ignore", 255), ("pv", 1)):
+        for polygon in label["polygons"]:
+            if polygon["cls"] == cls:
+                draw.polygon([tuple(point) for point in polygon["pts"]], fill=value)
+    return np.asarray(canvas)
+
+
+def main(pool: Path, parent: Path, output: Path, rules: str, audit: dict) -> None:
     if output.exists():
         raise SystemExit(f"Output already exists: {output}")
     triage = {t["key"]: t for t in json.loads((pool / "triage.json").read_text())}
@@ -97,11 +118,15 @@ def main(pool: Path, parent: Path, output: Path) -> None:
         verdict = review.get(key, {"components": [], "missed": False})
         if triage[key]["candidates"] and key not in review:
             raise SystemExit(f"Flagged crop {key} has no review verdict")
-        if verdict["missed"]:
+        if key in audit:
+            stats["audit_human"] = stats.get("audit_human", 0) + 1
+            mask = audit_mask(audit[key])
+        elif verdict["missed"]:
             stats["missed_excluded"] += 1
             continue
-        stats["reviewed" if triage[key]["candidates"] else "auto_negative"] += 1
-        mask = build_mask(p_tinden, p_vidda, verdict["components"])
+        else:
+            stats["reviewed" if triage[key]["candidates"] else "auto_negative"] += 1
+            mask = build_mask(p_tinden, p_vidda, verdict["components"], rules)
         stats["pv_px"] += int((mask == 1).sum())
         stats["ignore_px"] += int((mask == 255).sum())
         image_rel, mask_rel = f"images/nrw-train-pool-v1/{key}.png", f"masks/nrw-train-pool-v1/{key}.png"
@@ -117,11 +142,19 @@ def main(pool: Path, parent: Path, output: Path) -> None:
         for record in records:
             handle.write(json.dumps(record, sort_keys=True) + "\n")
     toml = (parent / "dataset.toml").read_text(encoding="utf-8")
-    toml = toml.replace(toml.split("\n")[2], f'dataset_version = "2026-10-22.training-v7"')
+    toml = toml.replace(toml.split("\n")[2], f'dataset_version = "2026-10-22.{output.name.removeprefix("pvextent-")}"')
     (output / "dataset.toml").write_text(toml.rstrip() + "\n" + SOURCE, encoding="utf-8")
     (output / "provenance" / "nrw-train-v1-assembly.json").write_text(json.dumps(stats, indent=1))
     print(json.dumps(stats))
 
 
 if __name__ == "__main__":
-    main(Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3]))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("pool", type=Path)
+    parser.add_argument("parent", type=Path)
+    parser.add_argument("output", type=Path)
+    parser.add_argument("--rules", choices=("v1", "v2"), default="v1")
+    parser.add_argument("--audit", type=Path, help="JSON object: pool crop key -> human label")
+    args = parser.parse_args()
+    main(args.pool, args.parent, args.output, args.rules,
+         json.loads(args.audit.read_text()) if args.audit else {})

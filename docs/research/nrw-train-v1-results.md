@@ -27,10 +27,11 @@ measured 2026-10-22. Imagery, labels and checkpoints stay outside Git.
 | Reviewed crops: human PV, reviewer `not_pv` | 2 (one clear module field; one glass roof the annotator called PV) |
 | Reviewed crops: reviewer PV, human no PV | 1 (small dark field, possibly a roof window) |
 | Pixel precision of constructed PV labels | 84.2 % |
-| Human PV pixels labelled PV / ignore / background | 34.3 % / 38.6 % / 27.1 % |
+| Human PV pixels labelled PV / ignore / background | 24.7 % / 27.9 % / 47.4 % |
 
-The constructed labels are conservative: PV labels are rarely wrong, but about a
-quarter of the true PV area in the sample is labelled background.
+The constructed labels are conservative: PV labels are rarely wrong, but about
+half of the true PV area in the sample is labelled background. (A first version of
+this report gave 34.3 / 38.6 / 27.1 %, computed with the wrong denominator.)
 
 ## Model results
 
@@ -65,6 +66,4 @@ difference), false alarms −14.0 to −6.5 points.
   and misses some large arrays Vidda finds (20–70 m²). This matches the audit:
   the constructed labels mark part of the real PV area as background, which
   teaches the model to under-call PV.
-- Next step: relabel the background-labelled PV, for example by setting all
-  pixels where Tinden exceeds 0.3 in `not_pv` crops of buildings with accepted PV
-  to ignore, and add the 80 human-labelled audit crops to training.
+- Next step: label rules v2 and V8, see amendment 1 of the protocol.
