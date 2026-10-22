@@ -12,6 +12,13 @@ from typing import Any, Sequence
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
+from .elevation import (
+    DEFAULT_GHI_KWH_M2,
+    azimuth_to_cardinal,
+    calculate_3d_surface_area,
+    calculate_annual_solar_yield,
+    fit_roof_plane_from_dsm,
+)
 from .metrics import DEFAULT_GSD_M, DEFAULT_MODULE_EFFICIENCY, calculate_pv_metrics, polygon_area_pixels
 from .regularize import detect_dominant_orientation, minimum_bounding_box, regularize_manhattan, simplify_douglas_peucker
 
@@ -162,11 +169,16 @@ def vectorize_mask(
     probabilities: np.ndarray | None = None,
     uncertainty: np.ndarray | None = None,
     fit_modules: bool = True,
+    dsm: np.ndarray | str | Path | None = None,
+    default_tilt_deg: float = 0.0,
+    default_azimuth_deg: float | None = None,
+    ghi_kwh_m2: float = DEFAULT_GHI_KWH_M2,
 ) -> dict[str, Any]:
     """Execute end-to-end CAD-grade geospatial vectorization on a PV segmentation mask.
 
     Returns:
-        dict: GeoJSON FeatureCollection with CAD-regularized polygon geometries and physical metrics.
+        dict: GeoJSON FeatureCollection with CAD-regularized polygon geometries, 3D surface area,
+              physical BIM module packing and annual photovoltaic energy yield modeling.
     """
     effective_min_area_px = max(min_area_px, (min_area_m2 / (gsd_m ** 2))) if min_area_m2 > 0 else min_area_px
     raw_rings = marching_squares_contours(mask, min_area_px=effective_min_area_px)
@@ -174,6 +186,17 @@ def vectorize_mask(
 
     transform = georeference.get("transform") if georeference else None
     crs_name = georeference.get("crs", "EPSG:25832") if georeference else "EPSG:25832"
+
+    dsm_arr = None
+    if dsm is not None:
+        if isinstance(dsm, np.ndarray):
+            dsm_arr = dsm
+        elif isinstance(dsm, (str, Path)):
+            dp = Path(dsm)
+            if dp.suffix == ".npy":
+                dsm_arr = np.load(dp)
+            else:
+                dsm_arr = np.array(Image.open(dp), dtype=np.float32)
 
     for idx, ring in enumerate(raw_rings, 1):
         # 1. Simplify
@@ -216,15 +239,52 @@ def vectorize_mask(
         metrics["estimated_table_layout"] = f"{table_rows}x{table_cols}"
         metrics["is_regularized"] = regularize
 
-        # 4. Physical PV module grid fitting
+        # 4. 3D Elevation, Roof Tilt and Orientation
+        if dsm_arr is not None:
+            plane_fit = fit_roof_plane_from_dsm(dsm_arr, regularized, gsd_m=gsd_m)
+            tilt_deg = plane_fit["tilt_deg"] if plane_fit["is_valid_3d_fit"] else float(default_tilt_deg)
+            az_deg = plane_fit["azimuth_deg"] if plane_fit["is_valid_3d_fit"] else (float(default_azimuth_deg) if default_azimuth_deg is not None else float(azimuth_deg))
+            metrics["dsm_fit_r2"] = plane_fit.get("fit_r2")
+            metrics["dsm_fit_rmse_m"] = plane_fit.get("fit_rmse_m")
+            metrics["elevation_mean_m"] = plane_fit.get("elevation_mean_m")
+            metrics["elevation_min_m"] = plane_fit.get("elevation_min_m")
+            metrics["elevation_max_m"] = plane_fit.get("elevation_max_m")
+            metrics["elevation_source"] = "dsm_raster"
+        else:
+            tilt_deg = float(default_tilt_deg)
+            az_deg = float(default_azimuth_deg) if default_azimuth_deg is not None else float(azimuth_deg)
+            metrics["elevation_source"] = "manual_or_default"
+
+        area_3d = calculate_3d_surface_area(metrics["area_m2"], tilt_deg)
+        metrics["area_true_3d_m2"] = area_3d["true_3d_area_m2"]
+        metrics["area_expansion_factor"] = area_3d["area_expansion_factor"]
+        metrics["roof_tilt_deg"] = area_3d["tilt_deg"]
+        metrics["roof_azimuth_deg"] = round(az_deg, 1)
+        metrics["roof_azimuth_cardinal"] = azimuth_to_cardinal(az_deg, tilt_deg)
+
+        # 5. Physical PV module grid fitting on 3D sloped surface
         modules_px = []
         if fit_modules:
             from .packing import fit_module_grid
-            packed = fit_module_grid(regularized, azimuth_deg, gsd_m=gsd_m)
+            packed = fit_module_grid(regularized, az_deg, gsd_m=gsd_m, tilt_deg=tilt_deg)
             metrics["fitted_module_count"] = packed["module_count"]
             metrics["fitted_capacity_kwp"] = packed["total_capacity_kwp"]
             metrics["module_packing_orientation"] = packed["orientation"]
             modules_px = packed["modules_px"]
+
+        # 6. Annual Solar Energy Yield & Carbon Displacement
+        eff_kwp = metrics.get("fitted_capacity_kwp") or metrics["estimated_capacity_kwp"]
+        yield_metrics = calculate_annual_solar_yield(
+            capacity_kwp=eff_kwp,
+            tilt_deg=tilt_deg,
+            azimuth_deg=az_deg,
+            ghi_kwh_m2=ghi_kwh_m2,
+        )
+        metrics["transposition_factor"] = yield_metrics["transposition_factor"]
+        metrics["specific_annual_yield_kwh_per_kwp"] = yield_metrics["specific_annual_yield_kwh_per_kwp"]
+        metrics["estimated_annual_yield_kwh"] = yield_metrics["estimated_annual_yield_kwh"]
+        metrics["estimated_annual_yield_mwh"] = yield_metrics["estimated_annual_yield_mwh"]
+        metrics["annual_co2_savings_tons"] = yield_metrics["annual_co2_savings_tons"]
 
         # Array-level Bayesian probability and uncertainty assessment
         if probabilities is not None:
@@ -303,9 +363,15 @@ def vectorize_mask(
             "high_confidence_arrays": high_conf,
             "review_recommended_arrays": review_rec,
             "total_pv_area_m2": round(sum(f["properties"]["area_m2"] for f in features), 2),
+            "total_true_3d_area_m2": round(sum(f["properties"].get("area_true_3d_m2", f["properties"]["area_m2"]) for f in features), 2),
             "total_capacity_kwp": round(sum(f["properties"]["estimated_capacity_kwp"] for f in features), 3),
+            "total_fitted_capacity_kwp": round(sum(f["properties"].get("fitted_capacity_kwp", 0.0) for f in features), 3),
             "total_estimated_modules": sum(f["properties"]["estimated_module_count"] for f in features),
             "total_fitted_modules": total_fitted_mods,
+            "total_annual_yield_mwh": round(sum(f["properties"].get("estimated_annual_yield_mwh", 0.0) for f in features), 3),
+            "total_annual_co2_savings_tons": round(sum(f["properties"].get("annual_co2_savings_tons", 0.0) for f in features), 2),
+            "mean_roof_tilt_deg": round(float(np.mean([f["properties"].get("roof_tilt_deg", 0.0) for f in features])), 1) if features else 0.0,
+            "ghi_kwh_m2": ghi_kwh_m2,
             "mean_scene_confidence": round(mean_scene_conf, 4),
             "regularized": regularize,
             "gsd_m": gsd_m,
@@ -350,9 +416,15 @@ def render_cad_overlay(
 
         # Callout badge at centroid
         cx, cy = props.get("centroid_pixel", (pts[0][0], pts[0][1]))
-        kwp = props.get("estimated_capacity_kwp", 0.0)
-        area = props.get("area_m2", 0.0)
-        label = f"{kwp:.1f} kWp | {area:.1f} m²"
+        kwp = props.get("fitted_capacity_kwp") or props.get("estimated_capacity_kwp", 0.0)
+        area_3d = props.get("area_true_3d_m2") or props.get("area_m2", 0.0)
+        tilt = props.get("roof_tilt_deg", 0.0)
+        cardinal = props.get("roof_azimuth_cardinal", "")
+        mwh = props.get("estimated_annual_yield_mwh", 0.0)
+        if tilt > 3.0:
+            label = f"{kwp:.1f} kWp | {area_3d:.1f} m² | {tilt:.0f}° {cardinal} | {mwh:.1f} MWh/a"
+        else:
+            label = f"{kwp:.1f} kWp | {area_3d:.1f} m² | {mwh:.1f} MWh/a"
 
         # Badge rectangle
         badge_w, badge_h = len(label) * 7 + 10, 18

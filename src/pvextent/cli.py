@@ -210,6 +210,10 @@ def main(argv: list[str] | None = None) -> int:
     vectorize.add_argument("--transform", nargs=6, type=float, help="GDAL 6-parameter affine transform [a, b, c, d, e, f]")
     vectorize.add_argument("--crs", default="EPSG:25832", help="Coordinate Reference System (default: EPSG:25832)")
     vectorize.add_argument("--min-area-m2", type=float, default=1.5, help="Minimum PV array surface area in m² (default: 1.5, filter out sub-module noise)")
+    vectorize.add_argument("--dsm", help="Path to Digital Surface Model (DSM / DOM) GeoTIFF or .npy elevation raster")
+    vectorize.add_argument("--roof-tilt", type=float, default=0.0, help="Manual roof pitch / tilt angle in degrees (default: 0.0, horizontal)")
+    vectorize.add_argument("--roof-azimuth", type=float, help="Manual roof compass azimuth in degrees (0=North, 90=East, 180=South, 270=West)")
+    vectorize.add_argument("--ghi", type=float, default=1050.0, help="Annual Global Horizontal Irradiation in kWh/m² (default: 1050.0)")
     vectorize.add_argument("--no-regularize", action="store_true", help="Disable 90-degree rectilinear Manhattan regularization")
     vectorize.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
     vectorize.add_argument("--json", action="store_true")
@@ -345,6 +349,10 @@ def main(argv: list[str] | None = None) -> int:
             regularize=not args.no_regularize,
             probabilities=final_probs,
             uncertainty=final_uncert,
+            dsm=args.dsm,
+            default_tilt_deg=args.roof_tilt,
+            default_azimuth_deg=args.roof_azimuth,
+            ghi_kwh_m2=args.ghi,
         )
         geojson_path = output / "vectorized.geojson"
         with open(geojson_path, "w", encoding="utf-8") as f:
@@ -369,8 +377,12 @@ def main(argv: list[str] | None = None) -> int:
             print(f"VECTORIZE OK: {summary['detected_pv_arrays']} arrays "
                   f"({summary.get('high_confidence_arrays', 0)} high-confidence, "
                   f"{summary.get('review_recommended_arrays', 0)} review-flagged), "
-                  f"{summary['total_pv_area_m2']} m², "
-                  f"{summary['total_capacity_kwp']} kWp. Output: {output}")
+                  f"2D Area: {summary['total_pv_area_m2']} m², "
+                  f"True 3D Area: {summary.get('total_true_3d_area_m2', summary['total_pv_area_m2'])} m² "
+                  f"(tilt {summary.get('mean_roof_tilt_deg', 0.0)}°), "
+                  f"{summary['total_capacity_kwp']} kWp, "
+                  f"Annual Yield: {summary.get('total_annual_yield_mwh', 0.0)} MWh/a "
+                  f"({summary.get('total_annual_co2_savings_tons', 0.0)} t CO2/a). Output: {output}")
         return 0
     if args.command == "evaluate":
         try:

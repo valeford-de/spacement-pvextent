@@ -42,6 +42,7 @@ def fit_module_grid(
     module_length_m: float = STANDARD_MODULE_LENGTH_M,
     module_width_m: float = STANDARD_MODULE_WIDTH_M,
     gap_m: float = STANDARD_MODULE_GAP_M,
+    tilt_deg: float = 0.0,
 ) -> dict:
     """Pack standardized physical PV module rectangles inside a regularized CAD polygon.
 
@@ -95,14 +96,20 @@ def fit_module_grid(
         ("landscape", module_width_m, module_length_m),
     ]
 
+    cos_tilt = math.cos(math.radians(max(0.0, min(85.0, float(tilt_deg)))))
+
     for ori_name, mod_u_m, mod_v_m in orientations:
+        # The slope dimension (v) is foreshortened in 2D projection by cos(tilt)
+        mod_v_proj = mod_v_m * cos_tilt
+        gap_v_proj = gap_m * cos_tilt
+
         step_u_m = mod_u_m + gap_m
-        step_v_m = mod_v_m + gap_m
+        step_v_m = mod_v_proj + gap_v_proj
 
         step_u_px = step_u_m / gsd_m
         step_v_px = step_v_m / gsd_m
         half_u_px = (mod_u_m / gsd_m) * 0.5
-        half_v_px = (mod_v_m / gsd_m) * 0.5
+        half_v_px = (mod_v_proj / gsd_m) * 0.5
 
         n_u = max(1, int(span_u_m / step_u_m))
         n_v = max(1, int(span_v_m / step_v_m))
