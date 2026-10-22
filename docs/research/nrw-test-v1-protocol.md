@@ -36,7 +36,14 @@ orthophotos, which the PV4GER benchmark does not cover.
   frames; `ignore` for anything the annotator cannot decide. Solar thermal
   collectors, skylights, glass roofs and conservatories are not PV.
 - Every crop ends as `done` with zero or more polygons, optionally flagged
-  `unsure`. Masks are rasterized from the polygons: PV `1`, ignore `255`,
+  `unsure`.
+- Amendment before any evaluation (2026-10-22): the first pass gave 41 PV crops
+  with 155 polygons and 7 crops flagged `unsure`. A visual check of the first-pass
+  polygons, without any model output, flagged 2 more crops. These 9 crops get one
+  review pass in which the annotator may also view the colour-infrared image
+  (`nw_dop_cir`, same flight) of each crop. Models never receive infrared input.
+  Reviewed crops record `reviewPass: "cir-v1"` and keep their first-pass labels in
+  `firstPass`. Masks are rasterized from the polygons: PV `1`, ignore `255`,
   everything else background `0`.
 
 ## Evaluation
