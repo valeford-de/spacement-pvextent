@@ -217,6 +217,20 @@ def main(argv: list[str] | None = None) -> int:
     vectorize.add_argument("--no-regularize", action="store_true", help="Disable 90-degree rectilinear Manhattan regularization")
     vectorize.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
     vectorize.add_argument("--json", action="store_true")
+    temporal = commands.add_parser("temporal", help="Multi-temporal change detection & 4D asset tracking across survey epochs")
+    temporal.add_argument("input_t1", help="GeoJSON or RGB image from survey epoch T1 (Historical)")
+    temporal.add_argument("input_t2", help="GeoJSON or RGB image from survey epoch T2 (Current)")
+    temporal.add_argument("output_dir", help="Output directory for multi-temporal GeoJSON, change audit, and CAD overlays")
+    temporal.add_argument("--date-t1", help="Date string for epoch T1 (e.g. 2024-06-15)")
+    temporal.add_argument("--date-t2", help="Date string for epoch T2 (e.g. 2025-06-20)")
+    temporal.add_argument("--checkpoint", nargs="+", help="Checkpoints to run segmentation if inputs are RGB images")
+    temporal.add_argument("--gsd", type=float, default=0.10, help="Ground sampling distance in meters (default: 0.10)")
+    temporal.add_argument("--threshold", type=float, default=0.25, help="Probability threshold (default: 0.25)")
+    temporal.add_argument("--iou-stable", type=float, default=0.70, help="Spatial overlap threshold to classify as stable array (default: 0.70)")
+    temporal.add_argument("--iou-match", type=float, default=0.15, help="Spatial overlap threshold to classify as expansion (default: 0.15)")
+    temporal.add_argument("--no-side-by-side", action="store_true", help="Render overlay only on T2 rather than side-by-side comparison")
+    temporal.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
+    temporal.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     if args.command == "monitor":
         from pvextent.monitoring import serve
@@ -383,6 +397,136 @@ def main(argv: list[str] | None = None) -> int:
                   f"{summary['total_capacity_kwp']} kWp, "
                   f"Annual Yield: {summary.get('total_annual_yield_mwh', 0.0)} MWh/a "
                   f"({summary.get('total_annual_co2_savings_tons', 0.0)} t CO2/a). Output: {output}")
+        return 0
+    if args.command == "temporal":
+        from pvextent.cad.temporal import detect_temporal_changes, render_temporal_cad_overlay
+        from pvextent.cad.vectorize import vectorize_mask
+        from pvextent.cad.georef import extract_georeference
+        import numpy as np
+        from PIL import Image
+
+        output = Path(args.output_dir).resolve()
+        output.mkdir(parents=True, exist_ok=True)
+
+        def _resolve_input(path_str: str):
+            p = Path(path_str).resolve()
+            if not p.exists():
+                raise FileNotFoundError(f"Input path not found: {p}")
+            if p.suffix.lower() in (".json", ".geojson"):
+                with open(p, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                img_cand = [
+                    p.with_suffix(".png"),
+                    p.with_suffix(".jpg"),
+                    p.parent / "cad_overlay.png",
+                    p.parent / "input.png",
+                ]
+                img = None
+                for c in img_cand:
+                    if c.exists():
+                        try:
+                            img = Image.open(c).convert("RGB")
+                            break
+                        except Exception:
+                            pass
+                return data, img, None, None
+
+            img = Image.open(p).convert("RGB")
+            georef = extract_georeference(p)
+            probs = None
+            uncert = None
+            if args.checkpoint:
+                import torch
+                from pvextent.models.deeplabv3plus import build_deeplabv3plus_resnet50
+                from pvextent.models.resnet_unet import build_resnet_unet, normalize_rgb
+                from pvextent.training.smoke import _device
+                from pvextent.inference.tiler import predict_tiled
+
+                arr = np.array(img, dtype=np.float32) / 255.0
+                dev = _device(torch, args.device)
+                ckpts = args.checkpoint
+                probs_list = []
+                uncert_list = []
+                for ckpt_path_str in ckpts:
+                    ckpt_p = Path(ckpt_path_str).resolve()
+                    doc = torch.load(ckpt_p, map_location="cpu", weights_only=True)
+                    sd = doc["model_state_dict"]
+                    if any("aspp" in k for k in sd):
+                        model = build_deeplabv3plus_resnet50(None)
+                    elif any("patch_embed" in k or "decode_head" in k for k in sd):
+                        from pvextent.models.segformer import build_segformer_mit_b2
+                        model = build_segformer_mit_b2(None)
+                    else:
+                        model = build_resnet_unet(None)
+                    model.load_state_dict(sd)
+                    model.to(dev)
+                    model.eval()
+                    tiled_res = predict_tiled(
+                        model=model,
+                        image=arr,
+                        device=dev,
+                        normalize_fn=normalize_rgb,
+                    )
+                    probs_list.append(tiled_res["probabilities"])
+                    uncert_list.append(tiled_res["uncertainty"])
+                probs = np.mean(probs_list, axis=0).astype(np.float32)
+                uncert = np.mean(uncert_list, axis=0).astype(np.float32)
+                binary_mask = (probs >= args.threshold).astype(np.uint8)
+            else:
+                gray = Image.open(p).convert("L")
+                binary_mask = (np.array(gray) > 127).astype(np.uint8)
+
+            geojson = vectorize_mask(
+                binary_mask,
+                georeference=georef,
+                gsd_m=args.gsd,
+                probabilities=probs,
+                uncertainty=uncert,
+            )
+            return geojson, img, probs, uncert
+
+        gj_t1, img_t1, p_t1, u_t1 = _resolve_input(args.input_t1)
+        gj_t2, img_t2, p_t2, u_t2 = _resolve_input(args.input_t2)
+
+        temporal_geojson = detect_temporal_changes(
+            geojson_t1=gj_t1,
+            geojson_t2=gj_t2,
+            date_t1=args.date_t1,
+            date_t2=args.date_t2,
+            probabilities_t1=p_t1,
+            probabilities_t2=p_t2,
+            uncertainty_t1=u_t1,
+            uncertainty_t2=u_t2,
+            iou_stable_threshold=args.iou_stable,
+            iou_match_threshold=args.iou_match,
+        )
+
+        geojson_out = output / "temporal_changes.geojson"
+        with open(geojson_out, "w", encoding="utf-8") as f:
+            json.dump(temporal_geojson, f, indent=2)
+
+        if img_t2 is not None:
+            overlay_out = output / "temporal_cad_overlay.png"
+            render_temporal_cad_overlay(
+                image_t2=img_t2,
+                temporal_geojson=temporal_geojson,
+                output_path=overlay_out,
+                image_t1=img_t1 if (not args.no_side_by_side and img_t1 is not None) else None,
+            )
+
+        if args.json:
+            print(json.dumps(temporal_geojson["summary"], indent=2))
+        else:
+            s = temporal_geojson["summary"]
+            print(
+                f"TEMPORAL OK: {s['total_events']} events detected "
+                f"({s['new_installations']} new, {s['expansions']} expansions, "
+                f"{s['decommissioned_arrays']} decommissioned, {s['stable_arrays']} stable) | "
+                f"Net ΔCapacity: {s['net_delta_capacity_kwp']:+.3f} kWp, "
+                f"Net ΔModules: {s['net_delta_module_count']:+d}, "
+                f"Net ΔYield: {s['net_delta_annual_yield_mwh']:+.3f} MWh/a. "
+                f"Output: {output}"
+            )
         return 0
     if args.command == "evaluate":
         try:
