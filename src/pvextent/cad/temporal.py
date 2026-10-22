@@ -348,16 +348,17 @@ def render_temporal_cad_overlay(
         colors = COLOR_MAP.get(change_type, COLOR_MAP[CHANGE_TYPE_STABLE])
         poly_pts = [(p[0], p[1]) for p in pts]
 
-        # Draw translucent filled boundary
-        draw.polygon(poly_pts, fill=colors["fill"])
-
-        # Draw individual physical module grids if present
-        for mod in props.get("fitted_modules_px", []):
-            mod_pts = [(p[0], p[1]) for p in mod]
-            draw.line(mod_pts + [mod_pts[0]], fill=colors["border"], width=1)
-
-        # Draw outer boundary
-        draw.line(poly_pts + [poly_pts[0]], fill=colors["border"], width=2)
+        # Draw boundaries and module grids
+        if change_type == CHANGE_TYPE_DECOMMISSIONED:
+            # Phantom ghost outline for removed asset (no active modules on T2!)
+            draw.polygon(poly_pts, fill=(255, 50, 70, 30))
+            draw.line(poly_pts + [poly_pts[0]], fill=(255, 70, 90, 220), width=2)
+        else:
+            draw.polygon(poly_pts, fill=colors["fill"])
+            for mod in props.get("fitted_modules_px", []):
+                mod_pts = [(p[0], p[1]) for p in mod]
+                draw.line(mod_pts + [mod_pts[0]], fill=colors["border"], width=1)
+            draw.line(poly_pts + [poly_pts[0]], fill=colors["border"], width=2)
 
         # Construct callout text
         cx, cy = props.get("centroid_pixel", (pts[0][0], pts[0][1]))
@@ -368,9 +369,9 @@ def render_temporal_cad_overlay(
         if change_type == CHANGE_TYPE_NEW:
             label = f"{symbol}: +{cap:.1f} kWp | +{props.get('fitted_module_count', 0)} mod"
         elif change_type == CHANGE_TYPE_EXPANSION:
-            label = f"{symbol}: +{d_cap:.1f} kWp (Total {cap:.1f} kWp)"
+            label = f"{symbol}: +{d_cap:.1f} kWp (Neu: {cap:.1f} kWp)"
         elif change_type == CHANGE_TYPE_DECOMMISSIONED:
-            label = f"{symbol}: {d_cap:.1f} kWp (Removed)"
+            label = f"{symbol}: {d_cap:.1f} kWp (Demontiert)"
         else:
             label = f"{symbol}: {cap:.1f} kWp"
 
@@ -387,10 +388,61 @@ def render_temporal_cad_overlay(
 
     # If side-by-side comparison with T1 requested
     if image_t1 is not None:
-        t1_resized = image_t1.convert("RGB").resize(composite.size, Image.Resampling.BILINEAR)
+        t1_base = image_t1.convert("RGBA").resize(composite.size, Image.Resampling.BILINEAR)
+        t1_overlay = Image.new("RGBA", t1_base.size, (0, 0, 0, 0))
+        draw_t1 = ImageDraw.Draw(t1_overlay)
+
+        # Draw historical T1 features on T1 image
+        for feature in temporal_geojson.get("features", []):
+            props = feature.get("properties", {})
+            change_type = props.get("change_type", CHANGE_TYPE_STABLE)
+            pts = props.get("pixel_polygon", [])
+            if len(pts) < 3:
+                continue
+
+            poly_pts = [(p[0], p[1]) for p in pts]
+            cx, cy = props.get("centroid_pixel", (pts[0][0], pts[0][1]))
+            cap = props.get("fitted_capacity_kwp") or props.get("estimated_capacity_kwp", 0.0)
+            d_cap = props.get("delta_capacity_kwp", 0.0)
+
+            if change_type == CHANGE_TYPE_DECOMMISSIONED:
+                # Active in T1, later removed in T2
+                c_border = (255, 140, 0, 240)
+                c_fill = (255, 140, 0, 80)
+                draw_t1.polygon(poly_pts, fill=c_fill)
+                draw_t1.line(poly_pts + [poly_pts[0]], fill=c_border, width=2)
+                t1_label = f"HISTORISCH: {cap:.1f} kWp (Später Rückbau)"
+                bw, bh = len(t1_label) * 7 + 10, 18
+                bx1, by1 = max(0, cx - bw / 2), max(0, cy - bh / 2)
+                draw_t1.rounded_rectangle([bx1, by1, min(t1_base.width, bx1 + bw), min(t1_base.height, by1 + bh)], radius=3, fill=(30, 20, 10, 210), outline=c_border, width=1)
+                draw_t1.text((bx1 + 5, by1 + 2), t1_label, fill=(255, 230, 210, 255))
+            elif change_type == CHANGE_TYPE_STABLE:
+                c_border = (120, 160, 220, 200)
+                c_fill = (80, 120, 180, 50)
+                draw_t1.polygon(poly_pts, fill=c_fill)
+                draw_t1.line(poly_pts + [poly_pts[0]], fill=c_border, width=2)
+                t1_label = f"BESTAND T1: {cap:.1f} kWp"
+                bw, bh = len(t1_label) * 7 + 10, 18
+                bx1, by1 = max(0, cx - bw / 2), max(0, cy - bh / 2)
+                draw_t1.rounded_rectangle([bx1, by1, min(t1_base.width, bx1 + bw), min(t1_base.height, by1 + bh)], radius=3, fill=(20, 25, 35, 210), outline=c_border, width=1)
+                draw_t1.text((bx1 + 5, by1 + 2), t1_label, fill=(230, 240, 255, 255))
+            elif change_type == CHANGE_TYPE_EXPANSION:
+                c_border = (0, 200, 220, 200)
+                c_fill = (0, 180, 200, 50)
+                draw_t1.polygon(poly_pts, fill=c_fill)
+                draw_t1.line(poly_pts + [poly_pts[0]], fill=c_border, width=2)
+                prev_cap = max(0.0, cap - d_cap)
+                t1_label = f"BESTAND T1: {prev_cap:.1f} kWp (Vor Erweiterung)"
+                bw, bh = len(t1_label) * 7 + 10, 18
+                bx1, by1 = max(0, cx - bw / 2), max(0, cy - bh / 2)
+                draw_t1.rounded_rectangle([bx1, by1, min(t1_base.width, bx1 + bw), min(t1_base.height, by1 + bh)], radius=3, fill=(10, 25, 35, 210), outline=c_border, width=1)
+                draw_t1.text((bx1 + 5, by1 + 2), t1_label, fill=(220, 245, 255, 255))
+            # New installations (Zubau) did not exist at T1, so nothing drawn on T1
+
+        t1_composite = Image.alpha_composite(t1_base, t1_overlay).convert("RGB")
         total_w = composite.width * 2 + 10
         side_by_side = Image.new("RGB", (total_w, composite.height), (20, 20, 20))
-        side_by_side.paste(t1_resized, (0, 0))
+        side_by_side.paste(t1_composite, (0, 0))
         side_by_side.paste(composite, (composite.width + 10, 0))
 
         # Add headers: T1 (Before) and T2 (After with Change Detection)
