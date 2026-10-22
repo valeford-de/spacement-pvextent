@@ -127,11 +127,13 @@ def normalize_rgb(images: Tensor) -> Tensor:
     return (images - mean) / std
 
 
-def build_resnet_unet(weights_path: Path | str | None = None) -> nn.Module:
+def build_resnet_unet(
+    weights_path: Path | str | None = None,
+    in_channels: int = 3,
+) -> nn.Module:
     """Build the fixed architecture offline, loading only verified encoder tensors.
 
-    None explicitly requests random encoder initialization for tests/checkpoint
-    restoration. Training a pretrained baseline must supply the prepared file.
+    Supports both 3-band (RGB) and 4-band (RGB+NIR) multispectral backbones.
     """
     try:
         import torch
@@ -145,7 +147,7 @@ def build_resnet_unet(weights_path: Path | str | None = None) -> nn.Module:
             encoder_name="resnet18", encoder_depth=5, encoder_weights=None,
             decoder_use_norm="batchnorm", decoder_channels=(256, 128, 64, 32, 16),
             decoder_attention_type=None, decoder_interpolation="nearest",
-            in_channels=3, classes=1, activation=None, aux_params=None,
+            in_channels=in_channels, classes=1, activation=None, aux_params=None,
         ).to(dtype=torch.float32)
         if weights_path is not None:
             payload = _verified_bytes(Path(weights_path), WEIGHT_SPEC)
@@ -154,6 +156,10 @@ def build_resnet_unet(weights_path: Path | str | None = None) -> nn.Module:
             if not classifier.issubset(state) or state["fc.weight"].shape != (1000, 512) or state["fc.bias"].shape != (1000,):
                 raise EncoderWeightsError("Expected the pinned ImageNet-1k classification head before encoder conversion.")
             encoder_state = {key: value for key, value in state.items() if key not in classifier}
+            if in_channels == 4 and "conv1.weight" in encoder_state:
+                w3 = encoder_state["conv1.weight"]
+                w_nir = 0.5 * (w3[:, 0:1, :, :] + w3[:, 1:2, :, :])
+                encoder_state["conv1.weight"] = torch.cat([w3, w_nir], dim=1)
             expected = model.encoder.state_dict()
             if set(encoder_state) != set(expected):
                 raise EncoderWeightsError("Pretrained encoder keys differ from the fixed ResNet18 architecture.")

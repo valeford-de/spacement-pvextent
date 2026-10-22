@@ -214,9 +214,18 @@ def main(argv: list[str] | None = None) -> int:
     vectorize.add_argument("--roof-tilt", type=float, default=0.0, help="Manual roof pitch / tilt angle in degrees (default: 0.0, horizontal)")
     vectorize.add_argument("--roof-azimuth", type=float, help="Manual roof compass azimuth in degrees (0=North, 90=East, 180=South, 270=West)")
     vectorize.add_argument("--ghi", type=float, default=1050.0, help="Annual Global Horizontal Irradiation in kWh/m² (default: 1050.0)")
+    vectorize.add_argument("--nir", help="Path to Near-Infrared (NIR) single-channel GeoTIFF or .npy raster")
+    vectorize.add_argument("--veto-vegetation", action="store_true", help="Automatically veto/suppress detected arrays on vegetated roofs (NDVI > 0.35)")
     vectorize.add_argument("--no-regularize", action="store_true", help="Disable 90-degree rectilinear Manhattan regularization")
     vectorize.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
     vectorize.add_argument("--json", action="store_true")
+    spectral = commands.add_parser("spectral", help="Multispectral analysis, NDVI extraction and Color Infrared (CIR) false-color composite export")
+    spectral.add_argument("input_image", help="Input 4-band GeoTIFF/PNG or standard 3-band RGB image")
+    spectral.add_argument("output_dir", help="Output directory for CIR composite, NDVI raster, and spectral report")
+    spectral.add_argument("--nir", help="Optional separate Near-Infrared (NIR) band image or .npy file")
+    spectral.add_argument("--cir", action="store_true", default=True, help="Export standard German Color Infrared (CIR) composite")
+    spectral.add_argument("--ndvi-threshold", type=float, default=0.35, help="Vegetation NDVI threshold (default: 0.35)")
+    spectral.add_argument("--json", action="store_true")
     temporal = commands.add_parser("temporal", help="Multi-temporal change detection & 4D asset tracking across survey epochs")
     temporal.add_argument("input_t1", help="GeoJSON or RGB image from survey epoch T1 (Historical)")
     temporal.add_argument("input_t2", help="GeoJSON or RGB image from survey epoch T2 (Current)")
@@ -367,6 +376,9 @@ def main(argv: list[str] | None = None) -> int:
             default_tilt_deg=args.roof_tilt,
             default_azimuth_deg=args.roof_azimuth,
             ghi_kwh_m2=args.ghi,
+            rgb=img,
+            nir=args.nir,
+            veto_vegetated_roofs=args.veto_vegetation,
         )
         geojson_path = output / "vectorized.geojson"
         with open(geojson_path, "w", encoding="utf-8") as f:
@@ -388,6 +400,9 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(geojson["summary"], indent=2))
         else:
             summary = geojson["summary"]
+            spec_info = ""
+            if summary.get("multispectral_nir_enabled"):
+                spec_info = f", NIR Verified: {summary.get('spectral_silicon_confirmed', 0)} silicon, {summary.get('vegetated_roof_vetoes', 0)} vegetated vetoes"
             print(f"VECTORIZE OK: {summary['detected_pv_arrays']} arrays "
                   f"({summary.get('high_confidence_arrays', 0)} high-confidence, "
                   f"{summary.get('review_recommended_arrays', 0)} review-flagged), "
@@ -396,7 +411,65 @@ def main(argv: list[str] | None = None) -> int:
                   f"(tilt {summary.get('mean_roof_tilt_deg', 0.0)}°), "
                   f"{summary['total_capacity_kwp']} kWp, "
                   f"Annual Yield: {summary.get('total_annual_yield_mwh', 0.0)} MWh/a "
-                  f"({summary.get('total_annual_co2_savings_tons', 0.0)} t CO2/a). Output: {output}")
+                  f"({summary.get('total_annual_co2_savings_tons', 0.0)} t CO2/a){spec_info}. Output: {output}")
+        return 0
+    if args.command == "spectral":
+        from pvextent.cad.spectral import calculate_ndvi, compose_cir_composite
+        import numpy as np
+        from PIL import Image
+
+        output = Path(args.output_dir).resolve()
+        output.mkdir(parents=True, exist_ok=True)
+        inp_p = Path(args.input_image).resolve()
+
+        raw_img = Image.open(inp_p)
+        if raw_img.mode in ("RGBA", "CMYK") or len(raw_img.getbands()) >= 4:
+            arr = np.array(raw_img)
+            rgb_arr = arr[..., :3]
+            nir_arr = arr[..., 3]
+        else:
+            rgb_arr = np.array(raw_img.convert("RGB"))
+            if args.nir:
+                nir_p = Path(args.nir).resolve()
+                if nir_p.suffix == ".npy":
+                    nir_arr = np.load(nir_p)
+                else:
+                    nir_arr = np.array(Image.open(nir_p).convert("L"))
+            else:
+                nir_arr = (rgb_arr[..., 0].astype(np.float32) * 0.7 + rgb_arr[..., 1].astype(np.float32) * 0.3).astype(np.uint8)
+
+        r_norm = rgb_arr[..., 0].astype(np.float32) / 255.0
+        nir_norm = nir_arr.astype(np.float32) / 255.0
+        ndvi = calculate_ndvi(nir_norm, r_norm)
+
+        veg_mask = (ndvi > args.ndvi_threshold).astype(np.uint8) * 255
+        Image.fromarray(veg_mask).save(output / "vegetation_mask.png")
+
+        ndvi_vis = (np.clip((ndvi + 0.2) / 1.0, 0.0, 1.0) * 255.0).astype(np.uint8)
+        Image.fromarray(ndvi_vis).save(output / "ndvi.png")
+
+        cir_img = compose_cir_composite(rgb_arr[..., 0], rgb_arr[..., 1], nir_arr)
+        cir_img.save(output / "cir_composite.png")
+
+        report = {
+            "input_image": str(inp_p),
+            "output_directory": str(output),
+            "mean_ndvi": round(float(np.mean(ndvi)), 4),
+            "max_ndvi": round(float(np.max(ndvi)), 4),
+            "vegetated_pixel_percentage": round(float(np.mean(ndvi > args.ndvi_threshold) * 100), 2),
+            "spectral_bands": 4,
+            "cir_composite": str(output / "cir_composite.png"),
+            "ndvi_raster": str(output / "ndvi.png"),
+        }
+        with open(output / "spectral_report.json", "w", encoding="utf-8") as f:
+            json.dump(report, f, indent=2)
+
+        if args.json:
+            print(json.dumps(report, indent=2))
+        else:
+            print(f"SPECTRAL OK: Mean NDVI: {report['mean_ndvi']}, "
+                  f"Vegetated coverage: {report['vegetated_pixel_percentage']}%. "
+                  f"Outputs written to: {output}")
         return 0
     if args.command == "temporal":
         from pvextent.cad.temporal import detect_temporal_changes, render_temporal_cad_overlay

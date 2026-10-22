@@ -21,6 +21,7 @@ from .elevation import (
 )
 from .metrics import DEFAULT_GSD_M, DEFAULT_MODULE_EFFICIENCY, calculate_pv_metrics, polygon_area_pixels
 from .regularize import detect_dominant_orientation, minimum_bounding_box, regularize_manhattan, simplify_douglas_peucker
+from .spectral import extract_polygon_spectral_stats
 
 
 def marching_squares_contours(binary_mask: np.ndarray, min_area_px: float = 30.0) -> list[list[tuple[float, float]]]:
@@ -173,12 +174,15 @@ def vectorize_mask(
     default_tilt_deg: float = 0.0,
     default_azimuth_deg: float | None = None,
     ghi_kwh_m2: float = DEFAULT_GHI_KWH_M2,
+    rgb: np.ndarray | Image.Image | str | Path | None = None,
+    nir: np.ndarray | Image.Image | str | Path | None = None,
+    veto_vegetated_roofs: bool = False,
 ) -> dict[str, Any]:
     """Execute end-to-end CAD-grade geospatial vectorization on a PV segmentation mask.
 
     Returns:
         dict: GeoJSON FeatureCollection with CAD-regularized polygon geometries, 3D surface area,
-              physical BIM module packing and annual photovoltaic energy yield modeling.
+              physical BIM module packing, annual photovoltaic energy yield modeling, and multispectral NIR verification.
     """
     effective_min_area_px = max(min_area_px, (min_area_m2 / (gsd_m ** 2))) if min_area_m2 > 0 else min_area_px
     raw_rings = marching_squares_contours(mask, min_area_px=effective_min_area_px)
@@ -197,6 +201,24 @@ def vectorize_mask(
                 dsm_arr = np.load(dp)
             else:
                 dsm_arr = np.array(Image.open(dp), dtype=np.float32)
+
+    rgb_arr = None
+    if rgb is not None:
+        if isinstance(rgb, np.ndarray):
+            rgb_arr = rgb
+        elif isinstance(rgb, Image.Image):
+            rgb_arr = np.array(rgb.convert("RGB"))
+        elif isinstance(rgb, (str, Path)):
+            rgb_arr = np.array(Image.open(rgb).convert("RGB"))
+
+    nir_arr = None
+    if nir is not None:
+        if isinstance(nir, np.ndarray):
+            nir_arr = nir
+        elif isinstance(nir, Image.Image):
+            nir_arr = np.array(nir.convert("L"))
+        elif isinstance(nir, (str, Path)):
+            nir_arr = np.array(Image.open(nir).convert("L"))
 
     for idx, ring in enumerate(raw_rings, 1):
         # 1. Simplify
@@ -315,9 +337,23 @@ def vectorize_mask(
         else:
             mean_u = 0.0
 
-        if mean_p >= 0.80 and mean_u <= 0.025:
+        # Multispectral NIR and Spectral Signature Analysis
+        if rgb_arr is not None:
+            spec_stats = extract_polygon_spectral_stats(
+                polygon_px=regularized,
+                rgb_arr=rgb_arr,
+                nir_arr=nir_arr,
+            )
+            metrics.update(spec_stats)
+            if veto_vegetated_roofs and spec_stats.get("is_spectral_false_positive"):
+                continue
+            is_spectral_fp = spec_stats.get("is_spectral_false_positive", False)
+        else:
+            is_spectral_fp = False
+
+        if mean_p >= 0.80 and mean_u <= 0.025 and not is_spectral_fp:
             conf_tier = "high"
-        elif mean_p >= 0.50 and mean_u <= 0.060:
+        elif mean_p >= 0.50 and mean_u <= 0.060 and not is_spectral_fp:
             conf_tier = "medium"
         else:
             conf_tier = "review_recommended"
@@ -373,6 +409,9 @@ def vectorize_mask(
             "mean_roof_tilt_deg": round(float(np.mean([f["properties"].get("roof_tilt_deg", 0.0) for f in features])), 1) if features else 0.0,
             "ghi_kwh_m2": ghi_kwh_m2,
             "mean_scene_confidence": round(mean_scene_conf, 4),
+            "multispectral_nir_enabled": nir_arr is not None,
+            "spectral_silicon_confirmed": sum(1 for f in features if f["properties"].get("spectral_verdict") == "silicon_photovoltaic_confirmed"),
+            "vegetated_roof_vetoes": sum(1 for f in features if f["properties"].get("spectral_verdict") == "vegetated_roof_veto"),
             "regularized": regularize,
             "gsd_m": gsd_m,
         },

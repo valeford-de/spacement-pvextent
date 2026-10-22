@@ -125,8 +125,14 @@ def prepare_deeplabv3plus_encoder_weights(cache_dir: Path | str, *, download: bo
         raise EncoderWeightsError(f"Cannot prepare DeepLabV3+ encoder cache: {error}") from error
 
 
-def build_deeplabv3plus_resnet50(weights_path: Path | str | None = None) -> Any:
-    """Build the DeepLabV3+ (ResNet50 ASPP) architecture offline, loading verified encoder tensors."""
+def build_deeplabv3plus_resnet50(
+    weights_path: Path | str | None = None,
+    in_channels: int = 3,
+) -> Any:
+    """Build the DeepLabV3+ (ResNet50 ASPP) architecture offline, loading verified encoder tensors.
+
+    Supports both 3-band (RGB) and 4-band (RGB + NIR / CIR) multispectral ingestion.
+    """
     try:
         import torch
         import torch.nn as nn
@@ -149,7 +155,7 @@ def build_deeplabv3plus_resnet50(weights_path: Path | str | None = None) -> Any:
             "deeplabv3plus",
             encoder_name="resnet50",
             encoder_weights=None,
-            in_channels=3,
+            in_channels=in_channels,
             classes=1,
         ).to(dtype=torch.float32)
         try:
@@ -168,6 +174,10 @@ def build_deeplabv3plus_resnet50(weights_path: Path | str | None = None) -> Any:
             if not classifier.issubset(state):
                 raise EncoderWeightsError("Expected ImageNet-1k classification head in ResNet50 encoder source.")
             encoder_state = {key: value for key, value in state.items() if key not in classifier}
+            if in_channels == 4 and "conv1.weight" in encoder_state:
+                w3 = encoder_state["conv1.weight"]
+                w_nir = 0.5 * (w3[:, 0:1, :, :] + w3[:, 1:2, :, :])
+                encoder_state["conv1.weight"] = torch.cat([w3, w_nir], dim=1)
             expected = model.encoder.state_dict()
             expected_keys = {k for k in expected if not k.endswith("num_batches_tracked")}
             if set(encoder_state) != expected_keys:
