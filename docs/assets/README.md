@@ -1,48 +1,48 @@
 # README image sources
 
-The README contains two derived documentation figures. They are illustrations,
-not a dataset release or an additional model evaluation. Raw crops, masks,
-prediction PNGs and checkpoints remain outside Git.
+All README figures show real output of the V5 (Vidda) checkpoint and the `pvextent`
+CLI. Nothing is drawn or edited by hand. Raw crops, masks, predictions and
+checkpoints remain outside Git.
 
-## Segmentation preview
-
-`segmentation-preview.png` shows two real aerial orthophotos from the geographically
-held-out validation partition, their complete ground-truth annotations, and actual
-predictions from the V4-trained model. Each panel retains the native 320 × 320 grid
-at 0.1 m/pixel; there is no image resampling.
-
-Both examples are 100% supervised (zero unlabelled or ignored pixels):
-
-| Row | Sample ID | Description | Ground Truth PV | Predicted PV | Sample IoU | Sample Dice |
-| --- | --- | --- | ---: | ---: | ---: | ---: |
-| 1 | `pv4ger-96e0ab3402e42dd6c89225c4` | Residential Rooftop PV | 12,604 px | 12,527 px | **98.74%** | **99.37%** |
-| 2 | `pv4ger-c55923b625fc5b0b224b3c3d` | Commercial Rooftop PV | 48,342 px | 48,562 px | **98.82%** | **99.41%** |
-
-- Imagery: GeoBasis NRW/openNRW under [Datenlizenz Deutschland Zero 2.0](https://www.govdata.de/dl-de/zero-2-0).
-- Labels: Complete reviewed ground truth. Green means confirmed PV array, blue means confirmed background roof/surrounding.
-- Predictions: Orange means model-predicted PV at threshold `0.5`.
-- Checkpoint: `baseline-resnet18-bulk-v4-001/best.pt`, epoch 3, documented in the [V4 training audit](../research/nrw-bulk-training-audit.md).
-- Checkpoint SHA-256: `32ca5148f0e18879c14fcc7b0b0e3e0ba09e272f25cf2cf6a45b8a9fd793f8bd`.
-
-## Training history
-
-`training-history.svg` plots actual recorded epoch losses and internal validation
-IoU comparing the baseline reference with the new V4 bulk training run.
-V4 incorporates the 482 AI-reviewed NRW partial masks across 3,775 total training crops
-and 278 validation crops. Straight lines connect measured epochs; no intermediate
-measurements are invented.
-
-The [renderer](../../examples/render_training_history.py) reads only these
-versioned scalar reports. Rebuild from the repository root:
+Rebuild every figure from the repository root:
 
 ```sh
-uv run --no-project --with matplotlib==3.11.2 python examples/render_training_history.py
+uv run --locked --no-sync python examples/render_readme_figures.py
 ```
 
-The graph is an original Valeford figure under Apache-2.0. It documents
-both the V4 target-source training trajectory and the earlier baseline control.
+The script needs the local checkpoint
+`runs/deeplabv3plus-resnet50-v5-photometric-001/best.pt`, the datasets
+`data/pvextent-training-v4` and `data/positive-holdout-frozen-v1`, and network access
+to the public Geobasis NRW WMS.
 
-## Brand assets
+## Figures
 
-`pvextent-banner.png` and `valeford-logo.png` are the supplied Spacement and
-Valeford brand assets.
+| File | Content | Input |
+| --- | --- | --- |
+| `segmentation-preview.png` | Orthophoto, ground truth and V5 prediction at threshold 0.5 | Sealed PV4GER test crops at the 90th, 50th and 10th per-crop IoU percentile of 418 crops with at least 500 PV pixels |
+| `nrw-holdout.jpg` | Same layout, recall on reviewed PV pixels | Every reviewed PV crop of the spatially separate NRW positive holdout |
+| `cad-overlay.png` | `pvextent vectorize --profile vidda`, GeoJSON redrawn at 2x with the library renderer | The three percentile test crops |
+| `temporal-change.jpg` | `pvextent temporal --checkpoint <V5> --threshold 0.5` | 64 m window around `nrw-DENW07AL0000ytXZBL`: `nw_hist_dop_2015` vs. `nw_dop_rgb` (2025 flight) |
+| `spectral.jpg` | `pvextent spectral --nir`: CIR composite and NDVI | Same window, `nw_dop_rgb` and `nw_dop_nir` |
+
+Selected crops on the sealed test set:
+
+| Percentile | Sample ID | IoU |
+| --- | --- | ---: |
+| 90th | `pv4ger-c4cdf711ece690c241b09ca3` | 97.4% |
+| 50th | `pv4ger-743ac1439eb370f97a8915b4` | 91.3% |
+| 10th | `pv4ger-c9c1365a90396b67acb3afb3` | 64.6% |
+
+The WMS layers are 8-bit display products, so the NDVI is relative, not calibrated
+reflectance. WMS responses are mutable; a later rebuild may differ.
+
+- Imagery: GeoBasis NRW/openNRW, including the PV4GER crops derived from it, under [Datenlizenz Deutschland Zero 2.0](https://www.govdata.de/dl-de/zero-2-0).
+- Checkpoint: `deeplabv3plus-resnet50-v5-photometric-001/best.pt`, SHA-256 `9380f5b7ebf5af23aeb445832402714865e387db5ce496d070575aada6e351a6`.
+
+## Other assets
+
+`training-history.svg` plots recorded epoch losses and internal validation IoU of the
+V4 run and the baseline control, rendered by
+[`render_training_history.py`](../../examples/render_training_history.py).
+`pvextent-banner.png`, `pvextent-vidda-banner.png`, `pvextent-tinden-banner.png` and
+`valeford-logo.png` are Spacement and Valeford brand assets.

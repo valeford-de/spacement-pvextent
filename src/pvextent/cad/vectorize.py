@@ -245,7 +245,7 @@ def vectorize_mask(
             continue
 
         # Compute dominant azimuth & OBB
-        _, azimuth_deg = detect_dominant_orientation(regularized)
+        dominant_rad, azimuth_deg = detect_dominant_orientation(regularized)
         obb = minimum_bounding_box(regularized)
         obb_len_m = round(obb["length"] * gsd_m, 2)
         obb_wid_m = round(obb["width"] * gsd_m, 2)
@@ -288,7 +288,8 @@ def vectorize_mask(
         modules_px = []
         if fit_modules:
             from .packing import fit_module_grid
-            packed = fit_module_grid(regularized, az_deg, gsd_m=gsd_m, tilt_deg=tilt_deg)
+            # Align the grid with the polygon edges in image space, not with the compass azimuth
+            packed = fit_module_grid(regularized, math.degrees(dominant_rad), gsd_m=gsd_m, tilt_deg=tilt_deg)
             metrics["fitted_module_count"] = packed["module_count"]
             metrics["fitted_capacity_kwp"] = packed["total_capacity_kwp"]
             metrics["module_packing_orientation"] = packed["orientation"]
@@ -420,6 +421,16 @@ def vectorize_mask(
     return geojson
 
 
+def _label_font(size: int) -> ImageFont.ImageFont | ImageFont.FreeTypeFont:
+    """Return a system font with glyphs for ² and umlauts, falling back to Pillow's default."""
+    for name in ("DejaVuSans.ttf", "Arial.ttf", "Helvetica.ttc"):
+        try:
+            return ImageFont.truetype(name, size)
+        except OSError:
+            continue
+    return ImageFont.load_default(size=size)
+
+
 def render_cad_overlay(
     image: Image.Image,
     geojson: dict,
@@ -436,6 +447,7 @@ def render_cad_overlay(
     MODULE_COLOR = (0, 255, 230, 160)    # Fine cyan-blue module line
     CALLOUT_BG = (10, 25, 20, 210)       # Dark slate callout badge
     TEXT_COLOR = (240, 255, 250, 255)    # Pristine white text
+    font = _label_font(12)
 
     for feature in geojson.get("features", []):
         props = feature.get("properties", {})
@@ -466,14 +478,14 @@ def render_cad_overlay(
             label = f"{kwp:.1f} kWp | {area_3d:.1f} m² | {mwh:.1f} MWh/a"
 
         # Badge rectangle
-        badge_w, badge_h = len(label) * 7 + 10, 18
+        badge_w, badge_h = draw.textlength(label, font=font) + 10, 18
         bx1 = max(0, cx - badge_w / 2)
         by1 = max(0, cy - badge_h / 2)
         bx2 = min(img.width, bx1 + badge_w)
         by2 = min(img.height, by1 + badge_h)
 
         draw.rounded_rectangle([bx1, by1, bx2, by2], radius=3, fill=CALLOUT_BG, outline=BORDER_COLOR, width=1)
-        draw.text((bx1 + 5, by1 + 2), label, fill=TEXT_COLOR)
+        draw.text((bx1 + 5, by1 + 2), label, fill=TEXT_COLOR, font=font)
 
     result = Image.alpha_composite(img, overlay).convert("RGB")
     result.save(output_path)
