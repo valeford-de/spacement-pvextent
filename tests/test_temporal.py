@@ -243,10 +243,10 @@ class TestTemporalChangeDetection(unittest.TestCase):
             out_p = Path(tmp_dir) / "temporal_cad.png"
             render_temporal_cad_overlay(img_t2, temporal_geojson, out_p, image_t1=img_t1)
             self.assertTrue(out_p.exists())
-            rendered = Image.open(out_p)
-            # Side by side should have double width plus spacer
-            self.assertEqual(rendered.width, 200 * 2 + 10)
-            self.assertEqual(rendered.height, 200)
+            with Image.open(out_p) as rendered:
+                # Side by side should have double width plus spacer
+                self.assertEqual(rendered.width, 200 * 2 + 10)
+                self.assertEqual(rendered.height, 200)
 
 
 if __name__ == "__main__":
