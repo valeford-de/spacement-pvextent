@@ -1,11 +1,12 @@
 # Copyright 2026 Valeford
 # SPDX-License-Identifier: Apache-2.0
 
-"""Unit tests for PVExtent Vidda and Tinden official model releases."""
+"""Unit tests for the PVExtent Fjell, Vidda and Tinden official model releases."""
 
 import unittest
 
 from pvextent.models.releases import (
+    FJELL_RELEASE_SPEC,
     MODEL_RELEASES,
     TINDEN_RELEASE_SPEC,
     VIDDA_RELEASE_SPEC,
@@ -17,10 +18,19 @@ from pvextent.models.releases import (
 class TestModelReleases(unittest.TestCase):
     def test_list_releases(self):
         releases = list_model_releases()
-        self.assertEqual(len(releases), 2)
+        self.assertEqual(len(releases), 3)
         names = [r.name for r in releases]
+        self.assertIn("PVExtent Fjell", names)
         self.assertIn("PVExtent Vidda", names)
         self.assertIn("PVExtent Tinden", names)
+
+    def test_get_fjell_spec(self):
+        fjell = get_model_spec("fjell")
+        self.assertIs(fjell, FJELL_RELEASE_SPEC)
+        self.assertEqual(fjell.default_tta, "none")
+        self.assertEqual(fjell.temperature, 1.0)
+        self.assertGreater(fjell.benchmark_iou, 0.88)
+        self.assertEqual(fjell.config_file, "configs/pvextent-fjell-v1.0.toml")
 
     def test_get_vidda_spec(self):
         vidda = get_model_spec("vidda")

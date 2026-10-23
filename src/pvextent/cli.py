@@ -196,7 +196,8 @@ def main(argv: list[str] | None = None) -> int:
     vectorize = commands.add_parser("vectorize", help="CAD-grade geospatial polygon vectorization and physical metrics")
     vectorize.add_argument("mask_or_image", help="Input binary mask PNG or RGB image")
     vectorize.add_argument("output_dir", help="Output directory for GeoJSON and CAD overlay")
-    vectorize.add_argument("--profile", choices=("vidda", "tinden"), help="Model profile: 'vidda' (Standard) or 'tinden' (High-End Flagship)")
+    vectorize.add_argument("--profile", choices=("fjell", "vidda", "tinden"),
+                           help="Model profile: 'fjell' (NRW, fewest false alarms), 'vidda' (Standard) or 'tinden' (High-End Flagship)")
     vectorize.add_argument("--checkpoint", nargs="+", help="One or more model checkpoints to ensemble")
     vectorize.add_argument("--ensemble-weights", nargs="+", type=float, help="Weights for ensemble models (default: equal)")
     vectorize.add_argument("--scales", nargs="+", type=float, default=[1.0], help="Scale factors for multi-scale pyramid TTA (default: 1.0)")
@@ -260,7 +261,17 @@ def main(argv: list[str] | None = None) -> int:
         output.mkdir(parents=True, exist_ok=True)
         input_path = Path(args.mask_or_image).resolve()
 
-        if getattr(args, "profile", None) == "vidda":
+        if getattr(args, "profile", None) == "fjell":
+            if not args.checkpoint:
+                cand = Path("runs/deeplabv3plus-resnet50-v7-nrw-hardneg-001/best.pt")
+                if cand.exists():
+                    args.checkpoint = [str(cand)]
+            # The settings NRW test set v1 and the sealed benchmark measured
+            args.tta = "none"
+            args.scales = [1.0]
+            args.overlap = 0.50
+            args.threshold = 0.5
+        elif getattr(args, "profile", None) == "vidda":
             if not args.checkpoint:
                 cand = [
                     Path("runs/deeplabv3plus-resnet50-v5-photometric-001/best.pt"),

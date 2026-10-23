@@ -1,0 +1,50 @@
+# Copyright 2026 Valeford
+# SPDX-License-Identifier: Apache-2.0
+
+[model]
+name = "pvextent-fjell"
+version = "1.0.0"
+tier = "standard"
+release_date = "2026-10-23"
+architecture = "deeplabv3plus-resnet50"
+backbone = "resnet50"
+decoder = "aspp"
+classes = 1
+in_channels = 3
+weights_checkpoint = "runs/deeplabv3plus-resnet50-v7-nrw-hardneg-001/best.pt"
+training_config = "configs/deeplabv3plus-resnet50-v7-nrw-hardneg.toml"
+
+[inference]
+# The settings under which NRW test set v1 and the sealed benchmark were measured
+tile_size = 400
+overlap = 0.50
+window_blending = "hann_2d"
+tta_mode = "none"
+scales = [1.0]
+threshold = 0.5
+calibrate = false
+temperature = 1.0
+
+[cad]
+regularize = true
+gsd_m = 0.10
+min_area_m2 = 1.5
+module_efficiency = 0.205
+module_wattage_kw = 0.400
+module_length_m = 1.76
+module_width_m = 1.04
+module_gap_m = 0.02
+co2_emission_factor_kg_per_kwh = 0.380
+ghi_kwh_m2 = 1050.0
+
+[performance]
+test_iou = 0.8883
+test_dice = 0.9408
+test_precision = 0.9446
+test_recall = 0.9371
+test_pixel_accuracy = 0.9769
+nrw_test_v1_iou = 0.541
+nrw_test_v1_false_alarm_rate = 0.065
+nrw_test_v1_pv_crops_detected = 0.643
+recommended_hardware = "Apple Silicon MPS (M1/M2/M3), NVIDIA CUDA (>=4GB VRAM), or Modern Multi-Core CPU"
+target_use_case = "Screening current Geobasis NRW orthophotos where false alarms are costly; misses about a third of PV roofs."

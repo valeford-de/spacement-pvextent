@@ -4,6 +4,7 @@
 """Model construction, architecture adapters, and official v1.0 release specifications."""
 
 from .releases import (
+    FJELL_RELEASE_SPEC,
     MODEL_RELEASES,
     TINDEN_RELEASE_SPEC,
     VIDDA_RELEASE_SPEC,
@@ -13,6 +14,7 @@ from .releases import (
 )
 
 __all__ = [
+    "FJELL_RELEASE_SPEC",
     "MODEL_RELEASES",
     "ModelReleaseSpec",
     "TINDEN_RELEASE_SPEC",

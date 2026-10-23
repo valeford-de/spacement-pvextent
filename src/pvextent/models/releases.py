@@ -1,9 +1,10 @@
 # Copyright 2026 Valeford
 # SPDX-License-Identifier: Apache-2.0
 
-"""Official PVExtent Model Releases & Specifications (v1.0).
+"""Official PVExtent Model Releases & Specifications.
 
-Exposes the two official production model releases:
+Exposes the official model releases:
+- PVExtent Fjell v1.0 (Recommended for current NRW imagery: fewest false alarms)
 - PVExtent Vidda v1.0 (Standard Model: High-Throughput & Edge Inference)
 - PVExtent Tinden v1.0 (High-End Model: Ensemble Precision)
 """
@@ -67,6 +68,33 @@ VIDDA_RELEASE_SPEC = ModelReleaseSpec(
     config_file="configs/pvextent-vidda-v1.0.toml",
 )
 
+FJELL_RELEASE_SPEC = ModelReleaseSpec(
+    name="PVExtent Fjell",
+    tier="Standard (NRW hard negatives)",
+    version="1.0.0",
+    release_date="2026-10-23",
+    architecture="DeepLabV3+ ResNet50 ASPP (V7: Vidda recipe plus NRW training data v1)",
+    description=(
+        "Single model trained with reviewed hard negatives from current Geobasis NRW "
+        "orthophotos. On NRW test set v1 it has the fewest false alarms on PV-free roofs "
+        "(6.5%) but misses about a third of PV roofs; see docs/research/nrw-train-v1-results.md."
+    ),
+    benchmark_iou=0.8883,
+    benchmark_dice=0.9408,
+    benchmark_accuracy=0.9769,
+    benchmark_recall=0.9371,
+    recommended_hardware="Apple Silicon (M1/M2/M3), NVIDIA CUDA (>=4GB), or modern multi-core CPU",
+    default_tile_size=400,
+    default_overlap=0.50,
+    default_tta="none",
+    default_scales=(1.0,),
+    temperature=1.0,
+    supports_3d_elevation=True,
+    supports_4d_temporal=True,
+    supports_multispectral_nir=False,
+    config_file="configs/pvextent-fjell-v1.0.toml",
+)
+
 TINDEN_RELEASE_SPEC = ModelReleaseSpec(
     name="PVExtent Tinden",
     tier="High-End (Flagship Precision)",
@@ -101,6 +129,8 @@ TINDEN_RELEASE_SPEC = ModelReleaseSpec(
 )
 
 MODEL_RELEASES = {
+    "fjell": FJELL_RELEASE_SPEC,
+    "pvextent-fjell": FJELL_RELEASE_SPEC,
     "vidda": VIDDA_RELEASE_SPEC,
     "pvextent-vidda": VIDDA_RELEASE_SPEC,
     "tinden": TINDEN_RELEASE_SPEC,
@@ -109,7 +139,7 @@ MODEL_RELEASES = {
 
 
 def get_model_spec(name: str) -> ModelReleaseSpec:
-    """Retrieve the official model release specification by key ('vidda' or 'tinden')."""
+    """Retrieve the official model release specification by key ('fjell', 'vidda' or 'tinden')."""
     key = name.strip().lower()
     if key in MODEL_RELEASES:
         return MODEL_RELEASES[key]
@@ -118,4 +148,4 @@ def get_model_spec(name: str) -> ModelReleaseSpec:
 
 def list_model_releases() -> list[ModelReleaseSpec]:
     """Return unique official model releases."""
-    return [VIDDA_RELEASE_SPEC, TINDEN_RELEASE_SPEC]
+    return [FJELL_RELEASE_SPEC, VIDDA_RELEASE_SPEC, TINDEN_RELEASE_SPEC]

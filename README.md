@@ -12,7 +12,7 @@
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-MPS%20%2F%20CUDA-EE4C2C.svg?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg?style=for-the-badge)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-509%20passing-success.svg?style=for-the-badge)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-510%20passing-success.svg?style=for-the-badge)](#testing)
 
 Rooftop photovoltaic (PV) segmentation and vectorization from aerial orthophotos,
 with module layout, roof-plane fitting, yield estimates and multi-epoch change
@@ -38,29 +38,47 @@ see [figure provenance](docs/assets/README.md).
 
 ### Current NRW imagery
 
+The PV4GER benchmark does not transfer to current Geobasis NRW orthophotos. NRW test
+set v1 is a random sample of 321 roofs from ten districts, labelled blind by a human
+annotator ([protocol](docs/research/nrw-test-v1-protocol.md)); 42 crops contain PV.
+Each model was evaluated once, with 95% bootstrap intervals over crops:
+
+| Model | IoU | Precision | PV roofs found | False alarms on PV-free roofs |
+| :--- | :---: | :---: | :---: | :---: |
+| **Fjell** (V7) | **54.1%** [42–63] | **74.8%** | 27 / 42 | **6.5%** [4–9] |
+| Tinden | 53.3% [43–62] | 65.9% | 34 / 42 | 16.5% [12–21] |
+| Vidda (V5) | 44.1% [33–53] | 49.2% | **35 / 42** | 33.7% [28–39] |
+
+Fjell trades recall for precision: it raises the fewest false alarms (glass roofs,
+skylights, conservatories, dark roofing) but misses about a third of PV roofs, because
+its automatically built NRW labels leave part of the real PV area as background
+([results and label audit](docs/research/nrw-train-v1-results.md)). Use Tinden or Vidda
+when missing an array costs more than a false alarm.
+
 ![All reviewed PV crops of the separate NRW holdout with V5 predictions; two of three arrays are missed entirely.](docs/assets/nrw-holdout.jpg)
 
-The benchmark does not transfer to current Geobasis NRW orthophotos. On every
-independently reviewed PV crop of the spatially separate NRW holdout, V5 finds 86% of
-the PV pixels on one building and none on the other two, although the modules are
-clearly visible. Treat outputs on new imagery sources as unvalidated.
+Vidda (V5) on the three PV crops of the earlier, spatially separate NRW holdout: it
+finds 86% of the PV pixels on one building and none on the other two.
 
 ## Model lineup
 
-| | **PVExtent Vidda** | **PVExtent Tinden** |
-| :--- | :--- | :--- |
-| **Profile** | Standard, high throughput | High-end, maximum accuracy |
-| **Architecture** | DeepLabV3+ ResNet50 ASPP (V5, photometric augmentation) | Equal-weight ensemble of V5 and V6 (V6: self-trained on NRW pseudo-labels) |
-| **Test-time augmentation** | None | Dihedral $D_4$ (8 orientations) + scales 0.9 / 1.0 / 1.1 |
-| **Tiling** | 400 px tiles, 25% overlap, 2D Hann blending | 400 px tiles, 50% overlap, 2D Hann blending |
-| **Calibration** | None | Temperature scaling, $T = 0.4068$ |
-| **Sealed test IoU** | 88.16% | 89.15% |
-| **Sealed test recall** | 93.53% | 94.93% |
-| **CLI** | `--profile vidda` | `--profile tinden` |
+| | **PVExtent Fjell** | **PVExtent Vidda** | **PVExtent Tinden** |
+| :--- | :--- | :--- | :--- |
+| **Profile** | Current NRW imagery, fewest false alarms | Standard, high throughput | High-end, ensemble |
+| **Architecture** | DeepLabV3+ ResNet50 ASPP (V7: Vidda recipe plus reviewed NRW hard negatives) | DeepLabV3+ ResNet50 ASPP (V5, photometric augmentation) | Equal-weight ensemble of V5 and V6 (V6: self-trained on NRW pseudo-labels) |
+| **Test-time augmentation** | None | None | Dihedral $D_4$ (8 orientations) + scales 0.9 / 1.0 / 1.1 |
+| **Tiling** | 400 px tiles, 50% overlap, 2D Hann blending | 400 px tiles, 25% overlap, 2D Hann blending | 400 px tiles, 50% overlap, 2D Hann blending |
+| **Calibration / threshold** | None, 0.5 | None, 0.25 | Temperature scaling, $T = 0.4068$ |
+| **Sealed test IoU** | 88.83% | 88.16% | 89.15% |
+| **Sealed test recall** | 93.71% | 93.53% | 94.93% |
+| **NRW test v1 IoU** | 54.1% | 44.1% | 53.3% |
+| **CLI** | `--profile fjell` | `--profile vidda` | `--profile tinden` |
 
-Test metrics come from the [sealed benchmark](#benchmark), which covers PV4GER imagery only. The benchmarked Tinden
-configuration used $D_4$ TTA at a single scale; the multi-scale averaging of the CLI
-profile was not part of that evaluation. Checkpoints are not distributed with this
+Sealed test metrics come from the [sealed benchmark](#benchmark), which covers PV4GER
+imagery only; NRW figures from [NRW test set v1](#current-nrw-imagery). Vidda and Fjell
+were measured at threshold 0.5. The benchmarked Tinden configuration used $D_4$ TTA at
+a single scale and threshold 0.505; the multi-scale averaging and the 0.25 threshold of
+the Vidda and Tinden CLI profiles were not part of either evaluation. Checkpoints are not distributed with this
 repository.
 
 ## Benchmark
@@ -71,16 +89,16 @@ freeze. Bold marks the best value per column. Details:
 
 | Model | IoU | Dice | Precision | Recall | Pixel accuracy |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| Baseline V1 (ResNet18 U-Net) | 85.92% | 92.42% | **93.98%** | 90.92% | 97.08% |
+| Baseline V1 (ResNet18 U-Net) | 85.92% | 92.42% | 93.98% | 90.92% | 97.08% |
 | DeepLabV3+ V4 (Focal + Lovász) | 87.87% | 93.55% | 93.88% | 93.21% | 97.48% |
 | DeepLabV3+ V5 — **Vidda** | 88.16% | 93.71% | 93.89% | 93.53% | 97.54% |
 | DeepLabV3+ V5 + $D_4$ TTA, calibrated | 87.95% | 93.59% | 94.06% | 93.12% | 97.50% |
 | DeepLabV3+ V6 + $D_4$ TTA, calibrated | 89.07% | 94.22% | 92.21% | **96.32%** | 97.68% |
 | Ensemble V5 + V6 + $D_4$ — **Tinden** | **89.15%** | **94.26%** | 93.61% | 94.93% | **97.74%** |
+| DeepLabV3+ V7 — **Fjell** | 88.83% | 94.08% | **94.46%** | 93.71% | 97.69% |
 
-The V1, V4 and V5 rows were re-run on 2026-10-22 and reproduce exactly. The V6
-checkpoint and its pseudo-label training data are not present in this workspace, so
-the V6 and Tinden rows could not be re-verified.
+The V1, V4, V5 (Vidda), V6 and Tinden rows were re-run on 2026-10-22 and reproduce the
+recorded values exactly; V7 was evaluated once after training on the same day.
 
 ## Features
 
@@ -129,9 +147,10 @@ cd spacement-pvextent
 uv sync --locked --all-extras
 ```
 
-Vectorize an orthophoto with either profile (checkpoints are expected under `runs/`):
+Vectorize an orthophoto with a release profile (checkpoints are expected under `runs/`):
 
 ```bash
+pvextent vectorize aerial_crop.png output_dir/ --profile fjell
 pvextent vectorize aerial_crop.png output_dir/ --profile vidda
 pvextent vectorize aerial_crop.png output_dir/ --profile tinden
 ```
