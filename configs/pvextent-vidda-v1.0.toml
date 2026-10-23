@@ -14,14 +14,15 @@ in_channels = 3
 weights_checkpoint = "runs/deeplabv3plus-resnet50-v5-photometric-001/best.pt"
 
 [inference]
+# The settings the sealed benchmark measured
 tile_size = 400
 overlap = 0.25
 window_blending = "hann_2d"
 tta_mode = "none"
 scales = [1.0]
-threshold = 0.25
-calibrate = true
-temperature = 0.4068
+threshold = 0.5
+calibrate = false
+temperature = 1.0
 
 [cad]
 regularize = true

@@ -66,19 +66,18 @@ finds 86% of the PV pixels on one building and none on the other two.
 | :--- | :--- | :--- | :--- |
 | **Profile** | Current NRW imagery, fewest false alarms | Standard, high throughput | High-end, ensemble |
 | **Architecture** | DeepLabV3+ ResNet50 ASPP (V7: Vidda recipe plus reviewed NRW hard negatives) | DeepLabV3+ ResNet50 ASPP (V5, photometric augmentation) | Equal-weight ensemble of V5 and V6 (V6: self-trained on NRW pseudo-labels) |
-| **Test-time augmentation** | None | None | Dihedral $D_4$ (8 orientations) + scales 0.9 / 1.0 / 1.1 |
+| **Test-time augmentation** | None | None | Dihedral $D_4$ (8 orientations) |
 | **Tiling** | 400 px tiles, 50% overlap, 2D Hann blending | 400 px tiles, 25% overlap, 2D Hann blending | 400 px tiles, 50% overlap, 2D Hann blending |
-| **Calibration / threshold** | None, 0.5 | None, 0.25 | Temperature scaling, $T = 0.4068$ |
+| **Calibration / threshold** | None, 0.5 | None, 0.5 | Temperature scaling, $T = 0.4068$; 0.505 |
 | **Sealed test IoU** | 88.83% | 88.16% | 89.15% |
 | **Sealed test recall** | 93.71% | 93.53% | 94.93% |
 | **NRW test v1 IoU** | 54.1% | 44.1% | 53.3% |
 | **CLI** | `--profile fjell` | `--profile vidda` | `--profile tinden` |
 
 Sealed test metrics come from the [sealed benchmark](#benchmark), which covers PV4GER
-imagery only; NRW figures from [NRW test set v1](#current-nrw-imagery). Vidda and Fjell
-were measured at threshold 0.5. The benchmarked Tinden configuration used $D_4$ TTA at
-a single scale and threshold 0.505; the multi-scale averaging and the 0.25 threshold of
-the Vidda and Tinden CLI profiles were not part of either evaluation. Checkpoints are not distributed with this
+imagery only; NRW figures from [NRW test set v1](#current-nrw-imagery). Each CLI profile
+runs exactly the configuration that was measured. Multi-scale TTA (`--scales`) and the
+vegetation veto remain available as options but have not been evaluated. Checkpoints are not distributed with this
 repository.
 
 ## Benchmark
@@ -122,7 +121,8 @@ pseudo-NIR channel, and the resulting NDVI/CIR output is not physically meaningf
 
 `pvextent vectorize --profile vidda` on the same three test crops: regularized polygons,
 fitted 400 W module grid and kWp/yield estimates. Without a DSM the roof is treated as
-flat. The profile thresholds at 0.25, which merges adjacent module rows on the right.
+flat. In the right crop the separate module rows on the left still merge into one
+block, and the skylight on the right is counted as a 4.8 kWp array, which is wrong.
 
 ![Output of pvextent temporal on Geobasis NRW imagery from 2015 and 2025.](docs/assets/temporal-change.jpg)
 

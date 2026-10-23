@@ -16,12 +16,13 @@ classes = 1
 in_channels = [3, 4]  # Supports 3-channel RGB and 4-channel RGB+NIR
 
 [inference]
+# The settings the sealed benchmark measured
 tile_size = 400
 overlap = 0.50
 window_blending = "hann_2d_separable"
 tta_mode = "d4"  # 8-fold dihedral symmetry group averaging
-scales = [0.90, 1.00, 1.10]  # Multi-scale pyramid TTA
-threshold = 0.25
+scales = [1.0]
+threshold = 0.505
 calibrate = true
 temperature = 0.4068
 uncertainty_decomposition = "epistemic_plus_aleatoric"

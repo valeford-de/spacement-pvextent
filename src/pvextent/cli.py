@@ -281,9 +281,11 @@ def main(argv: list[str] | None = None) -> int:
                     if c.exists():
                         args.checkpoint = [str(c)]
                         break
+            # The settings the sealed benchmark measured
             args.tta = "none"
             args.scales = [1.0]
             args.overlap = 0.25
+            args.threshold = 0.5
         elif getattr(args, "profile", None) == "tinden":
             if not args.checkpoint:
                 cand1 = Path("runs/deeplabv3plus-resnet50-v5-photometric-001/best.pt")
@@ -293,12 +295,13 @@ def main(argv: list[str] | None = None) -> int:
                     args.ensemble_weights = [0.5, 0.5]
                 elif cand1.exists():
                     args.checkpoint = [str(cand1)]
+            # The settings the sealed benchmark measured; multi-scale TTA and the
+            # spectral veto remain available as explicit options but are unmeasured
             args.tta = "d4"
-            args.scales = [0.9, 1.0, 1.1]
+            args.scales = [1.0]
             args.overlap = 0.50
-            args.calibrate = True
             args.temperature = 0.4068
-            args.veto_vegetation = True
+            args.threshold = 0.505
 
         final_probs = None
         final_uncert = None
