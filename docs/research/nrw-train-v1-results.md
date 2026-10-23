@@ -67,3 +67,31 @@ difference), false alarms −14.0 to −6.5 points.
   the constructed labels mark part of the real PV area as background, which
   teaches the model to under-call PV.
 - Next step: label rules v2 and V8, see amendment 1 of the protocol.
+
+## Amendment 1 results: V8 (label rules v2)
+
+V8 (`runs/deeplabv3plus-resnet50-v8-nrw-hardneg-v2-001/best.pt`, epoch 2,
+validation IoU 0.8895), single model, no TTA, threshold 0.5, evaluated once on
+each test set on 2026-10-23.
+
+**NRW test set v1**:
+
+| Model | IoU | Precision | Recall | PV crops detected | False alarms on PV-free crops |
+|---|---|---|---|---|---|
+| Vidda (V5) | 44.1 % [33.3–52.5] | 49.2 % | 81.2 % | 35/42 | 33.7 % (94/279) |
+| Tinden | 53.3 % [43.0–61.9] | 65.9 % | 73.6 % | 34/42 | 16.5 % (46/279) |
+| V7 | 54.1 % [42.1–63.1] | 74.8 % | 66.2 % | 27/42 | 6.5 % (18/279) |
+| V8 | 48.3 % [38.2–56.9] | 58.4 % | 73.6 % | 31/42 | 8.6 % [5.6–12.0] (24/279) |
+
+Paired bootstrap, V8 − V7: IoU −12.0 to +0.8, recall −0.0 to +15.5, false alarms
+−1.1 to +5.5 points. V8 − Tinden: false alarms −11.7 to −4.3 points, IoU and
+recall not distinguishable.
+
+**Sealed PV4GER test set**: V8 IoU 87.91 %, precision 91.88 %, recall 95.32 %
+(Vidda 88.16 / 93.89 / 93.53 %, V7 88.83 / 94.46 / 93.71 %).
+
+Reading: v2 labels recover recall (31 instead of 27 detected PV crops) and keep
+false alarms low, but V8 spills over PV boundaries: false-positive pixels on PV
+crops rise from 16,116 (V7) to 62,792. The ignore band around weak responses
+removes the background supervision next to modules. Neither V7 nor V8 dominates;
+better PV boundaries need human PV polygons, not wider ignore regions.
