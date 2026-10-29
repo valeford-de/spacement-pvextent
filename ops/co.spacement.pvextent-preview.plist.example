@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Copyright 2026 Valeford. SPDX-License-Identifier: Apache-2.0. -->
+<!-- Example for the current Mac mini; adapt every /Users/paulroder path and release ID. -->
+<!-- Install a private copy under ~/Library/LaunchAgents, not /Library/LaunchDaemons. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>co.spacement.pvextent-preview</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/paulroder/spacement-pvextent/.venv/bin/python</string>
+    <string>-m</string>
+    <string>pvextent.worker</string>
+    <string>--device</string>
+    <string>mps</string>
+    <string>--host</string>
+    <string>127.0.0.1</string>
+    <string>--port</string>
+    <string>8791</string>
+    <string>--threads</string>
+    <string>2</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/paulroder/spacement-pvextent-worker/releases/worker-v1-bce383d74aa4</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PYTHONPATH</key>
+    <string>/Users/paulroder/spacement-pvextent-worker/releases/worker-v1-bce383d74aa4/src</string>
+    <key>PYTHONUNBUFFERED</key>
+    <string>1</string>
+    <key>PYTORCH_ENABLE_MPS_FALLBACK</key>
+    <string>0</string>
+    <key>PVEXTENT_CHECKPOINT</key>
+    <string>/Users/paulroder/spacement-pvextent/runs/deeplabv3plus-resnet50-v5-photometric-001/best.pt</string>
+    <key>PVEXTENT_CHECKPOINT_SHA256</key>
+    <string>9380f5b7ebf5af23aeb445832402714865e387db5ce496d070575aada6e351a6</string>
+    <key>PVEXTENT_WORKER_TOKEN_FILE</key>
+    <string>/Users/paulroder/spacement-pvextent-worker/worker-token</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/paulroder/spacement-pvextent-worker/logs/worker.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/paulroder/spacement-pvextent-worker/logs/worker.err.log</string>
+</dict>
+</plist>
